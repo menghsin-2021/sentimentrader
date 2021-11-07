@@ -278,7 +278,7 @@ def single_stock_sentiment():
 if __name__ == "__main__":  # 如果以主程式執行
     # initial db
     db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
-    db_mysql.create_tb_all()
+    # db_mysql.create_tb_all()
 
     # run sever
     app.run(debug=DEBUG, host=HOST, port=PORT)
