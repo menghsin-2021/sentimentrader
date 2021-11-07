@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!-- form CSS -->
+    <link href="/static/css/dashboard.css" rel="stylesheet">
+
+<!--      plotly-->
+    <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>z
+<!--    <script src="plotly-2.4.2.min.js"></script>-->
+  </head>
+  <body>
+<nav class="navbar navbar-dark bg-primary flex-md-nowapr fixed-top p-0 shadow">
+  <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Sentimentrader</a>
+  <ul class="navbar-nav px-3">
+    <li class="nav-item text-nowarp">
+      <a class="nav-link" href="#">Logout</a>
+    </li>
+  </ul>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <!--     siderbar -->
+    <div class="col-md-2 bg-light d-md-block sidebar">
+      <div class="left-sidebar">
+        <ul class="nav nav-pills flex-column mb-auto">
+          <li class="nav-item">
+            <a href="http://localhost:5000" class="nav-link link-dark" aria-current="page">
+              <svg class="bi me-2" width="16" height="16">
+                <use xlink:href="#home"></use>
+              </svg>
+              Home
+            </a>
+          </li>
+          <li>
+            <a href="http://localhost:5000/social_volume.html" class="nav-link active">
+              <svg class="bi me-2" width="16" height="16">
+                <use xlink:href="#speedometer2"></use>
+              </svg>
+              Social volume
+            </a>
+          </li>
+          <li>
+            <a href="http://localhost:5000/sentiment.html" class="nav-link link-dark">
+              <svg class="bi me-2" width="16" height="16">
+                <use xlink:href="#table"></use>
+              </svg>
+              Sentiment
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link link-dark">
+              <svg class="bi me-2" width="16" height="16">
+                <use xlink:href="#grid"></use>
+              </svg>
+              Strategy
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link link-dark">
+              <svg class="bi me-2" width="16" height="16">
+                <use xlink:href="#people-circle"></use>
+              </svg>
+              Backtest
+            </a>
+          </li>
+        </ul>
+
+      </div>
+      <!-- figure       -->
+    </div>
+  </div>
+</div>
+<!--Main element-->
+<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+  <div>
+    <div id="myDiv" style="width: 800px; height: 500px;"></div>
+  </div>
+
+  <div>
+    <form action="/social_volume_rank" enctype="application/x-www-form-urlencoded" method=POST>
+      <div class="form-group">
+        <label for="category">類股</label>
+        <select class="form-control" id="category" name="category">
+          <option value="electric_car">電動車</option>
+          <option value="electric">電子資訊</option>
+          <option value="sail">航運</option>
+          <option value="biotech">生技</option>
+          <option value="finance">金融</option>
+          </select>
+      </div>
+      <div class="form-group">
+         <label for="source">文章來源</label>
+         <select class="form-control" id="source" name="source">
+          <option value="ptt">PTT 貼文</option>
+          <option value="cnyes">鉅亨網</option>
+        </select>
+      </div>
+      <div class="form-group">
+          <label for="duration">時間範圍</label>
+          <select class="form-control" id="duration" name="duration">
+            <option value="day">當日</option>
+            <option value="week">當周</option>
+            <option value="month">當月</option>
+            <option value="one_year">一年內</option>
+            <option value="three_year">三年內</option>
+          </select>
+      </div>
+      <div>
+    <button type="submit" class="btn btn-primary" id="search_rank" value="search_rank">送出</button>
+        </div>
+      </form>
+  </div>
+</main>
+
+    <script>
+    var social_volume_rank = {{social_volume_rank | safe}}
+    var trace1 =
+        {
+          x: social_volume_rank['stock_name_code'],
+          y: social_volume_rank['article_count'],
+          name: '被提及文章數',
+          type: "bar",
+          marker:{
+            color: ['#d52929', '#dc173e', '#e00052', '#e10068', '#df007d', '#ED0F8B', '#d70095', '#c200b4', '#9700d8', '#0000ff']
+          },
+        }
+      ;
+
+    var trace2 =
+        {
+          x: social_volume_rank["stock_name_code"],
+          y: social_volume_rank["stock_count"],
+          name: '被提及次數',
+          type: "bar",
+          marker:{
+            color: ['#bb0202', '#b90020', '#b90020', '#b40033', '#9f0051', '#9f0051', '#90005d', '#79006a', '#570079', '#000087']
+          },
+        }
+      ;
+
+
+
+    var data = [trace1, trace2];
+    var layout = {
+              barmode: 'stack',
+              title: {
+                text: social_volume_rank["title"],
+                font: {
+                  family: 'Courier New, monospace',
+                  size: 16
+                },
+                xref: 'paper',
+                x: 0.05,
+              },
+              xaxis: {
+                title: {
+                  text: '個股名稱',
+                  font: {
+                    family: 'Courier New, monospace',
+                    size: 14,
+                    color: '#7f7f7f'
+                  }
+                },
+              },
+              yaxis: {
+                title: {
+                  text: '被提及次數(次) / 被提及文章數(篇)',
+                  font: {
+                    family: 'Courier New, monospace',
+                    size: 14,
+                    color: '#7f7f7f'
+                  }
+                }
+              }
+            };
+
+      Plotly.newPlot("myDiv", data, layout);
+<!--     color gradient https://mycolor.space/gradient?ori=to+right&hex=%23F01313&hex2=%230F0FE0&sub=1-->
+    </script>
+
+  </body>
+
+</html>
+

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!-- form CSS -->
+    <link href="/static/css/dashboard.css" rel="stylesheet">
+
+<!--      plotly-->
+    <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>
+    <script src="plotly-2.4.2.min.js"></script>
+  </head>
+  <body>
+<nav class="navbar navbar-dark bg-primary flex-md-nowapr fixed-top p-0 shadow">
+  <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Sentimentrader</a>
+  <ul class="navbar-nav px-3">
+    <li class="nav-item text-nowarp">
+      <a class="nav-link" href="#">Logout</a>
+    </li>
+  </ul>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <!--     siderbar -->
+    <div class="col-md-2 bg-light d-md-block sidebar">
+      <div class="left-sidebar">
+        <ul class="nav nav-pills flex-column mb-auto">
+          <li class="nav-item">
+            <a href="http://localhost:5000" class="nav-link link-dark" aria-current="page">
+              <svg class="bi me-2" width="16" height="16">
+                <use xlink:href="#home"></use>
+              </svg>
+              Home
+            </a>
+          </li>
+          <li>
+            <a href="http://localhost:5000/social_volume.html" class="nav-link link-dark">
+              <svg class="bi me-2" width="16" height="16">
+                <use xlink:href="#speedometer2"></use>
+              </svg>
+              Social volume
+            </a>
+          </li>
+          <li>
+            <a href="href=http://localhost:5000/sentiment.html" class="nav-link active">
+              <svg class="bi me-2" width="16" height="16">
+                <use xlink:href="#table"></use>
+              </svg>
+              Sentiment
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link link-dark">
+              <svg class="bi me-2" width="16" height="16">
+                <use xlink:href="#grid"></use>
+              </svg>
+              Strategy
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link link-dark">
+              <svg class="bi me-2" width="16" height="16">
+                <use xlink:href="#people-circle"></use>
+              </svg>
+              Backtest
+            </a>
+          </li>
+        </ul>
+
+      </div>
+      <!-- figure       -->
+    </div>
+  </div>
+</div>
+<!--Main element-->
+<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+  <div>
+    <div id="myDiv" style="width: 1300px; height: 500px;"></div>
+  </div>
+
+  <div>
+    <form action="/single_stock_sentiment" enctype="application/x-www-form-urlencoded" method=POST>
+      <div class="form-group">
+        <label for="category">類股</label>
+        <select class="form-control" id="category" name="category">
+          <option value="electric_car">電動車</option>
+          <option value="electric">電子資訊</option>
+          <option value="sail">航運</option>
+          <option value="biotech">生技</option>
+          <option value="finance">金融</option>
+          </select>
+      </div>
+
+      <div class="form-group">
+         <label for="source">文章來源</label>
+         <select class="form-control" id="source" name="source">
+          <option value="ptt">PTT 貼文</option>
+          <option value="cnyes">鉅亨網</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+				<label for="stock_code" class="control-label">個股選單</label>
+				<select id="stock_code" class="form-control" name="stock_code">
+                    <optgroup label="電動車">
+                    	<option value="2317">2317 鴻海</option>
+                    	<option value="3023">3023 信邦</option>
+                    	<option value="2308">2308 台達電</option>
+                    	<option value="2301">2301 光寶科</option>
+                        <option value="1533">1533 車王電</option>
+                        <option value="8358">8358 金居</option>
+                        <option value="2357">2357 華碩</option>
+                        <option value="3665">3665 貿聯-ＫＹ</option>
+                    </optgroup>
+                </select>
+  </div>
+
+      <div>
+    <button type="submit" class="btn btn-primary" id="search-sentiment" value="search-sentiment">送出</button>
+        </div>
+
+      </form>
+
+
+</div>
+
+
+
+</main>
+
+    <script>
+       var trace1 = {
+          x: {{ daily_stock_price['date'][:1825] | safe }},
+          close: {{ daily_stock_price['close'][:1825] | safe}},
+            decreasing: { line: { color: "#7F7F7F" } },
+          high: {{ daily_stock_price['high'][:1825] | safe}},
+            increasing: { line: { color: "#17BECF" } },
+            line: { color: "rgba(31,119,180,1)" },
+          low: {{ daily_stock_price['low'][:1825] | safe }},
+          open: {{ daily_stock_price['open'][:1825] | safe }},
+          name: '歷年股價',
+
+       // customise colors
+       increasing: {line: {color: 'red'}},
+       decreasing: {line: {color: 'green'}},
+       type: "candlestick",
+       xaxis: {x: "x",
+               rangebreaks: [
+                {bounds: ["sat", "mon"]},
+            ]},
+       yaxis: "y"
+       };
+
+        var trace2 = {
+          x: {{ daily_stock_price['date'][:1825] | safe }},
+          y: {{ daily_sentiment['avg_valence'][:1825] | safe }},
+          type: 'scatter',
+          yaxis: 'y2',
+          name: '平均正向分數',
+          line: {
+              color: 'rgb(55, 128, 191)',
+              width: 1
+             }
+        };
+
+        var trace3 = {
+          x: {{ daily_stock_price['date'][:1825] | safe }},
+          y: {{ daily_sentiment['avg_arousal'][:1825] | safe }},
+          type: 'scatter',
+          yaxis: 'y2',
+          name: '平均強烈分數',
+          line: {
+              color: 'rgb(128, 0, 128)',
+              width: 1
+             },
+          visible: false,
+        };
+
+        var trace4 = {
+          x: {{ daily_stock_price['date'][:1825] | safe }},
+          y: {{ daily_sentiment['sum_sentiment'][:1825] | safe }},
+          type: 'bar',
+          yaxis: 'y3',
+          name: '股市關鍵字情感分數',
+          line: {
+              color: 'rgb(128, 0, 128)',
+              width: 1
+             },
+          visible: false,
+        };
+
+        var data = [trace1, trace2, trace3, trace4];
+
+        var layout = {
+          updatemenus: [{
+            type: 'buttons',
+            direction: 'right',
+            yanchor: 'bottom',
+            xanchor: 'left',
+            y: 0.90,
+            x: 0.3,
+            buttons: [{
+                  label: '週',
+                  method: 'restyle',
+                  args: [{
+                           x: [{{ daily_stock_price['date'][:7] | safe }}],
+                       close: [{{ daily_stock_price['close'][:7] | safe}}],
+                  decreasing: [{ line: { color: "green" }}],
+                        high: [{{ daily_stock_price['high'][:7] | safe}}],
+                  increasing: [{line: { color: "red" }}],
+                        line: [{ color: "rgba(31,119,180,1)" }],
+                         low: [{{ daily_stock_price['low'][:7] | safe }}],
+                        open: [{{ daily_stock_price['open'][:7] | safe }}],
+                          y1: [{{ daily_sentiment['avg_valence'][:7] | safe }}],
+                          y2: [{{ daily_sentiment['avg_arousal'][:7] | safe }}],
+                          y3: [{{ daily_sentiment['sum_sentiment'][:7] | safe }}]
+                          }]
+                    }, {
+                  label: '月',
+                  method: 'restyle',
+                  args: [{
+                           x: [{{ daily_stock_price['date'][:30] | safe }}],
+                       close: [{{ daily_stock_price['close'][:30] | safe}}],
+                  decreasing: [{ line: { color: "green" }}],
+                        high: [{{ daily_stock_price['high'][:30] | safe}}],
+                  increasing: [{line: { color: "red" }}],
+                        line: [{ color: "rgba(31,119,180,1)" }],
+                         low: [{{ daily_stock_price['low'][:30] | safe }}],
+                        open: [{{ daily_stock_price['open'][:30] | safe }}],
+                          y1: [{{ daily_sentiment['avg_valence'][:30] | safe }}],
+                          y2: [{{ daily_sentiment['avg_arousal'][:30] | safe }}],
+                          y3: [{{ daily_sentiment['sum_sentiment'][:30] | safe }}],
+                          xaxis.range: [{
+                              range: ['2016-07-01', '2016-12-31'],
+                              type: 'date'
+                            }]
+                        }]
+                    }, {
+                  label: '年',
+                  method: 'restyle',
+                  args: [{
+                           x: [{{ daily_stock_price['date'][:365] | safe }}],
+                       close: [{{ daily_stock_price['close'][:365] | safe}}],
+                  decreasing: [{ line: { color: "green" }}],
+                        high: [{{ daily_stock_price['high'][:365] | safe}}],
+                  increasing: [{line: { color: "red" }}],
+                        line: [{ color: "rgba(31,119,180,1)" }],
+                         low: [{{ daily_stock_price['low'][:365] | safe }}],
+                        open: [{{ daily_stock_price['open'][:365] | safe }}],
+                          y1: [{{ daily_sentiment['avg_valence'][:365] | safe }}],
+                          y2: [{{ daily_sentiment['avg_arousal'][:365] | safe }}],
+                          y3: [{{ daily_sentiment['sum_sentiment'][:365] | safe }}],
+                          xaxis: [{
+                              range: ['2016-07-01', '2016-12-31'],
+                              type: 'date'
+                            }]
+                        }]
+                  }, {
+                  label: '三年',
+                  method: 'restyle',
+                  args: [{
+                           x: [{{ daily_stock_price['date'][:1095] | safe }}],
+                       close: [{{ daily_stock_price['close'][:1095] | safe}}],
+                  decreasing: [{ line: { color: "green" }}],
+                        high: [{{ daily_stock_price['high'][:1095] | safe}}],
+                  increasing: [{line: { color: "red" }}],
+                        line: [{ color: "rgba(31,119,180,1)" }],
+                         low: [{{ daily_stock_price['low'][:1095] | safe }}],
+                        open: [{{ daily_stock_price['open'][:1095] | safe }}],
+                          y1: [{{ daily_sentiment['avg_valence'][:1095] | safe }}],
+                          y2: [{{ daily_sentiment['avg_arousal'][:1095] | safe }}],
+                          y3: [{{ daily_sentiment['sum_sentiment'][:1095] | safe }}],
+                          xaxis: [{
+                              range: ['2016-07-01', '2016-12-31'],
+                              type: 'date'
+                            }]
+                        }]
+                  },{
+                  label: '五年',
+                  method: 'restyle',
+                  args: [{
+                           x: [{{ daily_stock_price['date'][:1825] | safe }}],
+                       close: [{{ daily_stock_price['close'][:1825] | safe}}],
+                  decreasing: [{ line: { color: "green" }}],
+                        high: [{{ daily_stock_price['high'][:1825] | safe}}],
+                  increasing: [{line: { color: "red" }}],
+                        line: [{ color: "rgba(31,119,180,1)" }],
+                         low: [{{ daily_stock_price['low'][:1825] | safe }}],
+                        open: [{{ daily_stock_price['open'][:1825] | safe }}],
+                          y1: [{{ daily_sentiment['avg_valence'][:1825] | safe }}],
+                          y2: [{{ daily_sentiment['avg_arousal'][:1825] | safe }}],
+                          y3: [{{ daily_sentiment['sum_sentiment'][:1825] | safe }}],
+                          xaxis: [{
+                              autorange: true,
+                              type: 'date'
+                            }]
+                        }]
+                  }, {
+              label: '全部',
+              method: 'restyle',
+              args: [{
+                           x: [{{ daily_stock_price['date'] | safe }}],
+                       close: [{{ daily_stock_price['close'] | safe}}],
+                  decreasing: [{ line: { color: "green" }}],
+                        high: [{{ daily_stock_price['high'] | safe}}],
+                  increasing: [{line: { color: "red" }}],
+                        line: [{ color: "rgba(31,119,180,1)" }],
+                         low: [{{ daily_stock_price['low'] | safe }}],
+                        open: [{{ daily_stock_price['open'] | safe }}],
+                          y1: [{{ daily_sentiment['avg_valence'] | safe }}],
+                          y2: [{{ daily_sentiment['avg_arousal'] | safe }}],
+                          y3: [{{ daily_sentiment['sum_sentiment'] | safe }}],
+                          xaxis: [{
+                              autorange: true,
+                              type: 'date'
+                            }]
+                        }]
+                    },
+
+                  ]},
+            {
+        y: 0.8,
+        x: -0.2,
+        yanchor: 'top',
+        buttons: [{
+            method: 'restyle',
+            args: ['line.color', 'red'],
+            label: 'red'
+        }, {
+            method: 'restyle',
+            args: ['line.color', 'blue'],
+            label: 'blue'
+        }, {
+            method: 'restyle',
+            args: ['line.color', 'green'],
+            label: 'green'
+        }, {
+            method: 'restyle',
+            args: ['line.color', 'black'],
+            label: 'black'
+        }]
+            }, {
+        y: 0.6,
+        x: -0.2,
+        yanchor: 'top',
+        buttons: [{
+            method: 'restyle',
+            args: ['line.width', '0.3'],
+            label: '0.3'
+        }, {
+            method: 'restyle',
+            args: ['line.width', '1'],
+            label: '1'
+        },{
+            method: 'restyle',
+            args: ['line.width', '1.5'],
+            label: '1.5'
+        },]
+            },{
+        y: 1,
+        x: -0.2,
+        yanchor: 'top',
+        buttons: [{
+            method: 'restyle',
+            args: ['visible', [true, false, false, false]],
+            label: '歷年Ｋ線圖'
+        }, {
+            method: 'restyle',
+            args: ['visible', [true, true, false, false]],
+            label: '平均正向情感分數'
+        }, {
+            method: 'restyle',
+            args: ['visible', [true, false, true, false]],
+            label: '平均強烈情感分數'
+        }, {
+            method: 'restyle',
+            args: ['visible', [true, false, false, true]],
+            label: '股市關鍵字情感分數'
+        }]
+            }],
+
+        title: {
+                text:'個股情緒分數 ｖｓ 歷年股價',
+                font: {
+                  family: 'Courier New, monospace',
+                  size: 16
+                },
+                xref: 'paper',
+                x: 0.05,
+              },
+        dragmode: "zoom",
+        margin: {
+            r: 10,
+            t: 25,
+            b: 40,
+            l: 60
+          },
+        showlegend: true,
+        xaxis: {
+          title: {
+                  text: '日期',
+                  font: {
+                    family: 'Courier New, monospace',
+                    size: 14,
+                    color: '#7f7f7f'
+                  }
+                },
+          autorange: false,
+          domain: [0, 1],
+          range: {{ daily_stock_price['range'] | safe }},
+          rangeslider: { range: {{ daily_stock_price['range'] | safe }} },
+          title: "Date",
+          type: "date",
+          rangebreaks: [
+                {bounds: ["sat", "mon"]},
+            ]
+        },
+        yaxis: {
+          title: {
+                  text: '價格（元）',
+                  font: {
+                    family: 'Courier New, monospace',
+                    size: 14,
+                    color: '#7f7f7f'
+                  }
+                },
+          autorange: false,
+          domain: [0, 1],
+          range: [0, 800],
+          type: "linear"
+          },
+        yaxis2: {
+          title: {
+                  text: '情感分數',
+                  font: {
+                    family: 'Courier New, monospace',
+                    size: 14,
+                    color: '#7f7f7f'
+                  }
+                },
+          autorange: false,
+          domain: [0, 1],
+          range: [-2, 2],
+          type: "linear",
+          overlaying: 'y',
+          side: 'right',
+          position: 0.95
+          },
+          yaxis3: {
+          title: {
+                  text: '股市關鍵字分數',
+                  font: {
+                    family: 'Courier New, monospace',
+                    size: 14,
+                    color: '#7f7f7f'
+                  }
+                },
+          autorange: false,
+          domain: [0, 2],
+          range: [0, 1000],
+          type: "linear",
+          overlaying: 'y',
+          side: 'right',
+          position: 1.1
+          }
+        };
+
+Plotly.newPlot("myDiv", data, layout);
+
+
+    </script>
+
+  </body>
+
+</html>

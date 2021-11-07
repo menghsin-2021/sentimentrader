@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sentimentrader</title>
+    <!-- form CSS -->
+    <link href="/static/css/login.css" rel="stylesheet">
+</head>
+<body>
+<div class="container" id="registration-form">
+        <div class="image"></div>
+        <div class="frm">
+            <h1>Sign in / Sign up</h1>
+            <form action="/home.html" enctype="application/x-www-form-urlencoded" method=GET>
+                <div class="form-group">
+                    <label for="username">使用者名稱</label>
+                    <input type="text" class="form-control" id="username" placeholder="小於16個英文字">
+                </div>
+                <div class="form-group">
+                    <label for="email">使用者信箱</label>
+                    <input type="email" class="form-control" id="email" placeholder="請以英文半形字母輸入電郵地址">
+                </div>
+                <div class="form-group">
+                    <label for="pwd">密碼</label>
+                    <input type="password" class="form-control" id="pwd" placeholder="小於16個英文＋數字">
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-success btn-lg float-left">Log in</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

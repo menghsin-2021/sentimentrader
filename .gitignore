@@ -1,0 +1,80 @@
+.DS_Store
+.env
+.flaskenv
+*.pyc
+*.pyo
+env/
+venv/
+.venv/
+env*
+dist/
+build/
+*.egg
+*.egg-info/
+_mailinglist
+.tox/
+.cache/
+.pytest_cache/
+.idea/
+docs/_build/
+.vscode
+img/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+*,cover
+
+#test py
+config.py
+model_test.py
+user_reference_code.py
+gunicorn.py
+redis_test.py
+
+#json
+test.json
+sample_data.json
+data.json
+test_data.json
+*.json
+.json
+
+
+#jupyter notebook
+.ipynb_checkpoints
+
+#crawler test file
+chromedriver.exe
+crawed_page*
+
+#log
+*.log
+.log
+
+# sh
+.sh
+*.sh
+
+#csv
+*.csv
+.csv
+
+# jupyter notebook
+*.ipynb
+.ipynb
+
+# sql
+.sql
+*.sql
+
+# txt
+.txt
+*.txt
+
+# py
+data_pipeline_test.py
+sentimentrader_data_pipeline_daily.py
+
+
