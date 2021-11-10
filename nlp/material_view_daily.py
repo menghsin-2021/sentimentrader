@@ -3,28 +3,36 @@ from datetime import datetime, timedelta
 
 def get_today():
     today_strftime= datetime.today().strftime('%Y%m%d')
-    week_strftime = datetime.today().strftime('%Y%u')
-    month_strftime = datetime.today().strftime('%Y%m')
-    year_strftime = datetime.today().strftime('%Y')
+    yesterday_strftime = (datetime.today() - timedelta(days=1)).strftime('%Y%m%d')
+    # week_strftime = datetime.today().strftime('%Y%u')
+    # month_strftime = datetime.today().strftime('%Y%m')
+    # year_strftime = datetime.today().strftime('%Y')
 
-    return today_strftime, week_strftime, month_strftime, year_strftime
+    return today_strftime, yesterday_strftime
 
 def get_day_before(i):
     days_ago_strftime = (datetime.today() - timedelta(days=i)).strftime('%Y-%m-%d') + ' 00:00:00'
     # 2021-11-05 00:00:00 (mysql date)
     return days_ago_strftime
 
-today_strftime, week_strftime, month_strftime, year_strftime = get_today()
+today_strftime, yesterday_strftime = get_today()
 today = get_day_before(0)
+yesterday = get_day_before(1)
 weeks_ago_strftime = get_day_before(7)
 month_ago_strftime = get_day_before(30)
 year_ago_strftime = get_day_before(365)
 three_year_ago_strftime = get_day_before(1095)
 five_year_ago_strftime = get_day_before(1825)
 
-print(three_year_ago_strftime)
+# print(three_year_ago_strftime)
 
-sql_social_volume_daily = "CREATE TABLE `social_volume_daily_{}` AS \
+sql_drop_social_volume_daily = "DROP TABLE IF EXISTS `social_volume_daily`;"
+sql_drop_social_volume_weekly = "DROP TABLE IF EXISTS `social_volume_weekly`;"
+sql_drop_social_volume_monthly = "DROP TABLE IF EXISTS `social_volume_monthly`;"
+sql_drop_social_volume_yearly = "DROP TABLE IF EXISTS `social_volume_yearly`;"
+sql_drop_social_volume_three_yearly = "DROP TABLE IF EXISTS `social_volume_three_yearly`;"
+
+sql_social_volume_daily = "CREATE TABLE `social_volume_daily` AS \
                     SELECT DATE_FORMAT(date,'%Y%m%d') AS `days`, `source`, `category`, daily_social_volume.stock_code, `stock_name`, `count`, `article_count` \
                     FROM `daily_social_volume` \
                     JOIN `stocks` \
@@ -32,10 +40,9 @@ sql_social_volume_daily = "CREATE TABLE `social_volume_daily_{}` AS \
                     WHERE daily_social_volume.stock_code NOT IN (0, 1, 2, 3, 4, 5) \
                     AND `date` = '{}' \
                     AND `count` > 0 \
-                    ORDER BY `days` DESC, `count` DESC, `article_count` DESC;".format(today_strftime, today)
+                    ORDER BY `days` DESC, `count` DESC, `article_count` DESC;".format(today)
 
-
-sql_social_volume_weekly = "CREATE TABLE `social_volume_weekly_{}` AS \
+sql_social_volume_weekly = "CREATE TABLE `social_volume_weekly` AS \
                             SELECT DATE_FORMAT(date,'%Y%u') AS `weeks`, `source`, `category`, daily_social_volume.stock_code, `stock_name`, sum(count) AS `count`, sum(article_count) AS `article_count` \
                             FROM sentimentrader.daily_social_volume \
                             JOIN stocks \
@@ -44,10 +51,9 @@ sql_social_volume_weekly = "CREATE TABLE `social_volume_weekly_{}` AS \
                             AND `date` > '{}' \
                             GROUP BY `source`, `weeks`, `stock_code`\
                             HAVING count > 0 \
-                            ORDER BY `count` desc, `article_count` desc;".format(today_strftime, weeks_ago_strftime)
+                            ORDER BY `count` desc, `article_count` desc;".format(weeks_ago_strftime)
 
-
-sql_social_volume_monthly = "CREATE TABLE `social_volume_monthly_{}` AS \
+sql_social_volume_monthly = "CREATE TABLE `social_volume_monthly` AS \
                             SELECT DATE_FORMAT(date,'%Y%m') AS `months`, `source`, `category`, daily_social_volume.stock_code, `stock_name`, sum(count) AS `count`, sum(article_count) AS `article_count` \
                             FROM sentimentrader.daily_social_volume \
                             JOIN stocks \
@@ -56,10 +62,9 @@ sql_social_volume_monthly = "CREATE TABLE `social_volume_monthly_{}` AS \
                             AND `date` > '{}' \
                             GROUP BY `source`, `months`, `stock_code`\
                             HAVING count > 0 \
-                            ORDER BY `count` desc, `article_count` desc;".format(today_strftime, month_ago_strftime)
+                            ORDER BY `count` desc, `article_count` desc;".format(month_ago_strftime)
 
-
-sql_social_volume_yearly = "CREATE TABLE `social_volume_yearly_{}` AS \
+sql_social_volume_yearly = "CREATE TABLE `social_volume_yearly` AS \
                             SELECT DATE_FORMAT(date,'%Y') as `years`, `source`, `category`, daily_social_volume.stock_code, `stock_name`, sum(count) as `count`, sum(article_count) as `article_count` \
                             FROM sentimentrader.daily_social_volume \
                             JOIN stocks \
@@ -68,9 +73,9 @@ sql_social_volume_yearly = "CREATE TABLE `social_volume_yearly_{}` AS \
                             AND `date` > '{}' \
                             GROUP BY `source`, `years`, `stock_code`\
                             HAVING count > 0 \
-                            ORDER BY `count` desc, `article_count` desc;".format(today_strftime, year_ago_strftime)
+                            ORDER BY `count` desc, `article_count` desc;".format(year_ago_strftime)
 
-sql_social_volume_three_yearly = "CREATE TABLE `social_volume_three_yearly_{}` AS \
+sql_social_volume_three_yearly = "CREATE TABLE `social_volume_three_yearly` AS \
                                 SELECT DATE_FORMAT(date,'%Y') as `years`, `source`, `category`, daily_social_volume.stock_code, `stock_name`, sum(count) as `count`, sum(article_count) as `article_count` \
                                 FROM sentimentrader.daily_social_volume \
                                 JOIN stocks \
@@ -79,133 +84,131 @@ sql_social_volume_three_yearly = "CREATE TABLE `social_volume_three_yearly_{}` A
                                 AND `date` > '{}' \
                                 GROUP BY `source`, `years`, `stock_code`\
                                 HAVING count > 0 \
-                                ORDER BY `count` desc, `article_count` desc;".format(today_strftime, three_year_ago_strftime)
+                                ORDER BY `count` desc, `article_count` desc;".format(three_year_ago_strftime)
+
+sql_social_volume_daily_set_index_category = "ALTER TABLE sentimentrader.social_volume_daily ADD INDEX (`category`);"
+sql_social_volume_weekly_set_index_category = "ALTER TABLE sentimentrader.social_volume_weekly ADD INDEX (`category`);"
+sql_social_volume_monthly_set_index_category = "ALTER TABLE sentimentrader.social_volume_monthly ADD INDEX (`category`);"
+sql_social_volume_yearly_set_index_category = "ALTER TABLE sentimentrader.social_volume_yearly ADD INDEX (`category`);"
+sql_social_volume_three_yearly_set_index_category = "ALTER TABLE sentimentrader.social_volume_three_yearly ADD INDEX (`category`);"
+
+sql_social_volume_daily_set_index_source = "ALTER TABLE sentimentrader.social_volume_daily ADD INDEX (`source`);"
+sql_social_volume_weekly_set_index_source = "ALTER TABLE sentimentrader.social_volume_weekly ADD INDEX (`source`);"
+sql_social_volume_monthly_set_index_source = "ALTER TABLE sentimentrader.social_volume_monthly ADD INDEX (`source`);"
+sql_social_volume_yearly_set_index_source = "ALTER TABLE sentimentrader.social_volume_yearly ADD INDEX (`source`);"
+sql_social_volume_three_yearly_set_index_source = "ALTER TABLE sentimentrader.social_volume_three_yearly ADD INDEX (`source`);"
 
 
+# sentiment
+sql_drop_sentiment_view = "DROP TABLE IF EXISTS sentiment_view;"
 
-sql_sentiment_daily = "CREATE TABLE `sentiment_daily_{}` AS \
+sql_sentiment_view = "CREATE TABLE `sentiment_view` AS \
                        SELECT DATE_FORMAT(date, '%Y-%m-%d') as `days`, `source`, daily_sentiment.stock_code, `stock_name`, `category`, \
         	           `sum_valence`, (`avg_valence` - 5) as `avg_valence`, `sum_arousal`, (`avg_arousal` - 5 ) as `avg_arousal`, `sum_sentiment` \
                        FROM `sentimentrader`.`daily_sentiment` \
                        JOIN stocks \
                        ON daily_sentiment.stock_code = stocks.stock_code \
-                       order by `days` desc;".format(today_strftime)
+                       order by `days` desc;"
+
+sql_sentiment_view_set_index = "ALTER TABLE sentimentrader.sentiment_view ADD INDEX (`days`);"
+sql_sentiment_view_set_index_source = "ALTER TABLE sentimentrader.sentiment_view ADD INDEX (`source`);"
+sql_sentiment_view_set_index_stock_code = "ALTER TABLE sentimentrader.sentiment_view ADD INDEX (`stock_code`);"
+sql_sentiment_view_set_index_stock_name = "ALTER TABLE sentimentrader.sentiment_view ADD INDEX (`stock_name`);"
+sql_sentiment_view_set_index_category = "ALTER TABLE sentimentrader.sentiment_view ADD INDEX (`category`);"
+sql_sentiment_view_set_index_source_stock_code = "ALTER TABLE sentimentrader.sentiment_view ADD INDEX (`source`, `stock_code`);"
+sql_sentiment_view_set_index_day_source_stock_code = "ALTER TABLE sentimentrader.sentiment_view ADD INDEX (`days`, `source`, `stock_code`);"
 
 
-sql_sentiment_weekly = "CREATE TABLE `sentiment_weekly_{}` AS \
-                        SELECT DATE_FORMAT(date, '%Y-%m-%d') as `days`, `source`, daily_sentiment.stock_code as `stock_code`, `stock_name`, `category`, \
-    	                `sum_valence`, (`avg_valence` - 5) as `avg_valence`, `sum_arousal`, (`avg_arousal` - 5 ) as `avg_arousal`, `sum_sentiment` \
-                       FROM `sentimentrader`.`daily_sentiment` \
-                        JOIN stocks \
-                        ON daily_sentiment.stock_code = stocks.stock_code \
-                        WHERE `date` > '{}' \
-                        order by `days` desc;".format(today_strftime, weeks_ago_strftime)
 
-sql_sentiment_monthly = "CREATE TABLE `sentiment_monthly_{}` AS \
-                         SELECT DATE_FORMAT(date, '%Y-%m-%d') as `days`, `source`, daily_sentiment.stock_code as `stock_code`, `stock_name`, `category`, \
-    	                 `sum_valence`, (`avg_valence` - 5) as `avg_valence`, `sum_arousal`, (`avg_arousal` - 5 ) as `avg_arousal`, `sum_sentiment` \
-                         FROM `sentimentrader`.`daily_sentiment` \
-                         JOIN stocks \
-                         ON daily_sentiment.stock_code = stocks.stock_code \
-                         WHERE `date` > '{}' \
-                         order by `days` desc;".format(today_strftime, month_ago_strftime)
 
-sql_sentiment_yearly = "CREATE TABLE `sentiment_yearly_{}` AS \
-                        SELECT DATE_FORMAT(date, '%Y-%m-%d') as `days`, `source`, daily_sentiment.stock_code as `stock_code`, `stock_name`, `category`, \
-    	                `sum_valence`, (`avg_valence` - 5) as `avg_valence`, `sum_arousal`, (`avg_arousal` - 5 ) as `avg_arousal`, `sum_sentiment` \
-                        FROM `sentimentrader`.`daily_sentiment` \
-                        JOIN stocks \
-                        ON daily_sentiment.stock_code = stocks.stock_code \
-                        WHERE `date` > '{}' \
-                        order by `days` desc;".format(today_strftime, year_ago_strftime)
 
-sql_sentiment_three_yearly = "CREATE TABLE `sentiment_three_yearly_{}` AS \
-                        SELECT DATE_FORMAT(date, '%Y-%m-%d') as `days`, `source`, daily_sentiment.stock_code as `stock_code`, `stock_name`, `category`, \
-    	                `sum_valence`, (`avg_valence` - 5) as `avg_valence`, `sum_arousal`, (`avg_arousal` - 5 ) as `avg_arousal`, `sum_sentiment` \
-                        FROM `sentimentrader`.`daily_sentiment` \
-                        JOIN stocks \
-                        ON daily_sentiment.stock_code = stocks.stock_code \
-                        WHERE `date` > '{}' \
-                        order by `days` desc;".format(today_strftime, three_year_ago_strftime)
 
-sql_sentiment_five_yearly = "CREATE TABLE `sentiment_five_yearly_{}` AS \
-                        SELECT DATE_FORMAT(date, '%Y-%m-%d') as `days`, `source`, daily_sentiment.stock_code as `stock_code`, `stock_name`, `category`, \
-    	                `sum_valence`, (`avg_valence` - 5) as `avg_valence`, `sum_arousal`, (`avg_arousal` - 5 ) as `avg_arousal`, `sum_sentiment` \
-                        FROM `sentimentrader`.`daily_sentiment` \
-                        JOIN stocks \
-                        ON daily_sentiment.stock_code = stocks.stock_code \
-                        WHERE `date` > '{}' \
-                        order by `days` desc;".format(today_strftime, five_year_ago_strftime)
+# stock price
+sql_drop_stock_price_view = "DROP TABLE IF EXISTS `stock_price_view`;"
 
-sql_stock_price_daily = "CREATE TABLE `stock_price_daily_{}` AS \
+
+sql_stock_price_daily = "CREATE TABLE `stock_price_view` AS \
                         SELECT DATE_FORMAT(date, '%Y-%m-%d') as `days`, daily_stock_price.stock_code, `stock_name`, `category`, `open`, `low`, `high`, `close`, `volume` \
                         FROM `sentimentrader`.`daily_stock_price` \
                         JOIN `stocks` \
                         ON daily_stock_price.stock_code = `stocks`.`stock_code` \
-                        WHERE `date` > '2013-01-01 00:00:00' \
-                        ORDER BY `days` desc;".format(today_strftime)
+                        ORDER BY `days` desc;"
 
+sql_stock_price_view_set_index = "ALTER TABLE sentimentrader.stock_price_view ADD INDEX (`days`);"
+sql_stock_price_view_set_index_stock_code = "ALTER TABLE sentimentrader.stock_price_view ADD INDEX (`stock_code`);"
+sql_stock_price_view_set_index_stock_name = "ALTER TABLE sentimentrader.stock_price_view ADD INDEX (`stock_name`);"
+sql_stock_price_view_set_index_category = "ALTER TABLE sentimentrader.stock_price_view ADD INDEX (`category`);"
+sql_stock_price_view_set_index_source_stock_code = "ALTER TABLE sentimentrader.stock_price_view ADD INDEX (`category`, `stock_code`);"
+sql_stock_price_view_set_index_day_source_stock_code = "ALTER TABLE sentimentrader.stock_price_view ADD INDEX (`days`, `category`, `stock_code`);"
 
-sql_stock_price_weekly = "CREATE TABLE `stock_price_weekly_{}` AS \
-                       SELECT DATE_FORMAT(date, '%Y-%m-%d') as `days`, daily_stock_price.stock_code as `stock_code`, `stock_name`, `category`, `open`, `low`, `high`, `close`, `volume` \
-                       FROM `sentimentrader`.`daily_stock_price` \
-                       JOIN `stocks` \
-                       ON daily_stock_price.stock_code = stocks.stock_code \
-                       WHERE `date` > '{}' \
-                       ORDER BY `days` desc;".format(today_strftime, weeks_ago_strftime)
-
-sql_stock_price_monthly = "CREATE TABLE `stock_price_monthly_{}` AS \
-                       SELECT DATE_FORMAT(date, '%Y-%m-%d') as `days`, daily_stock_price.stock_code as `stock_code`, `stock_name`, `category`, `open`, `low`, `high`, `close`, `volume` \
-                       FROM `sentimentrader`.`daily_stock_price` \
-                       JOIN `stocks` \
-                       ON daily_stock_price.stock_code = stocks.stock_code \
-                       WHERE `date` > '{}' \
-                       ORDER BY `days` desc;".format(today_strftime, month_ago_strftime)
-
-sql_stock_price_yearly = "CREATE TABLE `stock_price_yearly_{}` AS \
-                       SELECT DATE_FORMAT(date, '%Y-%m-%d') as `days`, daily_stock_price.stock_code as `stock_code`, `stock_name`, `category`, `open`, `low`, `high`, `close`, `volume` \
-                       FROM `sentimentrader`.`daily_stock_price` \
-                       JOIN `stocks` \
-                       ON daily_stock_price.stock_code = stocks.stock_code \
-                       WHERE `date` > '{}' \
-                       ORDER BY `days` desc;".format(today_strftime, year_ago_strftime)
-
-sql_stock_price_three_yearly = "CREATE TABLE `stock_price_three_yearly_{}` AS \
-                       SELECT DATE_FORMAT(date, '%Y-%m-%d') as `days`, daily_stock_price.stock_code as `stock_code`, `stock_name`, `category`, `open`, `low`, `high`, `close`, `volume` \
-                       FROM `sentimentrader`.`daily_stock_price` \
-                       JOIN `stocks` \
-                       ON daily_stock_price.stock_code = stocks.stock_code \
-                       WHERE `date` > '{}' \
-                       ORDER BY `days` desc;".format(today_strftime, three_year_ago_strftime)
-
-sql_stock_price_five_yearly = "CREATE TABLE `stock_price_five_yearly_{}` AS \
-                       SELECT DATE_FORMAT(date, '%Y-%m-%d') as `days`, daily_stock_price.stock_code as `stock_code`, `stock_name`, `category`, `open`, `low`, `high`, `close`, `volume` \
-                       FROM `sentimentrader`.`daily_stock_price` \
-                       JOIN `stocks` \
-                       ON daily_stock_price.stock_code = stocks.stock_code \
-                       WHERE `date` > '{}' \
-                       ORDER BY `days` desc;".format(today_strftime, five_year_ago_strftime)
 
 
 
 db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
+
+try:
+    db_mysql.cursor.execute(sql_drop_social_volume_daily)
+except:
+    pass
+try:
+    db_mysql.cursor.execute(sql_drop_social_volume_weekly)
+except:
+    pass
+try:
+    db_mysql.cursor.execute(sql_drop_social_volume_monthly)
+except:
+    pass
+try:
+    db_mysql.cursor.execute(sql_drop_social_volume_yearly)
+except:
+    pass
+try:
+    db_mysql.cursor.execute(sql_drop_social_volume_three_yearly)
+except:
+    pass
+
+try:
+    db_mysql.cursor.execute(sql_drop_sentiment_view)
+except:
+    pass
+try:
+    db_mysql.cursor.execute(sql_drop_stock_price_view)
+except:
+    pass
+
 db_mysql.cursor.execute(sql_social_volume_daily)
 db_mysql.cursor.execute(sql_social_volume_weekly)
 db_mysql.cursor.execute(sql_social_volume_monthly)
 db_mysql.cursor.execute(sql_social_volume_yearly)
 db_mysql.cursor.execute(sql_social_volume_three_yearly)
 
+db_mysql.cursor.execute(sql_social_volume_daily_set_index_category)
+db_mysql.cursor.execute(sql_social_volume_weekly_set_index_category)
+db_mysql.cursor.execute(sql_social_volume_monthly_set_index_category)
+db_mysql.cursor.execute(sql_social_volume_yearly_set_index_category)
+db_mysql.cursor.execute(sql_social_volume_three_yearly_set_index_category)
 
-db_mysql.cursor.execute(sql_sentiment_daily)
-db_mysql.cursor.execute(sql_sentiment_weekly)
-db_mysql.cursor.execute(sql_sentiment_monthly)
-db_mysql.cursor.execute(sql_sentiment_yearly)
-db_mysql.cursor.execute(sql_sentiment_three_yearly)
-db_mysql.cursor.execute(sql_sentiment_five_yearly)
+db_mysql.cursor.execute(sql_social_volume_daily_set_index_source)
+db_mysql.cursor.execute(sql_social_volume_weekly_set_index_source)
+db_mysql.cursor.execute(sql_social_volume_monthly_set_index_source)
+db_mysql.cursor.execute(sql_social_volume_yearly_set_index_source)
+db_mysql.cursor.execute(sql_social_volume_three_yearly_set_index_source)
+
+db_mysql.cursor.execute(sql_sentiment_view)
+db_mysql.cursor.execute(sql_sentiment_view_set_index)
+db_mysql.cursor.execute(sql_sentiment_view_set_index_source)
+db_mysql.cursor.execute(sql_sentiment_view_set_index_stock_code)
+db_mysql.cursor.execute(sql_sentiment_view_set_index_stock_name)
+db_mysql.cursor.execute(sql_sentiment_view_set_index_category)
+db_mysql.cursor.execute(sql_sentiment_view_set_index_source_stock_code)
+db_mysql.cursor.execute(sql_sentiment_view_set_index_day_source_stock_code)
 
 db_mysql.cursor.execute(sql_stock_price_daily)
-db_mysql.cursor.execute(sql_stock_price_weekly)
-db_mysql.cursor.execute(sql_stock_price_monthly)
-db_mysql.cursor.execute(sql_stock_price_yearly)
-db_mysql.cursor.execute(sql_stock_price_three_yearly)
-db_mysql.cursor.execute(sql_stock_price_five_yearly)
+db_mysql.cursor.execute(sql_stock_price_view_set_index)
+db_mysql.cursor.execute(sql_stock_price_view_set_index_stock_code)
+db_mysql.cursor.execute(sql_stock_price_view_set_index_stock_name)
+db_mysql.cursor.execute(sql_stock_price_view_set_index_category)
+db_mysql.cursor.execute(sql_stock_price_view_set_index_source_stock_code)
+db_mysql.cursor.execute(sql_stock_price_view_set_index_day_source_stock_code)
+
+db_mysql.close_db()
