@@ -1,34 +1,77 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Sentimentrader</title>
-    <!-- form CSS -->
-    <link href="/static/css/login.css" rel="stylesheet">
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <!-- form CSS -->
+    <link rel="stylesheet" href="/static/css/login.css">
+  <title>Sign page</title>
 </head>
 <body>
-<div class="container" id="registration-form">
-        <div class="image"></div>
-        <div class="frm">
-            <h1>Sign in / Sign up</h1>
-            <form action="/home.html" enctype="application/x-www-form-urlencoded" method=GET>
-                <div class="form-group">
-                    <label for="username">使用者名稱</label>
-                    <input type="text" class="form-control" id="username" placeholder="小於16個英文字">
-                </div>
-                <div class="form-group">
-                    <label for="email">使用者信箱</label>
-                    <input type="email" class="form-control" id="email" placeholder="請以英文半形字母輸入電郵地址">
-                </div>
-                <div class="form-group">
-                    <label for="pwd">密碼</label>
-                    <input type="password" class="form-control" id="pwd" placeholder="小於16個英文＋數字">
-                </div>
-                <div class="form-group">
-                    <button type="submit" class="btn btn-success btn-lg float-left">Log in</button>
-                </div>
-            </form>
-        </div>
+
+<div class="container d-flex flex-row d-flex justify-content-center d-flex align-items-center mt-5">
+    <div class="image col-4" style="height: 500px">
+        <img src="/static/img/bearbull.jpeg" alt="" style="height: 500px">
     </div>
+
+    <div class="form col-4 bg-white" style="height: 500px">
+        <div class="form-all mt-3">
+          <div class="d-flex flex-column align-items-center col-12" id="singUpTable">
+            <h2>SignUp</h2>
+            <form action="/signup" method="POST">
+              <div class="form-group mt-2">
+                <label for="name">Name</label>
+                <input type="text" class="form-control" name="name" id="name">
+              </div>
+              <div class="form-group mt-2">
+                <label for="email">Email</label>
+                <input type="text" class="form-control" name="email" id="email">
+              </div>
+              <div class="form-group mt-2">
+                <label for="pwd">Password</label>
+                <input type="password" class="form-control" name="pwd" id="pwd">
+              </div>
+              <div class="form-group mt-2">
+                <label for="confirm_pwd">Confirm Password</label>
+                <input type="password" class="form-control" name="con-pwd" id="confirm_pwd">
+              </div>
+                <br>
+              <button class="btn btn-primary" id="signup-btn" type="submit" value="signup">signup</button>
+
+            </form>
+            <p class="show-page" id="loginF" onclick="switchToSignIn()">Already have an Account? SignIn</p>
+          </div>
+
+          <div class="d-none flex-column align-items-center col-12" id="signInTable">
+            <h2>SignIn</h2>
+            <form action="/signin" method="POST">
+              <div class="form-group mt-2">
+                <label for="email">Email</label>
+                <input type="text" class="form-control" name="email">
+              </div>
+              <div class="form-group mt-2">
+                <label for="pwd">Password</label>
+                <input type="password" class="form-control" name="pwd">
+              </div>
+                <br>
+              <button class="btn btn-primary" id="signin-btn" type="submit" value="signup">signin</button>
+            </form>
+            <p class="show-page" id="signupF" onclick="switchToSignUp()">Don't have an account yet? Signup</p>
+          </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- The JS SDK Login Button -->
+
+  <div class="fb-login-button" data-width="" data-size="large" data-button-type="continue_with" data-layout="default" data-auto-logout-link="true" data-use-continue-as="true"></div>
+ <!--fb-root↓-->
+  <div id="fb-root"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+  <script src="/static/js/login.js"></script>
+
 </body>
-</html>

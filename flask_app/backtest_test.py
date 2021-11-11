@@ -1,8 +1,6 @@
 import pandas as pd #引入pandas讀取股價歷史資料CSV檔
 import requests
-import pandas as pd
 from io import StringIO
-import datetime
 import os
 #visual
 import matplotlib.pyplot as plt
@@ -26,16 +24,16 @@ RDSPORT = 3306
 
 form = {'category': 'sail',
             'discount': '40',
-            'end_date': '2020-11-10',
+            'end_date': '2021-11-10',
             'money': '500',
             'sentiment_para_less': '40',
             'sentiment_para_more': '60',
             'source': 'ptt',
-            'start_date': '2018-01-01',
-            'stock_code': '2603',
+            'start_date': '2020-01-01',
+            'stock_code': '2317',
             'strategy_in': 'increase_in',
             'strategy_in_para': '1',
-            'strategy_line': 'none_line',
+            'strategy_line': 'kdj_line',
             'strategy_out': 'decrease_out',
             'strategy_out_para': '1',
             'strategy_sentiment': 'daily_sentiment_pass'}
@@ -76,11 +74,17 @@ print((float(sentiment_para_less) / 100 * 10 - 5))
 source = form['source']
 print('source:', source)
 # your fund
-money = form['money']
-print('money:', money)
+set_money = int(form['money'])
+print('set_money:', set_money)
 # your fee discount
-discount = form['discount']
+discount = float(form['discount'])
 print('discount:', discount)
+
+duration_day = (datetime.fromisoformat(end_date) - datetime.fromisoformat(start_date))
+print('duration_day: ', duration_day)
+duration_year = round(duration_day.days / 365, 2)
+print('duration_year: ', duration_year)
+print(type(duration_year))
 
 engine = create_engine("mysql+pymysql://{user}:{pw}@{host}/{db}"
                            .format(user=DBUSER,
@@ -150,6 +154,7 @@ print(df)
 
 
 # 進場時機判定
+money = set_money
 if strategy_line == 'macd_line':
     pass
 
@@ -173,19 +178,20 @@ elif strategy_line == 'kdj_line':
         sell = []
         buy_count = 0
         for i in range(len(df)):
-            if df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
+            if money >= df["Close"][i] and df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
                 buy.append(1)
                 sell.append(0)
                 buy_count += 1
-
+                money -= df["Close"][i]
             elif buy_count > 0 and df["B_K"][i] > df["B_D"][i] and df["K"][i] < df["D"][i]:
                 sell.append(-1)
                 buy.append(0)
                 buy_count -= 1
-
+                money += df["Close"][i]
             else:
                 buy.append(0)
                 sell.append(0)
+
 
         df["buy"] = buy
         df["sell"] = sell
@@ -197,16 +203,16 @@ elif strategy_line == 'kdj_line':
         buy_count = 0
         for i in range(len(df)):
             if df['avg_valence'][i] < (float(sentiment_para_more) / 100 * 10 - 5) and df['avg_valence'][i] > (float(sentiment_para_less) / 100 * 10 - 5):
-                if df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
+                if money >= df["Close"][i] and df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
                     buy.append(1)
                     sell.append(0)
                     buy_count += 1
-
+                    money -= df["Close"][i]
                 elif buy_count > 0 and df["B_K"][i] > df["B_D"][i] and df["K"][i] < df["D"][i]:
                     sell.append(-1)
                     buy.append(0)
                     buy_count -= 1
-
+                    money += df["Close"][i]
                 else:
                     buy.append(0)
                     sell.append(0)
@@ -224,16 +230,16 @@ elif strategy_line == 'kdj_line':
         buy_count = 0
         for i in range(len(df)):
             if i > 0 and df['avg_valence'][i] < 0 and df['avg_valence'][i - 1] > 0:
-                if df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
+                if money >= df["Close"][i] and df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
                     buy.append(1)
                     sell.append(0)
                     buy_count += 1
-
+                    money -= df["Close"][i]
                 elif buy_count > 0 and df["B_K"][i] > df["B_D"][i] and df["K"][i] < df["D"][i]:
                     sell.append(-1)
                     buy.append(0)
                     buy_count -= 1
-
+                    money += df["Close"][i]
                 else:
                     buy.append(0)
                     sell.append(0)
@@ -251,22 +257,23 @@ elif strategy_line == 'kdj_line':
         buy_count = 0
         for i in range(len(df)):
             if i > 0 and df['avg_valence'][i] > 0 and df['avg_valence'][i - 1] < 0:
-                if df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
+                if money >= df["Close"][i] and df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
                     buy.append(1)
                     sell.append(0)
                     buy_count += 1
-
+                    money -= df["Close"][i]
                 elif buy_count > 0 and df["B_K"][i] > df["B_D"][i] and df["K"][i] < df["D"][i]:
                     sell.append(-1)
                     buy.append(0)
                     buy_count -= 1
-
+                    money += df["Close"][i]
                 else:
                     buy.append(0)
                     sell.append(0)
             else:
                 buy.append(0)
                 sell.append(0)
+
 
         df["buy"] = buy
         df["sell"] = sell
@@ -282,16 +289,16 @@ else:
             buy_count = 0
             for i in range(len(df)):
                 if i > 1:
-                    if df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
+                    if money >= df["Close"][i] and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
                         buy.append(1)
                         sell.append(0)
                         buy_count += 1
-
+                        money -= df["Close"][i]
                     elif buy_count > 0 and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
                         sell.append(-1)
                         buy.append(0)
                         buy_count -= 1
-
+                        money += df["Close"][i]
                     else:
                         buy.append(0)
                         sell.append(0)
@@ -308,16 +315,16 @@ else:
             for i in range(len(df)):
                 if df['avg_valence'][i] < (float(sentiment_para_more) / 100 * 10 - 5) and df['avg_valence'][i] > (
                         float(sentiment_para_less) / 100 * 10 - 5):
-                    if df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
+                    if money >= df["Close"][i] and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
                         buy.append(1)
                         sell.append(0)
                         buy_count += 1
-
+                        money -= df["Close"][i]
                     elif buy_count > 0 and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
                         sell.append(-1)
                         buy.append(0)
                         buy_count -= 1
-
+                        money += df["Close"][i]
                     else:
                         buy.append(0)
                         sell.append(0)
@@ -335,22 +342,19 @@ else:
             buy_count = 0
             for i in range(len(df)):
                 if i > 0 and df['avg_valence'][i] < 0 and df['avg_valence'][i - 1] > 0:
-                    if df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
+                    if money >= df["Close"][i] and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
                         buy.append(1)
                         sell.append(0)
                         buy_count += 1
-
+                        money -= df["Close"][i]
                     elif buy_count > 0 and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
                         sell.append(-1)
                         buy.append(0)
                         buy_count -= 1
-
+                        money += df["Close"][i]
                     else:
                         buy.append(0)
                         sell.append(0)
-                else:
-                    buy.append(0)
-                    sell.append(0)
 
             df["buy"] = buy
             df["sell"] = sell
@@ -362,16 +366,16 @@ else:
             buy_count = 0
             for i in range(len(df)):
                 if i > 0 and df['avg_valence'][i] > 0 and df['avg_valence'][i - 1] < 0:
-                    if df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
+                    if money >= df["Close"][i] and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
                         buy.append(1)
                         sell.append(0)
                         buy_count += 1
-
+                        money -= df["Close"][i]
                     elif buy_count > 0 and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
                         sell.append(-1)
                         buy.append(0)
                         buy_count -= 1
-
+                        money += df["Close"][i]
                     else:
                         buy.append(0)
                         sell.append(0)
@@ -391,24 +395,25 @@ else:
             buy_count = 0
             for i in range(len(df)):
                 if i > 1:
-                    if df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
+                    if money >= df["Close"][i] and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
                             df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
                         buy.append(1)
                         sell.append(0)
                         buy_count += 1
-
+                        money -= df["Close"][i]
                     elif buy_count > 0 and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and \
                             df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
                         sell.append(-1)
                         buy.append(0)
                         buy_count -= 1
-
+                        money += df["Close"][i]
                     else:
                         buy.append(0)
                         sell.append(0)
                 else:
                     buy.append(0)
                     sell.append(0)
+
             df["buy"] = buy
             df["sell"] = sell
         # increase_out + sentiment over less pass
@@ -419,18 +424,18 @@ else:
             for i in range(len(df)):
                 if df['avg_valence'][i] < (float(sentiment_para_more) / 100 * 10 - 5) and df['avg_valence'][i] > (
                         float(sentiment_para_less) / 100 * 10 - 5):
-                    if df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
+                    if money >= df["Close"][i] and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
                             df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
                         buy.append(1)
                         sell.append(0)
                         buy_count += 1
-
+                        money -= df["Close"][i]
                     elif buy_count > 0 and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and \
                             df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
                         sell.append(-1)
                         buy.append(0)
                         buy_count -= 1
-
+                        money += df["Close"][i]
                     else:
                         buy.append(0)
                         sell.append(0)
@@ -448,18 +453,18 @@ else:
             buy_count = 0
             for i in range(len(df)):
                 if i > 0 and df['avg_valence'][i] < 0 and df['avg_valence'][i - 1] > 0:
-                    if df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
+                    if money >= df["Close"][i] and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
                             df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
                         buy.append(1)
                         sell.append(0)
                         buy_count += 1
-
+                        money -= df["Close"][i]
                     elif buy_count > 0 and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and \
                             df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
                         sell.append(-1)
                         buy.append(0)
                         buy_count -= 1
-
+                        money += df["Close"][i]
                     else:
                         buy.append(0)
                         sell.append(0)
@@ -477,18 +482,18 @@ else:
             buy_count = 0
             for i in range(len(df)):
                 if i > 0 and df['avg_valence'][i] > 0 and df['avg_valence'][i - 1] < 0:
-                    if df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
+                    if money >= df["Close"][i] and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
                             df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
                         buy.append(1)
                         sell.append(0)
                         buy_count += 1
-
+                        money -= df["Close"][i]
                     elif buy_count > 0 and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and \
                             df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
                         sell.append(-1)
                         buy.append(0)
                         buy_count -= 1
-
+                        money += df["Close"][i]
                     else:
                         buy.append(0)
                         sell.append(0)
@@ -507,7 +512,7 @@ print(df)
 buy_mark = []
 for i in range(len(df)):
     if df["buy"][i] == 1:
-        buy_mark.append(df["High"][i] + 15)
+        buy_mark.append(df["High"][i] + 10)
     else:
         buy_mark.append(np.nan)
 df["buy_mark"] = buy_mark
@@ -517,22 +522,44 @@ df["buy_mark"] = buy_mark
 sell_mark = []
 for i in range(len(df)):
     if df["sell"][i] == -1:
-        sell_mark.append(df["Low"][i] - 15)
+        sell_mark.append(df["Low"][i] - 10)
     else:
         sell_mark.append(np.nan)
 df["sell_mark"] = sell_mark
 
 
+if strategy_line == 'kdj_line' and strategy_sentiment != 'none_pass':
+    add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
+                mpf.make_addplot(df["K"], panel=2, color="r"),
+                mpf.make_addplot(df["D"], panel=2, color="g"),
+                mpf.make_addplot(df["avg_valence"], panel=2, color="b")
+                ]
 
-# df.index = pd.DatetimeIndex(df.index)
-# stock_id = "{}.TW".format(stock_code)
-# mc = mpf.make_marketcolors(up='r', down='g', inherit=True)
-# s  = mpf.make_mpf_style(base_mpf_style='yahoo', marketcolors=mc)
-# add_plot =[mpf.make_addplot(df["buy_mark"],scatter=True, markersize=100, marker='v', color='r'),
-#            mpf.make_addplot(df["sell_mark"],scatter=True, markersize=100, marker='^', color='g'),
-#            mpf.make_addplot(df["avg_valence"],panel= 2,color="g")]
-# kwargs = dict(type='candle', volume = True,figsize=(20, 10),title = stock_id, style=s,addplot=add_plot)
-# mpf.plot(df, **kwargs)
+elif strategy_line == 'kdj_line' and strategy_sentiment == 'none_pass':
+    add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
+                mpf.make_addplot(df["K"], panel=2, color="r"),
+                mpf.make_addplot(df["D"], panel=2, color="g")
+                ]
+
+elif strategy_sentiment != 'none_pass':
+    add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
+                mpf.make_addplot(df["avg_valence"], panel=2, color="b")
+                ]
+
+else:
+    add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),]
+
+df.index = pd.DatetimeIndex(df.index)
+stock_id = "{}.TW".format(stock_code)
+mc = mpf.make_marketcolors(up='r', down='g', inherit=True)
+s = mpf.make_mpf_style(base_mpf_style='yahoo', marketcolors=mc)
+kwargs = dict(type='candle', volume=True, figsize=(20, 10),title = stock_id, style=s, addplot=add_plot)
+filename = stock_code + '_' + datetime.today().strftime('%Y-%m-%d')
+mpf.plot(df, **kwargs, savefig=filename)
 
 
 
@@ -542,9 +569,52 @@ sell1 = df.loc[df["sell"] == -1]
 print("買進次數 : " + str(len(buy1)) + "次")
 print("賣出次數 : " + str(len(sell1)) + "次")
 
+sell1 = sell1.append(df[-1:])
+print(sell1.tail())
 
+money = set_money
+print('資金: ', money)
+for i in range(len(sell1)-1):
+    money = money - buy1["Close"][i] + sell1['Close'][i] - ((buy1["Close"][i] + sell1["Close"][i]) * 0.001425 * discount / 100)
 
+final_money = money + (len(buy1) - len(sell1)) * df["Close"][-1]
 
+print('最後所得金額: ', final_money)
+print('淨收益: ', final_money - set_money)
+print('總報酬率(淨收益) = ', (final_money - set_money) / set_money * 100, '%')
 
+return_rate = []
+for i in range(len(buy1)):
+    if i < len(sell1):
+        rate = round((sell1["Close"][i] - buy1["Close"][i]) / buy1["Close"][i] * 100, 2)
+        return_rate.append(rate)
+    # >= len(sell1)
+    else:
+        rate = round((df["Close"][-1] - buy1["Close"][i]) / buy1["Close"][i] * 100, 2)
+        return_rate.append(rate)
 
+print('每次交易(買+賣)報酬率:', return_rate)
 
+return_all = sorted(return_rate, reverse=True)
+print('每次交易報酬率排序:', return_all)
+print("該策略最高報酬為 : " + str(return_all[0]) + " %")
+print("該策略最低報酬為 : " + str(return_all[-1]) + " %")
+
+win = len([i for i in return_rate if i > 0])
+lose = len([i for i in return_rate if i <= 0])
+sum_t = len(return_rate)
+print("總獲利次數 : " + str(win) + "次")
+print("總虧損次數 : " + str(lose) + "次")
+print("總交易次數 : " + str(win + lose) + "次")
+print("勝率為 : " + str(round(win / sum_t * 100, 2)) + "%")
+
+cum_return = [0]
+for i in range(len(return_rate)):
+    cum = round(return_rate[i] + cum_return[i], 2)
+    cum_return.append(cum)
+print('累積報酬率:', cum_return)
+print("該策略平均每次報酬為 : " + str(round(cum_return[-1]/(win + lose), 2)) + "%")
+
+# 年化報酬率(%) = (總報酬率+1)^(1/年數) -1
+year_reward = ((((final_money - set_money) / set_money) + 1) ** (1/duration_year) - 1) * 100
+print('年化報酬率: ', year_reward, '%')
