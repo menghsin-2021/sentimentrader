@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta
 import json
 from pprint import pprint
-from flask import Flask, render_template, request, flash, send_from_directory, abort, Response
+from flask import Flask, render_template, request, flash, send_from_directory, abort, Response, make_response, redirect, url_for
 import config
 import model_mysql
 
@@ -12,12 +12,18 @@ import mplfinance as mpf
 from sqlalchemy import create_engine
 import talib
 import numpy as np
-
+from PIL import Image
+import io
 
 # user
 from hashlib import pbkdf2_hmac
 # token
 import jwt
+
+from photo_downloader_uploader import upload_file
+bucket_name = 'sentimentraderbucket'
+object_path = 'backtest'
+
 
 
 # sever var
@@ -34,13 +40,48 @@ DBNAME = config.DBNAME
 TABLES = "daily_stock_price"
 RDSPORT = 3306
 
+# S3 photo path
+S3_PHOTO_PATH = config.S3_PHOTO_PATH
+
 # 建立 flask 實體
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
 
+def get_cookie_check():
+    try:
+        token = request.cookies.get('token')
+        print(token)
+    except:
+        render_template('login.html')
+    else:
+        try:
+            decoded_token = jwt.decode(token, SECRET_KEY, algorithms=["HS256"], issuer='stock-sentimentrader.com', audience='www.stock-sentimentrader.com', verify_iss=3600)
+            user_email = decoded_token['sub']
+            print(decoded_token)
+            # print(user_email)
+
+        except jwt.exceptions.InvalidSignatureError:
+            return Response('Signature verification failed', status=403)
+        except jwt.exceptions.ExpiredSignatureError:
+            return Response('Signature has expired', status=403)
+        except jwt.exceptions.InvalidIssuerError:
+            return Response('Invalid issuer', status=403)
+        except jwt.exceptions.InvalidAudienceError:
+            return Response('Invalid audience', status=403)
+        except:
+              return False
+        else:
+            sql_uid = "SELECT `id` as `uid` \
+                                   FROM `user` \
+                                   WHERE `email` = '{}'".format(user_email)
+            db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
+            uid = db_mysql.query_tb_one(sql_uid)[0]
+            print(uid)
+            return uid
+
 def get_today():
-    today_strftime = datetime.today().strftime('%Y%m%d')
-    yesterday_strftime = (datetime.today() - timedelta(days=1)).strftime('%Y%m%d')
+    today_strftime = datetime.today().strftime('%Y-%m-%d')
+    yesterday_strftime = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d')
 
     return today_strftime, yesterday_strftime
 
@@ -152,9 +193,16 @@ def create_sentiment_json(range, result):
 def login():
     return render_template('login.html')
 
+
 @app.route('/home.html', methods=['GET'])
 def home():
-    return render_template('home.html')
+    uid = get_cookie_check()
+    print(uid)
+    if not uid:
+        return render_template('login.html')
+    else:
+        return render_template('home.html')
+
 
 @app.route('/social_volume.html', methods=['GET'])
 def social_volume():
@@ -308,725 +356,809 @@ def single_stock_sentiment():
 
 @app.route('/strategy.html', methods=['GET'])
 def strategy():
-    return render_template('strategy.html')
+    uid = get_cookie_check()
+    print(uid)
+    if not uid:
+        return render_template('login.html')
+    else:
+        return render_template('strategy.html')
+
+
 
 
 @app.route('/send_strategy', methods=['POST'])
 def send_strategy():
-    form = request.form.to_dict()
-    # form = {'category': 'sail',
-    #         'discount': '40',
-    #         'end_date': '2020-11-10',
-    #         'money': '500',
-    #         'sentiment_para_less': '40',
-    #         'sentiment_para_more': '60',
-    #         'source': 'ptt',
-    #         'start_date': '2018-01-01',
-    #         'stock_code': '2603',
-    #         'strategy_in': 'increase_in',
-    #         'strategy_in_para': '3',
-    #         'strategy_line': 'none_line',
-    #         'strategy_out': 'decrease_out',
-    #         'strategy_out_para': '3',
-    #         'strategy_sentiment': 'daily_sentiment_pass'}
-    pprint(form)
-    # category and stock_code
-    category = form['category']
-    stock_code = form['stock_code']
-    print('category:', category)
-    print('stock_code:', stock_code)
-    # duration
-    start_date = form['start_date']
-    end_date = form['end_date']
-    print('start_date:', start_date)
-    print('end_date:', end_date)
-    # KD, MACD, or custom
-    strategy_line = form['strategy_line']
-    print('strategy_line:', strategy_line)
-    # market in: custom para
-    strategy_in = form['strategy_in']
-    try:
-        strategy_in_para = float(form['strategy_in_para'])
-    except:
-        strategy_in_para = 1
-    print('strategy_in:', strategy_in)
-    print('strategy_in_para:', strategy_in_para)
-    # market out: custom para
-    strategy_out = form['strategy_out']
-    try:
-        strategy_out_para = float(form['strategy_out_para'])
-    except:
-        strategy_out_para = 1
-    print('strategy_out:', strategy_out)
-    print('strategy_out_para:', strategy_out_para)
-    # transition stop
-    strategy_sentiment = form['strategy_sentiment']
-    try:
-        sentiment_para_less = float(form['sentiment_para_less'])
-        sentiment_para_more = float(form['sentiment_para_more'])
-    except:
-        sentiment_para_more = 60
-        sentiment_para_less = 40
-    print('strategy_sentiment:', strategy_sentiment)
-    print('sentiment_para_less:', sentiment_para_less)
-    print('sentiment_para_more:', sentiment_para_more)
-    # print((float(sentiment_para_more) / 100 * 10 - 5))
-    # print((float(sentiment_para_less) / 100 * 10 - 5))
-    # your fee discount
-    source = form['source']
-    print('source:', source)
-    # your fund
-    set_money = int(form['money'])
-    print('set_money:', set_money)
-    # your fee discount
-    discount = float(form['discount'])
-    print('discount:', discount)
-
-    duration_day = (datetime.fromisoformat(end_date) - datetime.fromisoformat(start_date))
-    print('duration_day: ', duration_day)
-    duration_year = round(duration_day.days / 365, 2)
-    print('duration_year: ', duration_year)
-    print(type(duration_year))
-
-    engine = create_engine("mysql+pymysql://{user}:{pw}@{host}/{db}"
-                           .format(user=DBUSER,
-                                   pw=DBPASSWORD,
-                                   db=DBNAME,
-                                   host=DBHOST))
-
-    connection = engine.connect()
-
-    # set date
-    start_date_datetime = datetime.fromisoformat(start_date)
-    end_date_datetime = datetime.fromisoformat(end_date)
-    print(start_date_datetime)
-    print(end_date_datetime)
-
-    resoverall_stock_price = connection.execute("SELECT DATE_FORMAT(date,'%%Y-%%m-%%d') AS Date, open AS Open, high AS High, \
-                                                 low AS Low, close AS Close, volume AS Volume \
-                                                 FROM sentimentrader.daily_stock_price \
-                                                 WHERE stock_code = '{}' \
-                                                 AND `date` BETWEEN '{}' and '{}' \
-                                                 ORDER BY `Date`".format(stock_code, start_date_datetime,
-                                                                         end_date_datetime))
-
-    # fetch stock price
-    df1 = pd.DataFrame(resoverall_stock_price.fetchall())
-    df1.columns = resoverall_stock_price.keys()
-
-    # create df1
-    df1 = df1.drop_duplicates(subset='Date')
-    df1.index = df1['Date']
-    df1_date_index = df1.drop(['Date'], axis=1)
-    print(df1_date_index)
-
-    # create df2 and concat
-    if strategy_sentiment == 'none_pass':
-        # 不需要 concate
-        df = df1_date_index
-
+    uid = get_cookie_check()
+    print(uid)
+    if not uid:
+        return render_template('login.html')
     else:
-        # 和 sentiment concate
-        resoverall_sentiment = connection.execute("SELECT DATE_FORMAT(date,'%%Y-%%m-%%d') AS Date, (avg_valence - 5) as avg_valence, (avg_arousal - 5) as avg_arousal, sum_sentiment \
-                                    FROM sentimentrader.daily_sentiment \
-                                    WHERE source = '{}' \
-                                    AND stock_code = '{}' \
-                                    AND `date` BETWEEN '{}' and '{}' \
-                                    ORDER BY `Date`".format(source, stock_code, start_date_datetime, end_date_datetime))
-
-        df2 = pd.DataFrame(resoverall_sentiment.fetchall())
-        df2.columns = resoverall_sentiment.keys()
-
-        df2 = df2.drop_duplicates(subset='Date')
-        df2.index = df2['Date']
-        df2_date_index = df2.drop(['Date'], axis=1)
-
-        df = pd.concat([df1_date_index, df2_date_index], axis=1)
-        df = df.reindex(df1_date_index.index)
-        df = df.dropna()
-
-    # change astype
-    df['Volume'] = df['Volume'].astype('int')
-    print(df)
-
-    # 進場時機判定
-    money = set_money
-    if strategy_line == 'macd_line':
-        pass
-
-    # KD line
-    elif strategy_line == 'kdj_line':
-        df["K"], df["D"] = talib.STOCH(df['High'],
-                                       df['Low'],
-                                       df['Close'],
-                                       fastk_period=9,
-                                       slowk_period=3,
-                                       slowk_matype=1,
-                                       slowd_period=3,
-                                       slowd_matype=1)
-
-        df["B_K"] = df["K"].shift(1)
-        df["B_D"] = df["D"].shift(1)
-
-        # only KD
-        if strategy_sentiment == 'none_pass':
-            buy = []
-            sell = []
-            buy_count = 0
-            for i in range(len(df)):
-                if money >= df["Close"][i] and df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
-                    buy.append(1)
-                    sell.append(0)
-                    buy_count += 1
-                    money -= df["Close"][i]
-                elif buy_count > 0 and df["B_K"][i] > df["B_D"][i] and df["K"][i] < df["D"][i]:
-                    sell.append(-1)
-                    buy.append(0)
-                    buy_count -= 1
-                    money += df["Close"][i]
-                else:
-                    buy.append(0)
-                    sell.append(0)
-
-            df["buy"] = buy
-            df["sell"] = sell
-
-        # KD + sentiment over less
-        elif strategy_sentiment == 'daily_sentiment_pass':
-            buy = []
-            sell = []
-            buy_count = 0
-            for i in range(len(df)):
-                if df['avg_valence'][i] < (float(sentiment_para_more) / 100 * 10 - 5) and df['avg_valence'][i] > (
-                        float(sentiment_para_less) / 100 * 10 - 5):
-                    if money >= df["Close"][i] and df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
-                        buy.append(1)
-                        sell.append(0)
-                        buy_count += 1
-                        money -= df["Close"][i]
-                    elif buy_count > 0 and df["B_K"][i] > df["B_D"][i] and df["K"][i] < df["D"][i]:
-                        sell.append(-1)
-                        buy.append(0)
-                        buy_count -= 1
-                        money += df["Close"][i]
-                    else:
-                        buy.append(0)
-                        sell.append(0)
-                else:
-                    buy.append(0)
-                    sell.append(0)
-
-            print('money', money)
-            df["buy"] = buy
-            df["sell"] = sell
-
-        # KD + sentiment to negative
-        elif strategy_sentiment == 'to_negative_pass':
-            buy = []
-            sell = []
-            buy_count = 0
-            for i in range(len(df)):
-                if i > 0:
-                    if money >= df["Close"][i] and df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
-                        buy.append(1)
-                        sell.append(0)
-                        buy_count += 1
-                        money -= df["Close"][i]
-                    elif buy_count > 0 and df["B_K"][i] > df["B_D"][i] and df["K"][i] < df["D"][i]:
-                        sell.append(-1)
-                        buy.append(0)
-                        buy_count -= 1
-                        money += df["Close"][i]
-                    else:
-                        buy.append(0)
-                        sell.append(0)
-
-                elif df['avg_valence'][i] < 0 and df['avg_valence'][i - 1] > 0:
-                    buy.append(0)
-                    sell.append(0)
-
-                else:
-                    buy.append(0)
-                    sell.append(0)
-
-            df["buy"] = buy
-            df["sell"] = sell
-
-        # KD + sentiment to positive
-        elif strategy_sentiment == 'to_positive_pass':
-            buy = []
-            sell = []
-            buy_count = 0
-            for i in range(len(df)):
-                if i > 0:
-                    if money >= df["Close"][i] and df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
-                        buy.append(1)
-                        sell.append(0)
-                        buy_count += 1
-                        money -= df["Close"][i]
-                    elif buy_count > 0 and df["B_K"][i] > df["B_D"][i] and df["K"][i] < df["D"][i]:
-                        sell.append(-1)
-                        buy.append(0)
-                        buy_count -= 1
-                        money += df["Close"][i]
-                    else:
-                        buy.append(0)
-                        sell.append(0)
-
-                elif df['avg_valence'][i] > 0 and df['avg_valence'][i - 1] < 0:
-                    buy.append(0)
-                    sell.append(0)
-                else:
-                    buy.append(0)
-                    sell.append(0)
-
-            df["buy"] = buy
-            df["sell"] = sell
-
-
-    # 使用者自訂 strategy_line == 'none_line'
-    else:
-        if strategy_in == 'increase_in':
-            # only incease_in
-            if strategy_sentiment == 'none_pass':
-                buy = []
-                sell = []
-                buy_count = 0
-                for i in range(len(df)):
-                    if i > 1:
-                        if money >= df["Close"][i] and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][
-                            i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
-                            buy.append(1)
-                            sell.append(0)
-                            buy_count += 1
-                            money -= df["Close"][i]
-                        elif buy_count > 0 and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
-                                df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
-                            sell.append(-1)
-                            buy.append(0)
-                            buy_count -= 1
-                            money += df["Close"][i]
-                        else:
-                            buy.append(0)
-                            sell.append(0)
-                    else:
-                        buy.append(0)
-                        sell.append(0)
-                df["buy"] = buy
-                df["sell"] = sell
-            # increase_in + sentiment over less pass
-            elif strategy_sentiment == 'daily_sentiment_pass':
-                buy = []
-                sell = []
-                buy_count = 0
-                for i in range(len(df)):
-                    if df['avg_valence'][i] < (float(sentiment_para_more) / 100 * 10 - 5) and df['avg_valence'][i] > (
-                            float(sentiment_para_less) / 100 * 10 - 5):
-                        if money >= df["Close"][i] and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][
-                            i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
-                            buy.append(1)
-                            sell.append(0)
-                            buy_count += 1
-                            money -= df["Close"][i]
-                        elif buy_count > 0 and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
-                                df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
-                            sell.append(-1)
-                            buy.append(0)
-                            buy_count -= 1
-                            money += df["Close"][i]
-                        else:
-                            buy.append(0)
-                            sell.append(0)
-                    else:
-                        buy.append(0)
-                        sell.append(0)
-
-                df["buy"] = buy
-                df["sell"] = sell
-
-            # increase_in + sentiment to negative
-            elif strategy_sentiment == 'to_negative_pass':
-                buy = []
-                sell = []
-                buy_count = 0
-                for i in range(len(df)):
-                    if i > 0:
-                        if money >= df["Close"][i] and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][
-                            i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
-                            buy.append(1)
-                            sell.append(0)
-                            buy_count += 1
-                            money -= df["Close"][i]
-                        elif buy_count > 0 and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
-                                df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
-                            sell.append(-1)
-                            buy.append(0)
-                            buy_count -= 1
-                            money += df["Close"][i]
-                        else:
-                            buy.append(0)
-                            sell.append(0)
-                    elif df['avg_valence'][i] < 0 and df['avg_valence'][i - 1] > 0:
-                        buy.append(0)
-                        sell.append(0)
-                    else:
-                        buy.append(0)
-                        sell.append(0)
-
-                df["buy"] = buy
-                df["sell"] = sell
-
-            # increase_in + sentiment to positive
-            elif strategy_sentiment == 'to_positive_pass':
-                buy = []
-                sell = []
-                buy_count = 0
-                for i in range(len(df)):
-                    if i > 0:
-                        if money >= df["Close"][i] and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][
-                            i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
-                            buy.append(1)
-                            sell.append(0)
-                            buy_count += 1
-                            money -= df["Close"][i]
-                        elif buy_count > 0 and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
-                                df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
-                            sell.append(-1)
-                            buy.append(0)
-                            buy_count -= 1
-                            money += df["Close"][i]
-                        else:
-                            buy.append(0)
-                            sell.append(0)
-                    elif df['avg_valence'][i] > 0 and df['avg_valence'][i - 1] < 0:
-                        buy.append(0)
-                        sell.append(0)
-                    else:
-                        buy.append(0)
-                        sell.append(0)
-
-                df["buy"] = buy
-                df["sell"] = sell
-
-        # strategy_in == 'increase_out'
-        else:
-            # only incease_out
-            if strategy_sentiment == 'none_pass':
-                buy = []
-                sell = []
-                buy_count = 0
-                for i in range(len(df)):
-                    if i > 1:
-                        if money >= df["Close"][i] and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][
-                            i - 1] and \
-                                df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
-                            buy.append(1)
-                            sell.append(0)
-                            buy_count += 1
-                            money -= df["Close"][i]
-                        elif buy_count > 0 and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and \
-                                df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
-                            sell.append(-1)
-                            buy.append(0)
-                            buy_count -= 1
-                            money += df["Close"][i]
-                        else:
-                            buy.append(0)
-                            sell.append(0)
-                    else:
-                        buy.append(0)
-                        sell.append(0)
-
-                df["buy"] = buy
-                df["sell"] = sell
-            # increase_out + sentiment over less pass
-            elif strategy_sentiment == 'daily_sentiment_pass':
-                buy = []
-                sell = []
-                buy_count = 0
-                for i in range(len(df)):
-                    if df['avg_valence'][i] < (float(sentiment_para_more) / 100 * 10 - 5) and df['avg_valence'][i] > (
-                            float(sentiment_para_less) / 100 * 10 - 5):
-                        if money >= df["Close"][i] and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][
-                            i - 1] and \
-                                df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
-                            buy.append(1)
-                            sell.append(0)
-                            buy_count += 1
-                            money -= df["Close"][i]
-                        elif buy_count > 0 and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and \
-                                df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
-                            sell.append(-1)
-                            buy.append(0)
-                            buy_count -= 1
-                            money += df["Close"][i]
-                        else:
-                            buy.append(0)
-                            sell.append(0)
-                    else:
-                        buy.append(0)
-                        sell.append(0)
-
-                df["buy"] = buy
-                df["sell"] = sell
-
-            # increase_out + sentiment to negative
-            elif strategy_sentiment == 'to_negative_pass':
-                buy = []
-                sell = []
-                buy_count = 0
-                for i in range(len(df)):
-                    if i > 0:
-                        if money >= df["Close"][i] and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][
-                            i - 1] and \
-                                df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
-                            buy.append(1)
-                            sell.append(0)
-                            buy_count += 1
-                            money -= df["Close"][i]
-                        elif buy_count > 0 and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and \
-                                df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
-                            sell.append(-1)
-                            buy.append(0)
-                            buy_count -= 1
-                            money += df["Close"][i]
-                        else:
-                            buy.append(0)
-                            sell.append(0)
-                    elif df['avg_valence'][i] < 0 and df['avg_valence'][i - 1] > 0:
-                        buy.append(0)
-                        sell.append(0)
-
-                    else:
-                        buy.append(0)
-                        sell.append(0)
-
-                df["buy"] = buy
-                df["sell"] = sell
-
-            # increase_out + sentiment to positive
-            elif strategy_sentiment == 'to_positive_pass':
-                buy = []
-                sell = []
-                buy_count = 0
-                for i in range(len(df)):
-                    if i > 0:
-                        if money >= df["Close"][i] and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][
-                            i - 1] and df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
-                            buy.append(1)
-                            sell.append(0)
-                            buy_count += 1
-                            money -= df["Close"][i]
-                        elif buy_count > 0 and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and \
-                                df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
-                            sell.append(-1)
-                            buy.append(0)
-                            buy_count -= 1
-                            money += df["Close"][i]
-                        else:
-                            buy.append(0)
-                            sell.append(0)
-
-                    elif df['avg_valence'][i] > 0 and df['avg_valence'][i - 1] < 0:
-                        buy.append(0)
-                        sell.append(0)
-
-                    else:
-                        buy.append(0)
-                        sell.append(0)
-
-                df["buy"] = buy
-                df["sell"] = sell
-
-    print(df)
-
-    # tag buy marker
-    buy_mark = []
-    for i in range(len(df)):
-        if df["buy"][i] == 1:
-            buy_mark.append(df["High"][i] + 10)
-        else:
-            buy_mark.append(np.nan)
-    df["buy_mark"] = buy_mark
-
-    # tag sell marker
-    sell_mark = []
-    for i in range(len(df)):
-        if df["sell"][i] == -1:
-            sell_mark.append(df["Low"][i] - 10)
-        else:
-            sell_mark.append(np.nan)
-    df["sell_mark"] = sell_mark
-
-    if len(buy_mark) > 0 and len(sell_mark) > 0:
-        if strategy_line == 'kdj_line' and strategy_sentiment != 'none_pass':
-            add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
-                        mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
-                        mpf.make_addplot(df["K"], panel=2, color="r"),
-                        mpf.make_addplot(df["D"], panel=2, color="g"),
-                        mpf.make_addplot(df["avg_valence"], panel=2, color="b")
-                        ]
-
-        elif strategy_line == 'kdj_line' and strategy_sentiment == 'none_pass':
-            add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
-                        mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
-                        mpf.make_addplot(df["K"], panel=2, color="r"),
-                        mpf.make_addplot(df["D"], panel=2, color="g")
-                        ]
-
-        elif strategy_sentiment != 'none_pass':
-            add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
-                        mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
-                        mpf.make_addplot(df["avg_valence"], panel=2, color="b")
-                        ]
-
-        else:
-            add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
-                        mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'), ]
-    else:
-        add_plot = None
-
-    if add_plot == None:
-        print('沒有交易點')
-        return render_template('strategy.html')
-    else:
+        form = request.form.to_dict()
+        pprint(form)
+        # category and stock_code
+        category = form['category']
+        stock_code = form['stock_code']
+        print('category:', category)
+        print('stock_code:', stock_code)
+        # duration
+        start_date = form['start_date']
+        end_date = form['end_date']
+        print('start_date:', start_date)
+        print('end_date:', end_date)
+        # KD, MACD, or custom
+        strategy_line = form['strategy_line']
+        print('strategy_line:', strategy_line)
+        # market in: custom para
+        strategy_in = form['strategy_in']
         try:
-            df.index = pd.DatetimeIndex(df.index)
-            stock_id = "{}.TW".format(stock_code)
-            mc = mpf.make_marketcolors(up='r', down='g', inherit=True)
-            s = mpf.make_mpf_style(base_mpf_style='yahoo', marketcolors=mc, rc={'font.size': 14})
-            kwargs = dict(type='candle', volume=True, figsize=(20, 10), title=stock_id, style=s, addplot=add_plot)
-            filename = stock_code + '_' + datetime.today().strftime('%Y-%m-%d')
-            path = os.path.join("flask_app/static/img/report", filename)
-            mpf.plot(df, **kwargs, savefig=path)
-            print(filename)
-            print(path)
+            strategy_in_para = float(form['strategy_in_para'])
         except:
+            strategy_in_para = 1
+        print('strategy_in:', strategy_in)
+        print('strategy_in_para:', strategy_in_para)
+        # market out: custom para
+        strategy_out = form['strategy_out']
+        try:
+            strategy_out_para = float(form['strategy_out_para'])
+        except:
+            strategy_out_para = 1
+        print('strategy_out:', strategy_out)
+        print('strategy_out_para:', strategy_out_para)
+        # transition stop
+        strategy_sentiment = form['strategy_sentiment']
+        try:
+            sentiment_para_less = float(form['sentiment_para_less'])
+            sentiment_para_more = float(form['sentiment_para_more'])
+        except:
+            sentiment_para_more = 60
+            sentiment_para_less = 40
+        print('strategy_sentiment:', strategy_sentiment)
+        print('sentiment_para_less:', sentiment_para_less)
+        print('sentiment_para_more:', sentiment_para_more)
+        # print((float(sentiment_para_more) / 100 * 10 - 5))
+        # print((float(sentiment_para_less) / 100 * 10 - 5))
+        # your fee discount
+        source = form['source']
+        print('source:', source)
+        # your fund
+        set_money = int(form['money'])
+        print('set_money:', set_money)
+        # your fee discount
+        discount = float(form['discount'])
+        print('discount:', discount)
+
+        duration_day = (datetime.fromisoformat(end_date) - datetime.fromisoformat(start_date))
+        print('duration_day: ', duration_day)
+        duration_year = round(duration_day.days / 365, 2)
+        print('duration_year: ', duration_year)
+        print(type(duration_year))
+
+        engine = create_engine("mysql+pymysql://{user}:{pw}@{host}/{db}"
+                               .format(user=DBUSER,
+                                       pw=DBPASSWORD,
+                                       db=DBNAME,
+                                       host=DBHOST))
+
+        connection = engine.connect()
+
+        # set date
+        start_date_datetime = datetime.fromisoformat(start_date)
+        end_date_datetime = datetime.fromisoformat(end_date)
+        print(start_date_datetime)
+        print(end_date_datetime)
+
+        resoverall_stock_price = connection.execute("SELECT DATE_FORMAT(date,'%%Y-%%m-%%d') AS Date, open AS Open, high AS High, \
+                                                     low AS Low, close AS Close, volume AS Volume \
+                                                     FROM sentimentrader.daily_stock_price \
+                                                     WHERE stock_code = '{}' \
+                                                     AND `date` BETWEEN '{}' and '{}' \
+                                                     ORDER BY `Date`".format(stock_code, start_date_datetime,
+                                                                             end_date_datetime))
+
+        # fetch stock price
+        df1 = pd.DataFrame(resoverall_stock_price.fetchall())
+        df1.columns = resoverall_stock_price.keys()
+
+        # create df1
+        df1 = df1.drop_duplicates(subset='Date')
+        df1.index = df1['Date']
+        df1_date_index = df1.drop(['Date'], axis=1)
+        print(df1_date_index)
+
+        # create df2 and concat
+        if strategy_sentiment == 'none_pass':
+            # 不需要 concate
+            df = df1_date_index
+
+        else:
+            # 和 sentiment concate
+            resoverall_sentiment = connection.execute("SELECT DATE_FORMAT(date,'%%Y-%%m-%%d') AS Date, (avg_valence - 5) as avg_valence, (avg_arousal - 5) as avg_arousal, sum_sentiment \
+                                        FROM sentimentrader.daily_sentiment \
+                                        WHERE source = '{}' \
+                                        AND stock_code = '{}' \
+                                        AND `date` BETWEEN '{}' and '{}' \
+                                        ORDER BY `Date`".format(source, stock_code, start_date_datetime, end_date_datetime))
+
+            df2 = pd.DataFrame(resoverall_sentiment.fetchall())
+            df2.columns = resoverall_sentiment.keys()
+
+            df2 = df2.drop_duplicates(subset='Date')
+            df2.index = df2['Date']
+            df2_date_index = df2.drop(['Date'], axis=1)
+
+            df = pd.concat([df1_date_index, df2_date_index], axis=1)
+            df = df.reindex(df1_date_index.index)
+            df = df.dropna()
+
+        # change astype
+        df['Volume'] = df['Volume'].astype('int')
+        print(df)
+
+        # 進場時機判定
+        money = set_money
+        if strategy_line == 'macd_line':
+            pass
+
+        # KD line
+        elif strategy_line == 'kdj_line':
+            df["K"], df["D"] = talib.STOCH(df['High'],
+                                           df['Low'],
+                                           df['Close'],
+                                           fastk_period=9,
+                                           slowk_period=3,
+                                           slowk_matype=1,
+                                           slowd_period=3,
+                                           slowd_matype=1)
+
+            df["B_K"] = df["K"].shift(1)
+            df["B_D"] = df["D"].shift(1)
+
+            # only KD
+            if strategy_sentiment == 'none_pass':
+                buy = []
+                sell = []
+                buy_count = 0
+                for i in range(len(df)):
+                    if money >= df["Close"][i] and df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
+                        buy.append(1)
+                        sell.append(0)
+                        buy_count += 1
+                        money -= df["Close"][i]
+                    elif buy_count > 0 and df["B_K"][i] > df["B_D"][i] and df["K"][i] < df["D"][i]:
+                        sell.append(-1)
+                        buy.append(0)
+                        buy_count -= 1
+                        money += df["Close"][i]
+                    else:
+                        buy.append(0)
+                        sell.append(0)
+
+                df["buy"] = buy
+                df["sell"] = sell
+
+            # KD + sentiment over less
+            elif strategy_sentiment == 'daily_sentiment_pass':
+                buy = []
+                sell = []
+                buy_count = 0
+                for i in range(len(df)):
+                    if df['avg_valence'][i] < (float(sentiment_para_more) / 100 * 10 - 5) and df['avg_valence'][i] > (
+                            float(sentiment_para_less) / 100 * 10 - 5):
+                        if money >= df["Close"][i] and df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
+                            buy.append(1)
+                            sell.append(0)
+                            buy_count += 1
+                            money -= df["Close"][i]
+                        elif buy_count > 0 and df["B_K"][i] > df["B_D"][i] and df["K"][i] < df["D"][i]:
+                            sell.append(-1)
+                            buy.append(0)
+                            buy_count -= 1
+                            money += df["Close"][i]
+                        else:
+                            buy.append(0)
+                            sell.append(0)
+                    else:
+                        buy.append(0)
+                        sell.append(0)
+
+                print('money', money)
+                df["buy"] = buy
+                df["sell"] = sell
+
+            # KD + sentiment to negative
+            elif strategy_sentiment == 'to_negative_pass':
+                buy = []
+                sell = []
+                buy_count = 0
+                for i in range(len(df)):
+                    if i > 0:
+                        if money >= df["Close"][i] and df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
+                            buy.append(1)
+                            sell.append(0)
+                            buy_count += 1
+                            money -= df["Close"][i]
+                        elif buy_count > 0 and df["B_K"][i] > df["B_D"][i] and df["K"][i] < df["D"][i]:
+                            sell.append(-1)
+                            buy.append(0)
+                            buy_count -= 1
+                            money += df["Close"][i]
+                        else:
+                            buy.append(0)
+                            sell.append(0)
+
+                    elif df['avg_valence'][i] < 0 and df['avg_valence'][i - 1] > 0:
+                        buy.append(0)
+                        sell.append(0)
+
+                    else:
+                        buy.append(0)
+                        sell.append(0)
+
+                df["buy"] = buy
+                df["sell"] = sell
+
+            # KD + sentiment to positive
+            elif strategy_sentiment == 'to_positive_pass':
+                buy = []
+                sell = []
+                buy_count = 0
+                for i in range(len(df)):
+                    if i > 0:
+                        if money >= df["Close"][i] and df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
+                            buy.append(1)
+                            sell.append(0)
+                            buy_count += 1
+                            money -= df["Close"][i]
+                        elif buy_count > 0 and df["B_K"][i] > df["B_D"][i] and df["K"][i] < df["D"][i]:
+                            sell.append(-1)
+                            buy.append(0)
+                            buy_count -= 1
+                            money += df["Close"][i]
+                        else:
+                            buy.append(0)
+                            sell.append(0)
+
+                    elif df['avg_valence'][i] > 0 and df['avg_valence'][i - 1] < 0:
+                        buy.append(0)
+                        sell.append(0)
+                    else:
+                        buy.append(0)
+                        sell.append(0)
+
+                df["buy"] = buy
+                df["sell"] = sell
+
+
+        # 使用者自訂 strategy_line == 'none_line'
+        else:
+            if strategy_in == 'increase_in':
+                # only incease_in
+                if strategy_sentiment == 'none_pass':
+                    buy = []
+                    sell = []
+                    buy_count = 0
+                    for i in range(len(df)):
+                        if i > 1:
+                            if money >= df["Close"][i] and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][
+                                i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
+                                buy.append(1)
+                                sell.append(0)
+                                buy_count += 1
+                                money -= df["Close"][i]
+                            elif buy_count > 0 and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
+                                    df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
+                                sell.append(-1)
+                                buy.append(0)
+                                buy_count -= 1
+                                money += df["Close"][i]
+                            else:
+                                buy.append(0)
+                                sell.append(0)
+                        else:
+                            buy.append(0)
+                            sell.append(0)
+                    df["buy"] = buy
+                    df["sell"] = sell
+                # increase_in + sentiment over less pass
+                elif strategy_sentiment == 'daily_sentiment_pass':
+                    buy = []
+                    sell = []
+                    buy_count = 0
+                    for i in range(len(df)):
+                        if df['avg_valence'][i] < (float(sentiment_para_more) / 100 * 10 - 5) and df['avg_valence'][i] > (
+                                float(sentiment_para_less) / 100 * 10 - 5):
+                            if money >= df["Close"][i] and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][
+                                i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
+                                buy.append(1)
+                                sell.append(0)
+                                buy_count += 1
+                                money -= df["Close"][i]
+                            elif buy_count > 0 and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
+                                    df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
+                                sell.append(-1)
+                                buy.append(0)
+                                buy_count -= 1
+                                money += df["Close"][i]
+                            else:
+                                buy.append(0)
+                                sell.append(0)
+                        else:
+                            buy.append(0)
+                            sell.append(0)
+
+                    df["buy"] = buy
+                    df["sell"] = sell
+
+                # increase_in + sentiment to negative
+                elif strategy_sentiment == 'to_negative_pass':
+                    buy = []
+                    sell = []
+                    buy_count = 0
+                    for i in range(len(df)):
+                        if i > 0:
+                            if money >= df["Close"][i] and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][
+                                i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
+                                buy.append(1)
+                                sell.append(0)
+                                buy_count += 1
+                                money -= df["Close"][i]
+                            elif buy_count > 0 and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
+                                    df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
+                                sell.append(-1)
+                                buy.append(0)
+                                buy_count -= 1
+                                money += df["Close"][i]
+                            else:
+                                buy.append(0)
+                                sell.append(0)
+                        elif df['avg_valence'][i] < 0 and df['avg_valence'][i - 1] > 0:
+                            buy.append(0)
+                            sell.append(0)
+                        else:
+                            buy.append(0)
+                            sell.append(0)
+
+                    df["buy"] = buy
+                    df["sell"] = sell
+
+                # increase_in + sentiment to positive
+                elif strategy_sentiment == 'to_positive_pass':
+                    buy = []
+                    sell = []
+                    buy_count = 0
+                    for i in range(len(df)):
+                        if i > 0:
+                            if money >= df["Close"][i] and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][
+                                i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
+                                buy.append(1)
+                                sell.append(0)
+                                buy_count += 1
+                                money -= df["Close"][i]
+                            elif buy_count > 0 and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][i - 1] and \
+                                    df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
+                                sell.append(-1)
+                                buy.append(0)
+                                buy_count -= 1
+                                money += df["Close"][i]
+                            else:
+                                buy.append(0)
+                                sell.append(0)
+                        elif df['avg_valence'][i] > 0 and df['avg_valence'][i - 1] < 0:
+                            buy.append(0)
+                            sell.append(0)
+                        else:
+                            buy.append(0)
+                            sell.append(0)
+
+                    df["buy"] = buy
+                    df["sell"] = sell
+
+            # strategy_in == 'increase_out'
+            else:
+                # only incease_out
+                if strategy_sentiment == 'none_pass':
+                    buy = []
+                    sell = []
+                    buy_count = 0
+                    for i in range(len(df)):
+                        if i > 1:
+                            if money >= df["Close"][i] and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][
+                                i - 1] and \
+                                    df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
+                                buy.append(1)
+                                sell.append(0)
+                                buy_count += 1
+                                money -= df["Close"][i]
+                            elif buy_count > 0 and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and \
+                                    df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
+                                sell.append(-1)
+                                buy.append(0)
+                                buy_count -= 1
+                                money += df["Close"][i]
+                            else:
+                                buy.append(0)
+                                sell.append(0)
+                        else:
+                            buy.append(0)
+                            sell.append(0)
+
+                    df["buy"] = buy
+                    df["sell"] = sell
+                # increase_out + sentiment over less pass
+                elif strategy_sentiment == 'daily_sentiment_pass':
+                    buy = []
+                    sell = []
+                    buy_count = 0
+                    for i in range(len(df)):
+                        if df['avg_valence'][i] < (float(sentiment_para_more) / 100 * 10 - 5) and df['avg_valence'][i] > (
+                                float(sentiment_para_less) / 100 * 10 - 5):
+                            if money >= df["Close"][i] and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][
+                                i - 1] and \
+                                    df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
+                                buy.append(1)
+                                sell.append(0)
+                                buy_count += 1
+                                money -= df["Close"][i]
+                            elif buy_count > 0 and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and \
+                                    df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
+                                sell.append(-1)
+                                buy.append(0)
+                                buy_count -= 1
+                                money += df["Close"][i]
+                            else:
+                                buy.append(0)
+                                sell.append(0)
+                        else:
+                            buy.append(0)
+                            sell.append(0)
+
+                    df["buy"] = buy
+                    df["sell"] = sell
+
+                # increase_out + sentiment to negative
+                elif strategy_sentiment == 'to_negative_pass':
+                    buy = []
+                    sell = []
+                    buy_count = 0
+                    for i in range(len(df)):
+                        if i > 0:
+                            if money >= df["Close"][i] and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][
+                                i - 1] and \
+                                    df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
+                                buy.append(1)
+                                sell.append(0)
+                                buy_count += 1
+                                money -= df["Close"][i]
+                            elif buy_count > 0 and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and \
+                                    df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
+                                sell.append(-1)
+                                buy.append(0)
+                                buy_count -= 1
+                                money += df["Close"][i]
+                            else:
+                                buy.append(0)
+                                sell.append(0)
+                        elif df['avg_valence'][i] < 0 and df['avg_valence'][i - 1] > 0:
+                            buy.append(0)
+                            sell.append(0)
+
+                        else:
+                            buy.append(0)
+                            sell.append(0)
+
+                    df["buy"] = buy
+                    df["sell"] = sell
+
+                # increase_out + sentiment to positive
+                elif strategy_sentiment == 'to_positive_pass':
+                    buy = []
+                    sell = []
+                    buy_count = 0
+                    for i in range(len(df)):
+                        if i > 0:
+                            if money >= df["Close"][i] and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][
+                                i - 1] and df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
+                                buy.append(1)
+                                sell.append(0)
+                                buy_count += 1
+                                money -= df["Close"][i]
+                            elif buy_count > 0 and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and \
+                                    df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
+                                sell.append(-1)
+                                buy.append(0)
+                                buy_count -= 1
+                                money += df["Close"][i]
+                            else:
+                                buy.append(0)
+                                sell.append(0)
+
+                        elif df['avg_valence'][i] > 0 and df['avg_valence'][i - 1] < 0:
+                            buy.append(0)
+                            sell.append(0)
+
+                        else:
+                            buy.append(0)
+                            sell.append(0)
+
+                    df["buy"] = buy
+                    df["sell"] = sell
+
+        print(df)
+
+        # tag buy marker
+        buy_mark = []
+        for i in range(len(df)):
+            if df["buy"][i] == 1:
+                buy_mark.append(df["High"][i] + 10)
+            else:
+                buy_mark.append(np.nan)
+        df["buy_mark"] = buy_mark
+
+        # tag sell marker
+        sell_mark = []
+        for i in range(len(df)):
+            if df["sell"][i] == -1:
+                sell_mark.append(df["Low"][i] - 10)
+            else:
+                sell_mark.append(np.nan)
+        df["sell_mark"] = sell_mark
+
+        df['avg_valence'] = (df['avg_valence'] + 5) * 10 / 100
+
+        if len(buy_mark) > 0 and len(sell_mark) > 0:
+            if strategy_line == 'kdj_line' and strategy_sentiment != 'none_pass':
+                add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                            mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
+                            mpf.make_addplot(df["K"], panel=2, color="r"),
+                            mpf.make_addplot(df["D"], panel=2, color="g"),
+                            mpf.make_addplot(df["avg_valence"], panel=2, color="b")
+                            ]
+
+            elif strategy_line == 'kdj_line' and strategy_sentiment == 'none_pass':
+                add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                            mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
+                            mpf.make_addplot(df["K"], panel=2, color="r"),
+                            mpf.make_addplot(df["D"], panel=2, color="g")
+                            ]
+
+            elif strategy_sentiment != 'none_pass':
+                add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                            mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
+                            mpf.make_addplot(df["avg_valence"], panel=2, color="b")
+                            ]
+
+            else:
+                add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                            mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'), ]
+        else:
+            add_plot = None
+
+        if add_plot == None:
             print('沒有交易點')
             return render_template('strategy.html')
-
-        # 計算買進和賣出次數
-        buy1 = df.loc[df["buy"] == 1]
-        sell1 = df.loc[df["sell"] == -1]
-        print(buy1)
-        print(sell1)
-
-        total_buy_count = len(buy1)
-        total_sell_count = len(sell1)
-        print("買進次數 : " + str(total_buy_count) + "次")
-        print("賣出次數 : " + str(total_sell_count) + "次")
-
-        sell1 = sell1.append(df[-1:])
-        print(sell1.tail())
-
-        money = set_money
-        print('資金: ', money)
-        if len(sell1) >= 0:
-            for i in range(len(sell1) - 1):
-                money = money - buy1["Close"][i] + sell1['Close'][i] - ((buy1["Close"][i] + sell1["Close"][i]) * 0.001425 * discount / 100)
-
-            final_money = money + ((len(buy1) - len(sell1)) * sell1["Close"][-1])
         else:
-            final_money = money
+            try:
+                df.index = pd.DatetimeIndex(df.index)
+                stock_id = "{}.TW".format(stock_code)
+                mc = mpf.make_marketcolors(up='r', down='g', inherit=True)
+                s = mpf.make_mpf_style(base_mpf_style='yahoo', marketcolors=mc, rc={'font.size': 14})
+                kwargs = dict(type='candle', volume=True, figsize=(20, 10), title=stock_id, style=s, addplot=add_plot)
+                timestamp = int(datetime.today().timestamp())
+                timestamp_str = str(timestamp)
+                filename = f"{stock_code}_{timestamp_str}"
+                path = os.path.join("flask_app/static/img/report", filename)
+                mpf.plot(df, **kwargs, savefig=path)
+                print(filename)
+                print(path)
+            except:
+                print('沒有交易點')
+                return render_template('strategy.html')
 
-        print('最後所得金額: ', final_money)
-        print('淨收益: ', final_money - set_money)
-        total_return_rate = round((final_money - set_money) / set_money * 100, 2)
-        print('總報酬率(淨收益) = ', total_return_rate, '%')
-
-        return_rate = []
-        for i in range(len(buy1)):
-            if i < len(sell1):
-                rate = round((sell1["Close"][i] - buy1["Close"][i]) / buy1["Close"][i] * 100, 2)
-                return_rate.append(rate)
-            # >= len(sell1)
             else:
-                rate = round((df["Close"][-1] - buy1["Close"][i]) / buy1["Close"][i] * 100, 2)
-                return_rate.append(rate)
-
-        print('每次交易(買+賣)報酬率:', return_rate)
-
-        return_all = sorted(return_rate, reverse=True)
-        print('每次交易報酬率排序:', return_all)
-
-        height_return = return_all[0]
-        lowest_return = return_all[-1]
-
-        print("該策略最高報酬為 : " + str(height_return) + " %")
-        print("該策略最低報酬為 : " + str(lowest_return) + " %")
+                s3_save_filename = filename + '.png'
+                s3_save_path = os.path.join('flask_app/static/img/report', s3_save_filename)
+                # open file
+                pil_image = Image.open(s3_save_path)
+                # Save the image to an in-memory file
+                in_mem_file = io.BytesIO()
+                pil_image.save(in_mem_file, format=pil_image.format)
+                in_mem_file.seek(0)
+                upload_file(uid, in_mem_file, s3_save_filename, bucket_name, object_path)
+                file_path = f"{S3_PHOTO_PATH}/{uid}/{s3_save_filename}"
 
 
-        total_win = len([i for i in return_rate if i > 0])
-        total_lose = len([i for i in return_rate if i <= 0])
-        total_trade = total_win + total_lose
-        sum_t = len(return_rate)
-        win_rate = round(total_win / sum_t * 100, 2)
-        print("總獲利次數 : " + str(total_win) + "次")
-        print("總虧損次數 : " + str(total_lose) + "次")
-        print("總交易次數 : " + str(total_trade) + "次")
-        print("勝率為 : " + str(win_rate) + "%")
+            # 計算買進和賣出次數
+            buy1 = df.loc[df["buy"] == 1]
+            sell1 = df.loc[df["sell"] == -1]
+            print(buy1)
+            print(sell1)
 
-        cum_return = [0]
-        for i in range(len(return_rate)):
-            cum = round(return_rate[i] + cum_return[i], 2)
-            cum_return.append(cum)
-        print('累積報酬率:', cum_return)
-        avg_return_rate = round(cum_return[-1] / (total_win + total_lose), 2)
-        print("該策略平均每次報酬為 : " + str(avg_return_rate) + "%")
+            total_buy_count = len(buy1)
+            total_sell_count = len(sell1)
+            print("買進次數 : " + str(total_buy_count) + "次")
+            print("賣出次數 : " + str(total_sell_count) + "次")
 
-        # 年化報酬率(%) = (總報酬率+1)^(1/年數) -1
-        irr = round(((((final_money - set_money) / set_money) + 1) ** (1 / duration_year) - 1) * 100, 2)
-        print('年化報酬率: ', irr, '%')
+            sell1 = sell1.append(df[-1:])
+            print(sell1.tail())
 
-        # 策略參數
+            money = set_money
+            print('資金: ', money)
+            if len(sell1) >= 0:
+                for i in range(len(sell1) - 1):
+                    money = money - buy1["Close"][i] + sell1['Close'][i] - ((buy1["Close"][i] + sell1["Close"][i]) * 0.001425 * discount / 100)
 
-        strategy_dict = {
-            'uid': 'test@gmail.com',
-            'stock_code': stock_code,
-            'start_date': start_date,
-            'end_date': end_date,
-            'strategy_line': strategy_line,
-            'strategy_in': strategy_in,
-            'strategy_in_para': strategy_in_para,
-            'strategy_out': strategy_out,
-            'strategy_out_para': strategy_out_para,
-            'strategy_sentiment': strategy_sentiment,
-            'source': source,
-            'sentiment_para_more': sentiment_para_more,
-            'sentiment_para_less': sentiment_para_less,
-            'money': set_money,
-            'discount': discount,
-        }
+                final_money = money + ((len(buy1) - len(sell1)) * sell1["Close"][-1])
+            else:
+                final_money = money
 
-        print(strategy_dict)
+            print('最後所得金額: ', final_money)
+            print('淨收益: ', final_money - set_money)
+            total_return_rate = round((final_money - set_money) / set_money * 100, 2)
+            print('總報酬率(淨收益) = ', total_return_rate, '%')
 
-        # 回測報告
-        backtest_report = {
-            'total_buy_count': total_buy_count,
-            'total_sell_count': total_sell_count,
-            'total_return_rate': total_return_rate,
-            'height_return': height_return,
-            'lowest_return': lowest_return,
-            'total_win': total_win,
-            'total_lose': total_lose,
-            'total_trade': total_trade,
-            'win_rate': win_rate,
-            'avg_return_rate':  avg_return_rate,
-            'irr': irr,
-            'filename': filename,
-        }
+            return_rate = []
+            for i in range(len(buy1)):
+                if i < len(sell1):
+                    rate = round((sell1["Close"][i] - buy1["Close"][i]) / buy1["Close"][i] * 100, 2)
+                    return_rate.append(rate)
+                # >= len(sell1)
+                else:
+                    rate = round((df["Close"][-1] - buy1["Close"][i]) / buy1["Close"][i] * 100, 2)
+                    return_rate.append(rate)
 
-        print(backtest_report)
+            print('每次交易(買+賣)報酬率:', return_rate)
 
-        return render_template('backtest.html', filename=filename, backtest_report=backtest_report)
+            return_all = sorted(return_rate, reverse=True)
+            print('每次交易報酬率排序:', return_all)
+
+            height_return = return_all[0]
+            lowest_return = return_all[-1]
+
+            print("該策略最高報酬為 : " + str(height_return) + " %")
+            print("該策略最低報酬為 : " + str(lowest_return) + " %")
+
+
+            total_win = len([i for i in return_rate if i > 0])
+            total_lose = len([i for i in return_rate if i <= 0])
+            total_trade = total_win + total_lose
+            sum_t = len(return_rate)
+            win_rate = round(total_win / sum_t * 100, 2)
+            print("總獲利次數 : " + str(total_win) + "次")
+            print("總虧損次數 : " + str(total_lose) + "次")
+            print("總交易次數 : " + str(total_trade) + "次")
+            print("勝率為 : " + str(win_rate) + "%")
+
+            cum_return = [0]
+            for i in range(len(return_rate)):
+                cum = round(return_rate[i] + cum_return[i], 2)
+                cum_return.append(cum)
+            print('累積報酬率:', cum_return)
+            avg_return_rate = round(cum_return[-1] / (total_win + total_lose), 2)
+            print("該策略平均每次報酬為 : " + str(avg_return_rate) + "%")
+
+            # 年化報酬率(%) = (總報酬率+1)^(1/年數) -1
+
+            irr = round((((((final_money - set_money) / set_money) + 1) ** (1 / duration_year)) - 1) * 100, 2)
+            print('年化報酬率: ', irr, '%')
+
+            # 策略參數
+
+            strategy_dict = {
+                'user_id': uid,
+                'stock_code': stock_code,
+                'start_date': start_date,
+                'end_date': end_date,
+                'strategy_line': strategy_line,
+                'strategy_in': strategy_in,
+                'strategy_in_para': strategy_in_para,
+                'strategy_out': strategy_out,
+                'strategy_out_para': strategy_out_para,
+                'strategy_sentiment': strategy_sentiment,
+                'source': source,
+                'sentiment_para_more': sentiment_para_more,
+                'sentiment_para_less': sentiment_para_less,
+                'seed_money': set_money,
+                'discount': discount,
+                'create_date': today_strftime
+            }
+
+            print(strategy_dict)
+
+            # 回測報告
+            backtest_report = {
+                'user_id': uid,
+                'stock_code': stock_code,
+                'total_buy_count': total_buy_count,
+                'total_sell_count': total_sell_count,
+                'total_return_rate': total_return_rate,
+                'highest_return': height_return,
+                'lowest_return': lowest_return,
+                'total_win': total_win,
+                'total_lose': total_lose,
+                'total_trade': total_trade,
+                'win_rate': win_rate,
+                'avg_return_rate':  avg_return_rate,
+                'irr': irr,
+                'file_path': file_path,
+                'create_date': today_strftime
+            }
+
+
+            print(backtest_report)
+
+            strategy_backtest_dict = {
+                'user_id': uid,
+                'stock_code': stock_code,
+                'start_date': start_date,
+                'end_date': end_date,
+                'strategy_line': strategy_line,
+                'strategy_in': strategy_in,
+                'strategy_in_para': strategy_in_para,
+                'strategy_out': strategy_out,
+                'strategy_out_para': strategy_out_para,
+                'strategy_sentiment': strategy_sentiment,
+                'source': source,
+                'sentiment_para_more': sentiment_para_more,
+                'sentiment_para_less': sentiment_para_less,
+                'seed_money': set_money,
+                'discount': discount,
+                'total_buy_count': total_buy_count,
+                'total_sell_count': total_sell_count,
+                'total_return_rate': total_return_rate,
+                'highest_return': height_return,
+                'lowest_return': lowest_return,
+                'total_win': total_win,
+                'total_lose': total_lose,
+                'total_trade': total_trade,
+                'win_rate': win_rate,
+                'avg_return_rate': avg_return_rate,
+                'irr': irr,
+                'file_path': file_path,
+                'create_date': today_strftime
+            }
+
+            strategy_backtest_tuple = [strategy_backtest for strategy_backtest in strategy_backtest_dict.values()]
+            print(strategy_backtest_tuple)
+            # [1, '2317', '2020-01-01', '2021-10-31', 'kdj_line', 'none', 1, 'none', 1, 'to_negative_pass', 'ptt', 60, 40,
+            #  400, 40.0, 57, 57, -26.92, 14.63, -6.03, 19, 38, 57, 33.33, 0.22, -15.75,
+            #  'https://dwkrd7hfr3x4e.cloudfront.net/backtest/1/2317_1636715604.png', '2021-11-12']
+
+            #
+            # sql_insert_strategy = "INSERT INTO `strategy` (`user_id`, `stock_code`, `start_date`, `end_date`, \
+            #                                                `strategy_line`, `strategy_in`, `strategy_in_para`, `strategy_out`, `strategy_out_para`, \
+            #                                                `strategy_sentiment`, `source`, `sentiment_para_more`, `sentiment_para_less`, `seed_money`, \
+            #                                                `discount`, 'create_date') VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            #
+            # sql_insert_backtest = "INSERT INTO `backtest` (`user_id`, `stock_code`, `total_buy_count`, `total_sell_count`, \
+            #                                                `total_return_rate`, `highest_return`, `lowest_return`, `total_win`, `total_lose` \
+            #                                                `total_trade`, `win_rate`, `avg_return_rate`, `irr`, `file_path`, 'create_date') \
+            #                                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+
+            # sql_insert_strategy_backtest = "INSERT INTO `strategy_backtest` (`user_id`, `stock_code`, `start_date`, `end_date`, \
+            #                                                                  `strategy_line`, `strategy_in`, `strategy_in_para`, `strategy_out`, `strategy_out_para`, \
+            #                                                                  `strategy_sentiment`, `source`, `sentiment_para_more`, `sentiment_para_less`, `seed_money`, \
+            #                                                                  `discount`, `total_buy_count`, `total_sell_count`, `total_return_rate`, `highest_return`, \
+            #                                                                  `lowest_return`, `total_win`, `total_lose`, `total_trade`, `win_rate`, `avg_return_rate`, \
+            #                                                                  `irr`, `file_path`, 'create_date') \
+            #                                                                  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            #
+            # # db_mysql.insert_tb(sql_insert_strategy, strategy_tuple)
+            # # db_mysql.insert_tb(sql_insert_backtest, backtest_tuple)
+            # db_mysql.insert_tb(sql_insert_strategy_backtest, strategy_backtest_tuple)
+
+
+            return render_template('backtest.html', backtest_report=backtest_report)
 
 
 
 @app.route('/backtest.html', methods=['GET'])
 def backtest():
-    return render_template('backtest.html', filename="2317_2021-11-11")
-
-
+    uid = get_cookie_check()
+    print(uid)
+    if not uid:
+        return render_template('login.html')
+    else:
+        return render_template('backtest.html', filename="2317_2021-11-11")
 
 
 # user api
@@ -1052,9 +1184,20 @@ def b_type_to_str(b_type):
         b_type = str(b_type)
     return b_type
 
-def check_basic_auth(name, email, pwd, con_pwd):
+def check_basic_auth_signup(name, email, pwd, con_pwd):
     if name and email and pwd:
         if len(name) <= 255 and len(email) <= 255 and len(pwd) <= 255 and pwd == con_pwd:
+            basic_auth = True
+        else:
+            basic_auth = False
+    else:
+        basic_auth = False
+
+    return basic_auth
+
+def check_basic_auth_signin(email, pwd):
+    if email and pwd:
+        if len(email) <= 255 and len(pwd) <= 255:
             basic_auth = True
         else:
             basic_auth = False
@@ -1082,9 +1225,6 @@ def set_token(iss, sub, aud, iat, nbf, exp, jti):
 def signup():
     # get request data
     user_signup_request = request.form.to_dict()
-    # force(bool) – Ignore the mimetype and always try to parse JSON.
-    # silent(bool) – Silence parsing errors and return None instead
-    # cache (bool) – Store the parsed JSON to return for subsequent calls.
 
     print(user_signup_request)
 
@@ -1097,7 +1237,7 @@ def signup():
     db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
 
     # check Basic Auth
-    basic_auth = check_basic_auth(name, email, pwd, con_pwd)
+    basic_auth = check_basic_auth_signup(name, email, pwd, con_pwd)
     if not basic_auth:
         return Response('error: wrong format or miss something', status=400)
 
@@ -1117,7 +1257,7 @@ def signup():
 
             # 設定 token
             iss = 'stock-sentimentrader.com'
-            sub = name
+            sub = email
             aud = 'www.stock-sentimentrader.com'
             iat = datetime.utcnow()
             nbf = datetime.utcnow()
@@ -1137,278 +1277,118 @@ def signup():
             flash('signup success')
 
             # 回傳 json
-            signup_api = json.dumps({'data': {'access_token': access_token_str,  # 不能傳 byte 格式
+            # signup_api = json.dumps({'data': {'access_token': access_token_str,  # 不能傳 byte 格式
+            #                                   'access_expired': access_expired,
+            #                                   'user': {
+            #                                       'name': name,
+            #                                       'email': email,
+            #                                   }}}, indent=2, ensure_ascii=False)
+
+            # 回傳token
+            signup_user_info = {'data': {'access_token': access_token_str,  # 不能傳 byte 格式
                                               'access_expired': access_expired,
                                               'user': {
-                                                  'id': id,
                                                   'name': name,
                                                   'email': email,
-                                              }}}, indent=2, ensure_ascii=False)
+                                              }}}
 
             # convert content type from text/html to application/json
-            resp = Response(response=signup_api,
-                            status=200,
-                            mimetype="application/json")
+            # resp = Response(response=signup_api,
+            #                 status=200,
+            #                 mimetype="application/json")
 
+            # return render_template('home.html', resp=resp)
+
+            # 對重新導向的 myName.html 做回應
+            resp = make_response(redirect(url_for('home')))
+            # 回應為set cookie
+            resp.set_cookie(key='token', value=signup_user_info['data']['access_token'])
+            # 重新導向到 myName.html
             return resp
-
 
 
 @app.route('/signin', methods=['POST'])
 def signin():
-    user_signin_request = request.get_json(force=False, silent=False, cache=True)
-    provider = user_signin_request['provider']
-    if not user_signin_request:
-        return Response('error: miss email or password', status=400)
+    user_signin_request = request.form.to_dict()
+    print(user_signin_request)
 
-    elif provider == 'native':
-        email = user_signin_request['email']
-        password = user_signin_request['password']
-        basic_auth = check_basic_auth(provider, email, password)
-        # Basic Auth
-        if not basic_auth:
-            return Response('error: wrong format', status=400)
+    email = user_signin_request['email']
+    pwd = user_signin_request['pwd']
+
+    basic_auth = check_basic_auth_signin(email, pwd)
+
+    if not basic_auth:
+        return Response('error: wrong format', status=400)
+    else:
+        db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
+        sql_email = "SELECT `id`, `name`, `email`, `password`, `password_salt` FROM `user` WHERE `email`= %s"
+        result = db_mysql.query_tb_one(sql_email, (email,))
+        if not result:
+            return Response('error: sign in fail', status=403)
         else:
-            db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
-            sql_email = "SELECT `id`, `provider`, `name`, `email`, `password`, `password_salt`, `picture` FROM `user` WHERE `email`= %s"
-            result = db_mysql.query_tb_one(sql_email, (email,))
-            if not result:
-                return Response('error: sign in fail', status=403)
+            db_id = result[0]
+            db_name = result[1]
+            db_email = result[2]
+            db_password = result[3]
+            db_password_salt = result[4]
+            # 處理 password
+            password_salt = db_password_salt
+            password_hash = generate_hash(pwd, password_salt)
+            if db_password != password_hash:
+                return Response('error: wrong password', status=403)
             else:
-                db_id = result[0]
-                db_provider = result[1]
-                db_name = result[2]
-                db_email = result[3]
-                db_password = result[4]
-                db_password_salt = result[5]
-                db_picture = result[6]
+                # 設定 token
+                iss = 'stock-sentimentrader.com'
+                sub = db_email
+                aud = 'www.stock-sentimentrader.com'
+                iat = datetime.utcnow()
+                nbf = datetime.utcnow()
+                exp = iat + timedelta(seconds=3600)
+                jti = email
+                access_token = set_token(iss, sub, aud, iat, nbf, exp, jti)
+                access_token_str = b_type_to_str(access_token)
+                access_expired = int(exp.timestamp() - iat.timestamp())
+                # 其中 secret 就是密鑰（不可外洩，否則人人都能夠做出一樣的 JWT)
+                # 而 HS256 則是簽章的算法，也就是預設的 HMAC SHA526。
+                # 目前 PyJWT 支援 RS256 與 HS256 2 種簽章算法
+                # 更新資料庫token
+                sql_update = "UPDATE `user` SET `access_token`=%s, `access_expired`=%s WHERE `email`=%s"
+                db_mysql.update_tb(sql_update, (access_token, access_expired, email))
+                db_mysql.close_db()
+                flash('signin success')
+                # 回傳 json
+                # signin_api = json.dumps({'data': {'access_token': access_token_str,  # 不能傳 byte 格式
+                #                                   'access_expired': access_expired,
+                #                                   'user': {
+                #                                       'id': db_id,
+                #                                       'name': db_name,
+                #                                       'email': db_email,
+                #                                   }}}, indent=2, ensure_ascii=False)
 
-                # 處理 password
-                password_salt = db_password_salt
-                password_hash = generate_hash(password, password_salt)
-                if db_password != password_hash:
-                    return Response('error: wrong password', status=403)
-                else:
-                    # 設定 token
-                    iss = 'appworks.com'
-                    sub = db_name
-                    aud = 'www.stylish.com'
-                    iat = datetime.utcnow()
-                    nbf = datetime.utcnow()
-                    exp = iat + timedelta(seconds=3600)
-                    jti = email
+                # 回傳token
+                signin_user_info = {'data': {'access_token': access_token_str,  # 不能傳 byte 格式
+                                             'access_expired': access_expired,
+                                             'user': {
+                                                 'id': db_id,
+                                                 'name': db_name,
+                                                 'email': db_email,
+                                             }}}
 
-                    access_token = set_token(iss, sub, aud, iat, nbf, exp, jti)
-                    access_token_str = b_type_to_str(access_token)
-                    access_expired = int(exp.timestamp() - iat.timestamp())
-                    # 其中 secret 就是密鑰（不可外洩，否則人人都能夠做出一樣的 JWT)
-                    # 而 HS256 則是簽章的算法，也就是預設的 HMAC SHA526。
-                    # 目前 PyJWT 支援 RS256 與 HS256 2 種簽章算法
-                    # 更新資料庫token
-                    sql_update = "UPDATE `user` SET `access_token`=%s, `access_expired`=%s WHERE `email`=%s"
-                    db_mysql.update_tb(sql_update, (access_token, access_expired, email))
-                    db_mysql.close_db()
-                    flash('signin success')
-                    # 回傳 json
-                    signup_api = json.dumps({'data': {'access_token': access_token_str,  # 不能傳 byte 格式
-                                                      'access_expired': access_expired,
-                                                      'user': {
-                                                          'id': db_id,
-                                                          'provider': db_provider,
-                                                          'name': db_name,
-                                                          'email': db_email,
-                                                          'picture': db_picture,
-                                                      }}}, indent=2, ensure_ascii=False)
-                    # convert content type from text/html to application/json
-                    resp = Response(response=signup_api,
-                                    status=200,
-                                    mimetype="application/json")
-                    return resp
+                # # convert content type from text/html to application/json
+                # resp = Response(response=signin_api,
+                #                 status=200,
+                #                 mimetype="application/json")
+                # return render_template('home.html', resp=resp)
 
+                resp = make_response(redirect(url_for('home')))
+                # 回應為set cookie
+                resp.set_cookie(key='token', value=signin_user_info['data']['access_token'])
+                # 重新導向到 myName.html
 
-    # elif provider == 'facebook':
-    #     fb_access_token = user_signin_request['access_token']
-    #     if not fb_access_token:
-    #         flash('error: miss token')
-    #         return Response(status=400) and 'error: miss token'
-    #
-    #     else:
-    #         if len(fb_access_token) > 255:
-    #             flash('error: wrong format')
-    #             return Response('error: wrong format', status=400)
-    #
-    #         else:
-    #             r_token = requests.get("https://graph.facebook.com/debug_token?input_token={}&access_token={}".format(fb_access_token, APPTOKEN))  # 網址來自圖形API測試工具的 cURL，token 可用 測試用戶產生存取權杖
-    #             if r_token.status_code != requests.codes.ok:
-    #                 print(r_token.status_code)  # 如果文章被刪會跳 404 (或 ip 被 ban)
-    #                 return Response('error: no reaction', status=400)
-    #
-    #             else:
-    #                 token_information = r_token.json()
-    #                 print(token_information)
-    #                 try:
-    #                     valid = token_information['data']['is_valid']
-    #
-    #                 except:
-    #                     return Response('Session has expired', status=400)
-    #
-    #                 else:
-    #                     fb_access_expired = token_information['data']['expires_at'] - int(datetime.utcnow().timestamp())  #fb_access_expired
-    #                     token_user_ID = token_information['data']['user_id']
-    #                     fbID = token_user_ID  # fbID
-    #
-    #                     # 檢查用戶資料
-    #                     r_person = requests.get(
-    #                         "https://graph.facebook.com/v11.0/me?fields=id%2Cname%2Cemail%2Cpicture&access_token={}".format(
-    #                             fb_access_token))  # 網址來自圖形API測試工具的 cURL，token 可用 測試用戶產生存取權杖
-    #                     if r_person.status_code != requests.codes.ok:
-    #                         pprint(r_person.status_code)  # 如果文章被刪會跳 404 (或 ip 被 ban)
-    #                         return Response('error: no reaction', status=400)
-    #
-    #                     try:
-    #                         personal_information = r_person.json()
-    #                         name = personal_information['name']  # name
-    #                         email = personal_information['email']  # email
-    #                         picture = personal_information['picture']['data']['url']  # picture
-    #                         password = 'facebooklogin'  # password
-    #                         password_salt = 'facebooklogin'  # password_salt
-    #
-    #                     except:
-    #                         return Response('error: no email information', status=400)
-    #
-    #                     else:
-    #                         # 檢查 FB token OK 跟取得用戶資料之後 就先做一個 token
-    #                         # 設定 token
-    #                         iss = 'appworks.com'
-    #                         sub = name
-    #                         aud = 'www.stylish.com'
-    #                         iat = datetime.utcnow()
-    #                         nbf = datetime.utcnow()
-    #                         exp = iat + timedelta(seconds=3600)
-    #                         jti = email
-    #
-    #                         access_token = set_token(iss, sub, aud, iat, nbf, exp, jti)
-    #                         access_token_str = b_type_to_str(access_token)
-    #                         access_expired = int(exp.timestamp() - iat.timestamp())
-    #
-    #                         # 檢查資料庫是否已經有相同的使用者 (有了就更新 token 就好)
-    #                         sql_fbID = "SELECT `fbID` FROM `user` WHERE `fbID`= %s"
-    #                         db_mysql = model_mysql.DbWrapperMysql('stylish')
-    #                         try:
-    #                             result = db_mysql.query_tb_all(sql_fbID, (fbID,))
-    #                             fbID = result[0]
-    #
-    #                         except:
-    #                             # 如果沒有就插入資料庫
-    #                             sql_fb_user_insert = "INSERT INTO `user` (`name`, `email`, `password`, `password_salt`, `provider`,`access_token`, `access_expired`, `picture`, `fbID`, `fb_access_token`, `fb_access_expired`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-    #                             db_mysql.insert_tb(sql_fb_user_insert, (name, email, password, password_salt, provider, access_token, access_expired, picture, fbID, fb_access_token, fb_access_expired))
-    #                             db_mysql.close_db()
-    #                             flash('signin success')
-    #
-    #                         else:
-    #                             # 更新資料庫token
-    #                             sql_update = "UPDATE `user` SET `access_token`=%s, `access_expired`=%s, `fb_access_token`=%s, `fb_access_expired`=%s WHERE `fbID`=%s"
-    #                             db_mysql.update_tb(sql_update, (access_token, access_expired, fb_access_token, fb_access_expired, fbID))
-    #                             db_mysql.close_db()
-    #                             flash('signin success')
-    #
-    #                         # 回傳 json
-    #                         signin_api = json.dumps({'data': {'access_token': access_token_str,
-    #                                                           'access_expired': access_expired,
-    #                                                           'user': {
-    #                                                               'id': fbID,
-    #                                                               'provider': provider,
-    #                                                               'name': name,
-    #                                                               'email': email,
-    #                                                               'picture': picture,
-    #                                                           }}}, indent=2, ensure_ascii=False)
-    #
-    #                         # convert content type from text/html to application/json
-    #                         resp = Response(response=signin_api,
-    #                                         status=200,
-    #                                         mimetype="application/json")
-    #                         return resp
+                # set_cookie(key, value='', max_age=None, expires=None, path='/', domain=None, secure=False,
+                #            httponly=False, samesite=None)
 
-    else:
-        flash('error: unknown provider')
-        return Response('error: unknown provider', status=400)
-
-
-
-# @app.route('/profile', methods=['GET'])
-# def profile():
-#     header = request.headers  # 取 header
-#     if 'Authorization' not in header:  # 判斷有沒有 Authorization key
-#         return Response('invalid_request', status=400)
-#
-#     else:
-#         authorization = header['Authorization']
-#         if 'Bearer' not in authorization or len(authorization) == 0:
-#             return Response('invalid_request', status=400)
-#
-#         else:
-#             request_token = header['Authorization'].replace('Bearer ', '')  # 判斷有沒有 token value 而且要有 Bearer
-#             try:
-#                 # 解 token 判斷來源和期限
-#                 decoded_token = jwt.decode(request_token, SECRET_KEY, algorithms=["HS256"], issuer='appworks.com', audience='www.stylish.com' or 'www.facebook.com')
-#                 print(decoded_token)
-#
-#             except jwt.exceptions.InvalidSignatureError:
-#                 return Response('Signature verification failed', status=403)
-#
-#             except jwt.exceptions.ExpiredSignatureError:
-#                 return Response('Signature has expired', status=403)
-#
-#             except jwt.exceptions.InvalidIssuerError:
-#                 return Response('Invalid issuer', status=403)
-#
-#             except jwt.exceptions.InvalidAudienceError:
-#                 return Response('Invalid audience', status=403)
-#
-#             except:
-#                 return Response('wrong token', status=403)
-#
-#             else:
-#                 flash('valid success')
-#                 try:
-#                     db_mysql = model_mysql.DbWrapperMysql('stylish')
-#                     sql_profile = "SELECT `provider`, `name`, `email`, `picture` FROM `user` WHERE `access_token`= %s"
-#                     result = db_mysql.query_tb_one(sql_profile, (request_token,))
-#
-#                 except:
-#                     return Response('unknown token', status=400)
-#
-#                 else:
-#                     provider = result[0]
-#                     name = result[1]
-#                     email = result[2]
-#                     picture = result[3]
-#
-#                     profile_api = json.dumps({'data': {
-#                                                         'provider': provider,
-#                                                         'name': name,
-#                                                         'email': email,
-#                                                         'picture': picture,
-#                                                       }}, indent=2, ensure_ascii=False)
-#
-#                     # convert content type from text/html to application/json
-#                     resp = Response(response=profile_api,
-#                                     status=200,
-#                                     mimetype="application/json")
-#                     return resp
-
-
-
-@app.route('/welcome')
-def welcome():
-    # get cookie
-    name = request.cookies.get('user')
-    # 如果可以拿到 cookie 就顯示
-    if name:
-        return '<h1>welcome ' + name + '</h1>'
-    # 不能就回首頁
-    else:
-        return render_template('user.html')
+                return resp
 
 
 

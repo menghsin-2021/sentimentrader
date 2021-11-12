@@ -143,7 +143,7 @@
         <div class="content d-flex flex-row mr-2">
             <div class="report figure col-9">
                 <div class="figure">
-                    <img src="/static/img/report/{{ backtest_report['filename'] | safe }}.png" alt="back test result" width="900" height="600">
+                    <img src="{{ backtest_report['file_path'] | safe }}" alt="back test result" width="900" height="600">
                 </div>
             </div>
 
@@ -177,7 +177,7 @@
                       <tr>
                           <th scope="row">4</th>
                           <td>該策略最高報酬為</td>
-                           <td>{{ backtest_report['height_return'] | safe}}%</td>
+                           <td>{{ backtest_report['highest_return'] | safe}}%</td>
                         </tr>
                       <tr>
                           <th scope="row">5</th>
