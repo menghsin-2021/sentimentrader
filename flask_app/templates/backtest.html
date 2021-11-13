@@ -84,57 +84,20 @@
         <div class="strategy_card">
                 <h2>策略卡牌</h2>
                 <br>
-                <div class="card-deck">
+                <div id="card-deck" class="card-deck">
+                    {% for i in range(strategy_backtest_dict_list_length) %}
                     <div class="card col-2 p-2 bg-light border-dark">
-                        <div class="card-body">
-                            <h4 class="card-title">交易策略 1 號</h4>
+                        <div id="card-{{ i }}" class="card-body">
+                            <h4 class="card-title">{{ strategy_backtest_dict_list[i]['stock_code'] | safe }}</h4>
                             <ul>
-                                <li>勝率</li>
-                                <li>年化報酬率</li>
-                                <li>總報酬率</li>
+                                <li>勝率： {{ strategy_backtest_dict_list[i]['win_rate'] | safe }}</li>
+                                <li>年化報酬率： {{ strategy_backtest_dict_list[i]['irr'] | safe }}</li>
+                                <li>總報酬率： {{ strategy_backtest_dict_list[i]['total_return_rate'] | safe }}</li>
+                                <li>創建日期： {{ strategy_backtest_dict_list[i]['create_date'] | safe }}</li>
                             </ul>
                         </div>
                     </div>
-                    <div class="card col-2 p-2 bg-light border-dark">
-                        <div class="card-body">
-                            <h4 class="card-title">交易策略 2 號</h4>
-                            <ul>
-                                <li>勝率</li>
-                                <li>年化報酬率</li>
-                                <li>總報酬率</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="card col-2 p-2 bg-light border-dark">
-                        <div class="card-body">
-                            <h4 class="card-title">交易策略 3 號</h4>
-                            <ul>
-                                <li>勝率</li>
-                                <li>年化報酬率</li>
-                                <li>總報酬率</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="card col-2 p-2 bg-light border-dark">
-                        <div class="card-body">
-                            <h4 class="card-title">交易策略 4 號</h4>
-                            <ul>
-                                <li>勝率</li>
-                                <li>年化報酬率</li>
-                                <li>總報酬率</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="card col-2 p-2 bg-light border-dark">
-                        <div class="card-body">
-                            <h4 class="card-title">交易策略 5 號</h4>
-                            <ul>
-                                <li>勝率</li>
-                                <li>年化報酬率</li>
-                                <li>總報酬率</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
                 <br>
                 <br>
@@ -143,7 +106,7 @@
         <div class="content d-flex flex-row mr-2">
             <div class="report figure col-9">
                 <div class="figure">
-                    <img src="{{ backtest_report['file_path'] | safe }}" alt="back test result" width="900" height="600">
+                    <img src="{{ strategy_backtest_dict_list[0]['file_path'] | safe }}" alt="back test result" width="900" height="600">
                 </div>
             </div>
 
@@ -162,76 +125,79 @@
                         <tr>
                           <th scope="row">1</th>
                           <td>買進次數</td>
-                            <td>{{ backtest_report['total_buy_count'] | safe}}</td>
+                            <td>{{ strategy_backtest_dict_list[0]['total_buy_count'] | safe}}</td>
                         </tr>
                         <tr>
                           <th scope="row">2</th>
                           <td>賣出次數</td>
-                          <td>{{ backtest_report['total_sell_count'] | safe}}</td>
+                          <td>{{ strategy_backtest_dict_list[0]['total_sell_count'] | safe}}</td>
                         </tr>
                         <tr>
                           <th scope="row">3</th>
                           <td>總報酬率(淨收益)</td>
-                           <td>{{ backtest_report['total_return_rate'] | safe}}%</td>
+                           <td>{{ strategy_backtest_dict_list[0]['total_return_rate'] | safe}}%</td>
                         </tr>
                       <tr>
                           <th scope="row">4</th>
                           <td>該策略最高報酬為</td>
-                           <td>{{ backtest_report['highest_return'] | safe}}%</td>
+                           <td>{{ strategy_backtest_dict_list[0]['highest_return'] | safe}}%</td>
                         </tr>
                       <tr>
                           <th scope="row">5</th>
                           <td>該策略最低報酬為</td>
-                           <td>{{ backtest_report['lowest_return'] | safe}}%</td>
+                           <td>{{ strategy_backtest_dict_list[0]['lowest_return'] | safe}}%</td>
                         </tr>
                       <tr>
                           <th scope="row">6</th>
                           <td>總獲利次數</td>
-                           <td>{{ backtest_report['total_win'] | safe}}</td>
+                           <td>{{ strategy_backtest_dict_list[0]['total_win'] | safe}}</td>
                         </tr>
                       <tr>
                           <th scope="row">7</th>
                           <td>總虧損次數</td>
-                           <td>{{ backtest_report['total_lose'] | safe}}</td>
+                           <td>{{ strategy_backtest_dict_list[0]['total_lose'] | safe}}</td>
                         </tr>
                       <tr>
                           <th scope="row">8</th>
                           <td>總交易次數</td>
-                           <td>{{ backtest_report['total_trade'] | safe}}</td>
+                           <td>{{ strategy_backtest_dict_list[0]['total_trade'] | safe}}</td>
                         </tr>
                       <tr>
                           <th scope="row">9</th>
                           <td>勝率</td>
-                           <td>{{ backtest_report['win_rate'] | safe}}%</td>
+                           <td>{{ strategy_backtest_dict_list[0]['win_rate'] | safe}}%</td>
                         </tr>
                       <tr>
                           <th scope="row">10</th>
                           <td>該策略平均每次報酬為</td>
-                           <td>{{ backtest_report['avg_return_rate'] | safe}}%</td>
+                           <td>{{ strategy_backtest_dict_list[0]['avg_return_rate'] | safe}}%</td>
                         </tr>
                       <tr>
                           <th scope="row">11</th>
                           <td>年化報酬率</td>
-                           <td>{{ backtest_report['irr'] | safe}}%</td>
+                           <td>{{ strategy_backtest_dict_list[0]['irr'] | safe}}%</td>
                         </tr>
                       </tbody>
                     </table>
                 </div>
 
-                <form action="/send_strategy" method="POST">
-                    <div class="d-flex flex-row justify-content-end">
 
+                    <div class="d-flex flex-row justify-content-end">
                         <div>
-                            <button type="submit" class="btn btn-primary mr-3" id="clear-setting" value="clear-setting">捨棄策略
-                            </button>
+                            <form id="remove-strategy-form" action="/remove_strategy" method="POST">
+                                <input type="text" value="{{ strategy_backtest_dict_list[0]['strategy_id'] }}" style="display: none;" name="remove-strategy">
+                                <input type="submit" class="btn btn-primary mr-3" id="remove-strategy" value="捨棄策略">
+                            </form>
                         </div>
 
                         <div>
-                            <button type="submit" class="btn btn-primary mr-3" id="sent-backtest" value="sent-backtest">重新回測
-                            </button>
+                            <form action="/send_strategy" method="POST">
+                            <input type="submit" class="btn btn-primary mr-3" id="sent-backtest" value="重新回測">
+                            </input>
+                            </form>
                         </div>
                     </div>
-                </form>
+
             </div>
         </div>
     </div>
@@ -239,7 +205,95 @@
 
 
 
-<script src="/static/js/strategy.js"></script>
+<script>
+
+const cardDesk = document.querySelector(".card-deck");
+const figure = document.querySelector(".figure");
+const table = document.querySelector(".table");
+const removeStrategyForm = document.querySelector("#remove-strategy-form");
+
+let strategy_backtest_dict_list = {{ strategy_backtest_dict_list | safe }}
+
+
+cardDesk.addEventListener("click", (event) => {
+    for (let i = 0; i < 5; i++){
+        if (event.target.id == `card-${i}`) {
+            removeStrategyForm.innerHTML = `<input type="text" value="${strategy_backtest_dict_list[i]['strategy_id']}" style="display: none;" name="remove-strategy">
+                                            <input type="submit" class="btn btn-primary mr-3" id="remove-strategy" value="捨棄策略">`
+
+            figure.innerHTML = `<img src="${strategy_backtest_dict_list[i]['file_path']}" alt="back test result" width="900" height="600">`
+
+            table.innerHTML = `<thead>
+                        <tr>
+                          <th scope="col">#</th>
+                          <th scope="col">項目</th>
+                          <th scope="col">結果</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <th scope="row">1</th>
+                          <td>買進次數</td>
+                            <td>${strategy_backtest_dict_list[i]['total_buy_count']}</td>
+                        </tr>
+                        <tr>
+                          <th scope="row">2</th>
+                          <td>賣出次數</td>
+                          <td>${strategy_backtest_dict_list[i]['total_sell_count']}</td>
+                        </tr>
+                        <tr>
+                          <th scope="row">3</th>
+                          <td>總報酬率(淨收益)</td>
+                           <td>${strategy_backtest_dict_list[i]['total_return_rate']}%</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">4</th>
+                          <td>該策略最高報酬為</td>
+                           <td>${strategy_backtest_dict_list[i]['highest_return']}%</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">5</th>
+                          <td>該策略最低報酬為</td>
+                           <td>${strategy_backtest_dict_list[i]['lowest_return']}%</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">6</th>
+                          <td>總獲利次數</td>
+                           <td>${strategy_backtest_dict_list[i]['total_win']}</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">7</th>
+                          <td>總虧損次數</td>
+                           <td>${strategy_backtest_dict_list[i]['total_lose']}</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">8</th>
+                          <td>總交易次數</td>
+                           <td>${strategy_backtest_dict_list[i]['total_trade']}</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">9</th>
+                          <td>勝率</td>
+                           <td>${strategy_backtest_dict_list[i]['win_rate']}%</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">10</th>
+                          <td>該策略平均每次報酬為</td>
+                           <td>${strategy_backtest_dict_list[i]['avg_return_rate']}%</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">11</th>
+                          <td>年化報酬率</td>
+                           <td>${strategy_backtest_dict_list[i]['irr']}%</td>
+                        </tr>
+                      </tbody>`
+        }else {
+            // do nothing
+        }
+    }
+ })
+
+</script>
 
 
 </body>

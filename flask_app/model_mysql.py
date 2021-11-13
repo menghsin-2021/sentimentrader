@@ -230,8 +230,8 @@ create_sql_format_user_strategy = {
                      )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_user),
 
     "strategy_backtest": "CREATE TABLE IF NOT EXISTS {}( \
-                `id` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-                `user_id` BIGINT COLLATE utf8mb4_bin NOT NULL AUTO_INCREMENT, \
+                `id` BIGINT COLLATE utf8mb4_bin NOT NULL AUTO_INCREMENT, \
+                `user_id` BIGINT COLLATE utf8mb4_bin NOT NULL, \
                 `stock_code` varchar(255) COLLATE utf8mb4_bin NOT NULL, \
                 `start_date` text COLLATE utf8mb4_bin NOT NULL, \
                 `end_date` text COLLATE utf8mb4_bin NOT NULL, \
@@ -418,6 +418,10 @@ class DbWrapperMysql:
         else:
             self.cursor.execute(sql_update)
             self.connect_db.commit()
+
+    def delete_row(self, sql_delete):
+        self.cursor.execute(sql_delete)
+        self.connect_db.commit()
 
     def close_db(self):
         self.connect_db.close()

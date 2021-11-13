@@ -198,7 +198,7 @@ def login():
 def home():
     uid = get_cookie_check()
     print(uid)
-    if not uid:
+    if not isinstance(uid, int):
         return render_template('login.html')
     else:
         return render_template('home.html')
@@ -358,7 +358,7 @@ def single_stock_sentiment():
 def strategy():
     uid = get_cookie_check()
     print(uid)
-    if not uid:
+    if not isinstance(uid, int):
         return render_template('login.html')
     else:
         return render_template('strategy.html')
@@ -370,7 +370,7 @@ def strategy():
 def send_strategy():
     uid = get_cookie_check()
     print(uid)
-    if not uid:
+    if not isinstance(uid, int):
         return render_template('login.html')
     else:
         form = request.form.to_dict()
@@ -1086,44 +1086,44 @@ def send_strategy():
 
             print(backtest_report)
 
-            strategy_backtest_dict = {
-                'user_id': uid,
-                'stock_code': stock_code,
-                'start_date': start_date,
-                'end_date': end_date,
-                'strategy_line': strategy_line,
-                'strategy_in': strategy_in,
-                'strategy_in_para': strategy_in_para,
-                'strategy_out': strategy_out,
-                'strategy_out_para': strategy_out_para,
-                'strategy_sentiment': strategy_sentiment,
-                'source': source,
-                'sentiment_para_more': sentiment_para_more,
-                'sentiment_para_less': sentiment_para_less,
-                'seed_money': set_money,
-                'discount': discount,
-                'total_buy_count': total_buy_count,
-                'total_sell_count': total_sell_count,
-                'total_return_rate': total_return_rate,
-                'highest_return': height_return,
-                'lowest_return': lowest_return,
-                'total_win': total_win,
-                'total_lose': total_lose,
-                'total_trade': total_trade,
-                'win_rate': win_rate,
-                'avg_return_rate': avg_return_rate,
-                'irr': irr,
-                'file_path': file_path,
-                'create_date': today_strftime
-            }
+            # strategy_backtest_dict = {
+            #     'user_id': uid,
+            #     'stock_code': stock_code,
+            #     'start_date': start_date,
+            #     'end_date': end_date,
+            #     'strategy_line': strategy_line,
+            #     'strategy_in': strategy_in,
+            #     'strategy_in_para': strategy_in_para,
+            #     'strategy_out': strategy_out,
+            #     'strategy_out_para': strategy_out_para,
+            #     'strategy_sentiment': strategy_sentiment,
+            #     'source': source,
+            #     'sentiment_para_more': sentiment_para_more,
+            #     'sentiment_para_less': sentiment_para_less,
+            #     'seed_money': set_money,
+            #     'discount': discount,
+            #     'total_buy_count': total_buy_count,
+            #     'total_sell_count': total_sell_count,
+            #     'total_return_rate': total_return_rate,
+            #     'highest_return': height_return,
+            #     'lowest_return': lowest_return,
+            #     'total_win': total_win,
+            #     'total_lose': total_lose,
+            #     'total_trade': total_trade,
+            #     'win_rate': win_rate,
+            #     'avg_return_rate': avg_return_rate,
+            #     'irr': irr,
+            #     'file_path': file_path,
+            #     'create_date': today_strftime
+            # }
 
-            strategy_backtest_tuple = [strategy_backtest for strategy_backtest in strategy_backtest_dict.values()]
-            print(strategy_backtest_tuple)
-            # [1, '2317', '2020-01-01', '2021-10-31', 'kdj_line', 'none', 1, 'none', 1, 'to_negative_pass', 'ptt', 60, 40,
-            #  400, 40.0, 57, 57, -26.92, 14.63, -6.03, 19, 38, 57, 33.33, 0.22, -15.75,
-            #  'https://dwkrd7hfr3x4e.cloudfront.net/backtest/1/2317_1636715604.png', '2021-11-12']
+            strategy_backtest_tuple = (uid, stock_code, start_date, end_date, strategy_line, strategy_in, strategy_in_para, strategy_out, strategy_out_para,
+                                       strategy_sentiment, source, sentiment_para_more, sentiment_para_less,
+                                       set_money, discount, total_buy_count, total_sell_count, total_return_rate, height_return, lowest_return,
+                                       total_win, total_lose, total_trade, win_rate, avg_return_rate, irr, file_path, today_strftime)
 
-            #
+
+
             # sql_insert_strategy = "INSERT INTO `strategy` (`user_id`, `stock_code`, `start_date`, `end_date`, \
             #                                                `strategy_line`, `strategy_in`, `strategy_in_para`, `strategy_out`, `strategy_out_para`, \
             #                                                `strategy_sentiment`, `source`, `sentiment_para_more`, `sentiment_para_less`, `seed_money`, \
@@ -1134,18 +1134,17 @@ def send_strategy():
             #                                                `total_trade`, `win_rate`, `avg_return_rate`, `irr`, `file_path`, 'create_date') \
             #                                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
-            # sql_insert_strategy_backtest = "INSERT INTO `strategy_backtest` (`user_id`, `stock_code`, `start_date`, `end_date`, \
-            #                                                                  `strategy_line`, `strategy_in`, `strategy_in_para`, `strategy_out`, `strategy_out_para`, \
-            #                                                                  `strategy_sentiment`, `source`, `sentiment_para_more`, `sentiment_para_less`, `seed_money`, \
-            #                                                                  `discount`, `total_buy_count`, `total_sell_count`, `total_return_rate`, `highest_return`, \
-            #                                                                  `lowest_return`, `total_win`, `total_lose`, `total_trade`, `win_rate`, `avg_return_rate`, \
-            #                                                                  `irr`, `file_path`, 'create_date') \
-            #                                                                  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-            #
-            # # db_mysql.insert_tb(sql_insert_strategy, strategy_tuple)
-            # # db_mysql.insert_tb(sql_insert_backtest, backtest_tuple)
-            # db_mysql.insert_tb(sql_insert_strategy_backtest, strategy_backtest_tuple)
+            sql_insert_strategy_backtest = "INSERT INTO `strategy_backtest` (`user_id`, `stock_code`, `start_date`, `end_date`, \
+                                                                             `strategy_line`, `strategy_in`, `strategy_in_para`, `strategy_out`, `strategy_out_para`, \
+                                                                             `strategy_sentiment`, `source`, `sentiment_para_more`, `sentiment_para_less`, `seed_money`, \
+                                                                             `discount`, `total_buy_count`, `total_sell_count`, `total_return_rate`, `highest_return`, \
+                                                                             `lowest_return`, `total_win`, `total_lose`, `total_trade`, `win_rate`, `avg_return_rate`, \
+                                                                             `irr`, `file_path`, `create_date`) \
+                                                                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
+            # db_mysql.insert_tb(sql_insert_strategy, strategy_tuple)
+            # db_mysql.insert_tb(sql_insert_backtest, backtest_tuple)
+            db_mysql.insert_tb(sql_insert_strategy_backtest, strategy_backtest_tuple)
 
             return render_template('backtest.html', backtest_report=backtest_report)
 
@@ -1155,10 +1154,71 @@ def send_strategy():
 def backtest():
     uid = get_cookie_check()
     print(uid)
-    if not uid:
+    if not isinstance(uid, int):
         return render_template('login.html')
     else:
-        return render_template('backtest.html', filename="2317_2021-11-11")
+        sql_social_volume = "SELECT * \
+                             FROM `strategy_backtest` \
+                             WHERE `user_id` = '{}' \
+                             ORDER BY `create_date` DESC \
+                             limit 5;".format(uid)
+
+        db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
+        result = db_mysql.query_tb_all(sql_social_volume)
+        # pprint(result[0])
+        strategy_backtest_dict_list = [{
+                'strategy_id': strategy_backtest[0],
+                'user_id': strategy_backtest[1],
+                'stock_code': strategy_backtest[2],
+                'start_date': strategy_backtest[3],
+                'end_date': strategy_backtest[4],
+                'strategy_line': strategy_backtest[5],
+                'strategy_in': strategy_backtest[6],
+                'strategy_in_para': strategy_backtest[7],
+                'strategy_out': strategy_backtest[8],
+                'strategy_out_para': strategy_backtest[9],
+                'strategy_sentiment': strategy_backtest[10],
+                'source': strategy_backtest[11],
+                'sentiment_para_more': strategy_backtest[12],
+                'sentiment_para_less': strategy_backtest[13],
+                'seed_money': strategy_backtest[14],
+                'discount': strategy_backtest[15],
+                'total_buy_count': strategy_backtest[16],
+                'total_sell_count': strategy_backtest[17],
+                'total_return_rate': strategy_backtest[18],
+                'highest_return': strategy_backtest[19],
+                'lowest_return': strategy_backtest[20],
+                'total_win': strategy_backtest[21],
+                'total_lose': strategy_backtest[22],
+                'total_trade': strategy_backtest[23],
+                'win_rate': strategy_backtest[24],
+                'avg_return_rate': strategy_backtest[25],
+                'irr': strategy_backtest[26],
+                'file_path': strategy_backtest[27],
+                'create_date': strategy_backtest[28]
+            } for strategy_backtest in result]
+
+        strategy_backtest_dict_list_length = len(strategy_backtest_dict_list)
+        # pprint(strategy_backtest_dict_list[0])
+
+
+        return render_template('backtest.html', strategy_backtest_dict_list=strategy_backtest_dict_list, strategy_backtest_dict_list_length=strategy_backtest_dict_list_length)
+
+@app.route('/remove_strategy', methods=['POST'])
+def remove_strategy():
+    form = request.form.to_dict()
+    pprint(form)
+    strategy_id = form['remove-strategy']
+    print(strategy_id)
+
+    sql_delete_strategy = "DELETE FROM `strategy_backtest` WHERE `id` = '{}'".format(strategy_id)
+    db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
+    db_mysql.delete_row(sql_delete_strategy)
+    print(f"strategy {strategy_id} is deleted")
+
+    resp = make_response(redirect(url_for('backtest')))
+
+    return resp
 
 
 # user api
@@ -1395,7 +1455,7 @@ def signin():
 if __name__ == "__main__":  # 如果以主程式執行
     # initial db
     db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
-    # db_mysql.create_tb_all()
+    db_mysql.create_tb_all()
 
     # run sever
     app.run(debug=DEBUG, host=HOST, port=PORT)
