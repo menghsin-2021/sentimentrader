@@ -1287,7 +1287,7 @@ def backtest():
                              FROM `strategy_backtest` \
                              WHERE `user_id` = '{}' \
                              ORDER BY `create_date` DESC, `id` DESC \
-                             limit 5;".format(uid)
+                             limit 15;".format(uid)
 
         db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
         result = db_mysql.query_tb_all(sql_social_volume)

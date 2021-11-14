@@ -84,15 +84,15 @@
         <div class="strategy_card">
                 <h2>策略卡牌</h2>
                 <br>
-                <div id="card-deck" class="card-deck">
+                <div id="card-deck" class="d-flex flex-row flex-nowrap overflow-auto" style="height: 250px; ">
                     {% for i in range(strategy_backtest_dict_list_length) %}
-                    <div class="card col-2 p-2 bg-light border-dark">
+                    <div class="card col-3 p-2 bg-light border-dark" >
                         <div id="card-{{ i }}" class="card-body">
                             <h4 class="card-title">{{ strategy_backtest_dict_list[i]['stock_code'] | safe }}</h4>
-                            <ul>
-                                <li>勝率： {{ strategy_backtest_dict_list[i]['win_rate'] | safe }}</li>
-                                <li>年化報酬率： {{ strategy_backtest_dict_list[i]['irr'] | safe }}</li>
-                                <li>總報酬率： {{ strategy_backtest_dict_list[i]['total_return_rate'] | safe }}</li>
+                            <ul style="font-size:16px; list-style-type: none;">
+                                <li>勝率： {{ strategy_backtest_dict_list[i]['win_rate'] | safe }}%</li>
+                                <li>年化報酬率： {{ strategy_backtest_dict_list[i]['irr'] | safe }}%</li>
+                                <li>總報酬率： {{ strategy_backtest_dict_list[i]['total_return_rate'] | safe }}%</li>
                                 <li>創建日期： {{ strategy_backtest_dict_list[i]['create_date'] | safe }}</li>
                             </ul>
                         </div>
@@ -104,14 +104,14 @@
         </div>
 
         <div class="content d-flex flex-row mr-2">
-            <div class="report figure col-9">
+            <div class="report figure col-8">
                 <div class="figure">
-                    <img src="{{ strategy_backtest_dict_list[0]['file_path'] | safe }}" alt="back test result" width="900" height="600">
+                    <img src="{{ strategy_backtest_dict_list[0]['file_path'] | safe }}" alt="back test result" width="550" height="500" style="width: 550px; height: 500px; object-fit: cover; padding: -100px 500px 0 0">
                 </div>
             </div>
 
 
-            <div class="report_content d-flex flex-column col-3">
+            <div class="report_content d-flex flex-column col-4">
                 <div class="report_information d-flex flex-row justify-content-between">
                     <table class="table table-hover">
                       <thead>
@@ -207,17 +207,17 @@
 
 <script>
 
-const cardDesk = document.querySelector(".card-deck");
+const cardDesk = document.querySelector("#card-deck");
 const figure = document.querySelector(".figure");
 const table = document.querySelector(".table");
 const removeStrategyForm = document.querySelector("#remove-strategy-form");
 const sentBacktestForm = document.querySelector("#send-backtest-form");
 
 let strategy_backtest_dict_list = {{ strategy_backtest_dict_list | safe }}
-
+let strategy_backtest_dict_list_length = {{ strategy_backtest_dict_list_length | safe }}
 
 cardDesk.addEventListener("click", (event) => {
-    for (let i = 0; i < 5; i++){
+    for (let i = 0; i < strategy_backtest_dict_list_length; i++){
         if (event.target.id == `card-${i}`) {
             removeStrategyForm.innerHTML = `<input type="text" value="${strategy_backtest_dict_list[i]['strategy_id']}" style="display: none;" name="remove_strategy">
                                             <input type="submit" class="btn btn-primary mr-3" id="remove-strategy" value="捨棄策略">`
@@ -225,7 +225,7 @@ cardDesk.addEventListener("click", (event) => {
             sentBacktestForm.innerHTML = `<input type="text" value="${strategy_backtest_dict_list[i]['strategy_id']}" style="display: none;" name="send_backtest">
                                           <input type="submit" class="btn btn-primary mr-3" id="send-backtest" value="重新回測">`
 
-            figure.innerHTML = `<img src="${strategy_backtest_dict_list[i]['file_path']}" alt="back test result" width="900" height="600">`
+            figure.innerHTML = `<img src="${strategy_backtest_dict_list[i]['file_path']}" alt="back test result" width="550" height="500" style="width: 550px; height: 500px; object-fit: cover; padding: -100px 500px 0 0">`
 
             table.innerHTML = `<thead>
                         <tr>
