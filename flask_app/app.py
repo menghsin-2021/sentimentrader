@@ -20,6 +20,7 @@ from hashlib import pbkdf2_hmac
 # token
 import jwt
 
+
 from photo_downloader_uploader import upload_file
 bucket_name = 'sentimentraderbucket'
 object_path = 'backtest'
@@ -188,10 +189,18 @@ def create_sentiment_json(range, result):
 
         return sentiment
 
+
 @app.route('/', methods=['GET'])
 @app.route('/login.html', methods=['GET'])
 def login():
     return render_template('login.html')
+
+
+@app.route('/logout', methods=['GET'])
+def logout():
+    resp = make_response(render_template('login.html'))
+    resp.delete_cookie('token')
+    return resp
 
 
 @app.route('/home.html', methods=['GET'])
@@ -361,10 +370,123 @@ def strategy():
     if not isinstance(uid, int):
         return render_template('login.html')
     else:
-        return render_template('strategy.html')
+        return render_template('strategy.html', send_backtest="null")
+
+
+@app.route('/send_backtest', methods=['POST'])
+def send_backtest():
+    uid = get_cookie_check()
+    print(uid)
+    if not isinstance(uid, int):
+        return render_template('login.html')
+    else:
+        send_backtest_strategy_id = request.form.to_dict()['send_backtest']
+
+        print(send_backtest_strategy_id)
+
+        sql_fetch_category = "SELECT * \
+                              FROM `strategy_backtest` \
+                              JOIN `stocks` \
+                              ON `strategy_backtest`.`stock_code` = `stocks`.`stock_code` \
+                              WHERE `id` = '{}';".format(send_backtest_strategy_id)
+
+        # sql_fetch_category = "SELECT `category`, `stock_name` \
+        #                      FROM `stocks` \
+        #                      WHERE `stock_code` = '{}';".format(send_backtest['stock_code'])
+
+        db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
+        strategy_backtest = db_mysql.query_tb_one(sql_fetch_category)
+        print(strategy_backtest)
+
+        send_backtest = {
+                'strategy_id': strategy_backtest[0],
+                'user_id': strategy_backtest[1],
+                'stock_code': strategy_backtest[2],
+                'start_date': strategy_backtest[3],
+                'end_date': strategy_backtest[4],
+                'strategy_line': strategy_backtest[5],
+                'strategy_in': strategy_backtest[6],
+                'strategy_in_para': strategy_backtest[7],
+                'strategy_out': strategy_backtest[8],
+                'strategy_out_para': strategy_backtest[9],
+                'strategy_sentiment': strategy_backtest[10],
+                'source': strategy_backtest[11],
+                'sentiment_para_more': strategy_backtest[12],
+                'sentiment_para_less': strategy_backtest[13],
+                'seed_money': strategy_backtest[14],
+                'discount': strategy_backtest[15],
+                'total_buy_count': strategy_backtest[16],
+                'total_sell_count': strategy_backtest[17],
+                'total_return_rate': strategy_backtest[18],
+                'highest_return': strategy_backtest[19],
+                'lowest_return': strategy_backtest[20],
+                'total_win': strategy_backtest[21],
+                'total_lose': strategy_backtest[22],
+                'total_trade': strategy_backtest[23],
+                'win_rate': strategy_backtest[24],
+                'avg_return_rate': strategy_backtest[25],
+                'irr': strategy_backtest[26],
+                'file_path': strategy_backtest[27],
+                'create_date': strategy_backtest[28],
+            'stock_name': strategy_backtest[30],
+            'category': strategy_backtest[31]
+            }
+
+
+        category_name = {
+            "electric_electric_car": "電動車",
+            "electric_car": "電動車",
+            "electric": "電子資訊",
+            "sail": "航運",
+            "biotech": "生技",
+            "finance": "金融",
+            "stock_market": "台積電",
+        }
+
+        strategy_line_name = {
+            "none": "--",
+            "undefined": "--",
+            "kdj_line": "ＫＤ線交叉",
+            "macd_line": "ＭＡＣＤ線交叉",
+            "none_line": "自訂",
+        }
+
+        strategy_in_name = {
+            "none": "--",
+            "increase_in": "股價連續上漲(3日)",
+            "decrease_in": "股價連續下跌(3日)"
+        }
+
+        strategy_out_name = {
+            "none": "--",
+            "increase_out": "股價連續上漲(3日)",
+            "decrease_out": "股價連續下跌(3日)"
+        }
+
+        strategy_sentiment_name = {
+            "none_pass": "--",
+            "daily_sentiment_pass": "當日情緒分數",
+            "to_negative_pass": "正轉負",
+            "to_positive_pass": "負轉正",
+        }
+
+        source_name = {
+            "ptt": "PTT 論壇",
+            "cnyes": "鉅亨網新聞",
+        }
+
+        pprint(send_backtest)
+
+        send_backtest['category_name'] = category_name[send_backtest['category']]
+        send_backtest['strategy_line_name'] = strategy_line_name[send_backtest['strategy_line']]
+        send_backtest['strategy_in_name'] = strategy_in_name[send_backtest['strategy_in']]
+        send_backtest['strategy_out_name'] = strategy_out_name[send_backtest['strategy_out']]
+        send_backtest['strategy_sentiment_name'] = strategy_sentiment_name[send_backtest['strategy_sentiment']]
+        send_backtest['source_name'] = source_name[send_backtest['source']]
 
 
 
+        return render_template('strategy.html', send_backtest=send_backtest)
 
 @app.route('/send_strategy', methods=['POST'])
 def send_strategy():
@@ -902,8 +1024,10 @@ def send_strategy():
             else:
                 sell_mark.append(np.nan)
         df["sell_mark"] = sell_mark
-
-        df['avg_valence'] = (df['avg_valence'] + 5) * 10 / 100
+        if strategy_sentiment != 'none_pass':
+            df['avg_valence'] = (df['avg_valence'] + 5) * 10 / 100
+        else:
+            pass
 
         if len(buy_mark) > 0 and len(sell_mark) > 0:
             if strategy_line == 'kdj_line' and strategy_sentiment != 'none_pass':
@@ -1146,7 +1270,9 @@ def send_strategy():
             # db_mysql.insert_tb(sql_insert_backtest, backtest_tuple)
             db_mysql.insert_tb(sql_insert_strategy_backtest, strategy_backtest_tuple)
 
-            return render_template('backtest.html', backtest_report=backtest_report)
+            resp = redirect(url_for('backtest'))
+
+            return resp
 
 
 
@@ -1160,7 +1286,7 @@ def backtest():
         sql_social_volume = "SELECT * \
                              FROM `strategy_backtest` \
                              WHERE `user_id` = '{}' \
-                             ORDER BY `create_date` DESC \
+                             ORDER BY `create_date` DESC, `id` DESC \
                              limit 5;".format(uid)
 
         db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
@@ -1198,9 +1324,9 @@ def backtest():
                 'create_date': strategy_backtest[28]
             } for strategy_backtest in result]
 
-        strategy_backtest_dict_list_length = len(strategy_backtest_dict_list)
+        strategy_backtest_dict_list_length = int(len(strategy_backtest_dict_list))
         # pprint(strategy_backtest_dict_list[0])
-
+        print(strategy_backtest_dict_list_length)
 
         return render_template('backtest.html', strategy_backtest_dict_list=strategy_backtest_dict_list, strategy_backtest_dict_list_length=strategy_backtest_dict_list_length)
 
@@ -1208,7 +1334,7 @@ def backtest():
 def remove_strategy():
     form = request.form.to_dict()
     pprint(form)
-    strategy_id = form['remove-strategy']
+    strategy_id = form['remove_strategy']
     print(strategy_id)
 
     sql_delete_strategy = "DELETE FROM `strategy_backtest` WHERE `id` = '{}'".format(strategy_id)

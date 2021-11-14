@@ -17,10 +17,10 @@
 </head>
 <body>
 <nav class="navbar navbar-dark bg-primary flex-md-nowapr fixed-top p-0 shadow">
-    <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Sentimentrader</a>
+    <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/home.html">Sentimentrader</a>
     <ul class="navbar-nav px-3">
         <li class="nav-item text-nowarp">
-            <a class="nav-link" href="#">Logout</a>
+            <a class="nav-link" href="/logout">Logout</a>
         </li>
     </ul>
 </nav>
@@ -185,15 +185,15 @@
                     <div class="d-flex flex-row justify-content-end">
                         <div>
                             <form id="remove-strategy-form" action="/remove_strategy" method="POST">
-                                <input type="text" value="{{ strategy_backtest_dict_list[0]['strategy_id'] }}" style="display: none;" name="remove-strategy">
+                                <input type="text" value="{{ strategy_backtest_dict_list[0]['strategy_id'] | safe }}" style="display: none;" name="remove_strategy">
                                 <input type="submit" class="btn btn-primary mr-3" id="remove-strategy" value="捨棄策略">
                             </form>
                         </div>
 
                         <div>
-                            <form action="/send_strategy" method="POST">
-                            <input type="submit" class="btn btn-primary mr-3" id="sent-backtest" value="重新回測">
-                            </input>
+                            <form id="send-backtest-form" action="/send_backtest" method="POST">
+                            <input type="text" value="{{ strategy_backtest_dict_list[0]['strategy_id'] | safe }}" style="display: none;" name="send_backtest">
+                            <input type="submit" class="btn btn-primary mr-3" id="send-backtest" value="重新回測">
                             </form>
                         </div>
                     </div>
@@ -211,6 +211,7 @@ const cardDesk = document.querySelector(".card-deck");
 const figure = document.querySelector(".figure");
 const table = document.querySelector(".table");
 const removeStrategyForm = document.querySelector("#remove-strategy-form");
+const sentBacktestForm = document.querySelector("#send-backtest-form");
 
 let strategy_backtest_dict_list = {{ strategy_backtest_dict_list | safe }}
 
@@ -218,8 +219,11 @@ let strategy_backtest_dict_list = {{ strategy_backtest_dict_list | safe }}
 cardDesk.addEventListener("click", (event) => {
     for (let i = 0; i < 5; i++){
         if (event.target.id == `card-${i}`) {
-            removeStrategyForm.innerHTML = `<input type="text" value="${strategy_backtest_dict_list[i]['strategy_id']}" style="display: none;" name="remove-strategy">
+            removeStrategyForm.innerHTML = `<input type="text" value="${strategy_backtest_dict_list[i]['strategy_id']}" style="display: none;" name="remove_strategy">
                                             <input type="submit" class="btn btn-primary mr-3" id="remove-strategy" value="捨棄策略">`
+
+            sentBacktestForm.innerHTML = `<input type="text" value="${strategy_backtest_dict_list[i]['strategy_id']}" style="display: none;" name="send_backtest">
+                                          <input type="submit" class="btn btn-primary mr-3" id="send-backtest" value="重新回測">`
 
             figure.innerHTML = `<img src="${strategy_backtest_dict_list[i]['file_path']}" alt="back test result" width="900" height="600">`
 

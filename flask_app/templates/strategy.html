@@ -17,10 +17,10 @@
 </head>
 <body>
 <nav class="navbar navbar-dark bg-primary flex-md-nowapr fixed-top p-0 shadow">
-    <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Sentimentrader</a>
+    <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/home.html">Sentimentrader</a>
     <ul class="navbar-nav px-3">
         <li class="nav-item text-nowarp">
-            <a class="nav-link" href="#">Logout</a>
+            <a class="nav-link" href="/logout">Logout</a>
         </li>
     </ul>
 </nav>
@@ -141,7 +141,7 @@
         </div>
 
 
-        <form action="/send_strategy" method="POST">
+        <form id="strategy-form" action="/send_strategy" method="POST">
             <div class="strategy_setting d-flex flex-row justify-content-between">
 
                 <div class="strategy_setting_para col-6">
@@ -294,24 +294,366 @@
             </div>
             <div class="d-flex flex-row justify-content-end">
                 <div>
-                    <button type="submit" class="btn btn-primary mr-3" id="clear-setting" value="clear-setting">清除重設
-                    </button>
-                </div>
-
-                <div>
                     <button type="submit" class="btn btn-primary mr-3" id="sent-backtest" value="sent-backtest">送出回測
                     </button>
                 </div>
             </div>
-
         </form>
+    <br>
+            <div class="d-flex flex-row justify-content-end">
+                <div>
+                    <button type="submit" class="btn btn-primary mr-3" id="clear-setting" value="clear-setting">清除重設
+                    </button>
+                </div>
+            </div>
     </div>
 </main>
 
 
 
-<script src="/static/js/strategy.js"></script>
 
+<script>
+
+const strategyForm = document.querySelector("#strategy-form");
+const clearSetting = document.querySelector("#clear-setting");
+
+clearSetting.addEventListener("click", (event) => {
+    strategyForm.innerHTML = `<div class="strategy_setting d-flex flex-row justify-content-between">
+
+                <div class="strategy_setting_para col-6">
+                    <h2>交易策略制定/選擇</h2>
+                    <br>
+                    <div>
+                        <div class="form-group">
+                              <label for="category">類股</label>
+                              <select class="form-control" id="category" name="category" onchange="insertOption('category', 'stock_code')">
+                                <option value="electric_car">電動車</option>
+                                <option value="electric">電子資訊</option>
+                                <option value="sail">航運</option>
+                                <option value="biotech">生技</option>
+                                <option value="finance">金融</option>
+                              </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="stock_code" class="control-label">個股選單</label>
+                                <select id="stock_code" class="form-control" name="stock_code">
+                                    <optgroup label="電動車">
+                                        <option value="2317">2317 鴻海</option>
+                                        <option value="3023">3023 信邦</option>
+                                        <option value="2308">2308 台達電</option>
+                                        <option value="2301">2301 光寶科</option>
+                                        <option value="1533">1533 車王電</option>
+                                        <option value="8358">8358 金居</option>
+                                        <option value="2357">2357 華碩</option>
+                                        <option value="3665">3665 貿聯-ＫＹ</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="strategy_line">進出場策略(技術線或自訂)</label>
+                                <select class="form-control strategy_line" id="strategy_line" name="strategy_line" onchange="showStrategy('strategy_line', 'custom_strategy')">
+                                    <option value="none">--</option>
+                                    <option value="kdj_line">ＫＤ線交叉</option>
+                                    <option value="macd_line">ＭＡＣＤ線交叉</option>
+                                    <option value="none_line">自訂</option>
+                                </select>
+                            </div>
+
+                        <div id="custom_strategy" class="custom_strategy">
+                        <div class="form-group" >
+                                <label for="strategy_in">自訂進場策略(股價)</label>
+                                <select class="form-control" id="strategy_in" name="strategy_in" onchange="strategyStock('strategy_in', 'strategy_out')">
+                                    <option value="none">--</option>
+                                    <option value="increase_in">股價連續上漲(3日)</option>
+                                    <option value="decrease_in">股價連續下跌(3日)</option>
+                                </select>
+                            </div>
+
+                        <div class="input-group mb-3">
+                              <div class="input-group-prepend">
+                                <span class="input-group-text">大於或等於</span>
+                              </div>
+                              <input type="number" class="form-control" name="strategy_in_para" aria-label="Amount (to the nearest dollar)">
+                              <div class="input-group-append">
+                                <span class="input-group-text">％</span>
+                              </div>
+                            </div>
+
+                        <div class="form-group">
+                                <label for="strategy_out">自訂出場策略(股價)</label>
+                                <select class="form-control" id="strategy_out" name="strategy_out">
+                                    <option value="none">--</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group mb-3">
+                              <div class="input-group-prepend">
+                                <span class="input-group-text">大於或等於</span>
+                              </div>
+                              <input type="number" class="form-control" name="strategy_out_para" aria-label="Amount (to the nearest dollar)">
+                              <div class="input-group-append">
+                                <span class="input-group-text">％</span>
+                              </div>
+                            </div>
+                            </div>
+
+
+                            <div class="form-group">
+                                <label for="sentiment_condition">不進場條件依據</label>
+                                <select class="form-control" id="sentiment_condition" name="strategy_sentiment" onchange="strategySentiment('sentiment_condition', 'sentiment_grade', 'sentiment_source')">
+                                    <option value="daily_sentiment_pass">當日情緒分數</option>
+                                    <option value="to_negative_pass">正轉負</option>
+                                    <option value="to_positive_pass">負轉正</option>
+                                    <option value="none_pass"> -- </option>
+                                </select>
+                            </div>
+
+
+                            <div id="sentiment_grade" class="sentiment_grade">
+
+                            <div class="input-group mb-3">
+                              <div class="input-group-prepend">
+                                <span class="input-group-text">大於或等於</span>
+                              </div>
+                              <input type="number" class="form-control" name="sentiment_para_more" aria-label="Amount (to the nearest dollar)" placeholder="0-100">
+                              <div class="input-group-append">
+                                <span class="input-group-text">分</span>
+                              </div>
+                            </div>
+
+                            <div class="input-group mb-3">
+                              <div class="input-group-prepend">
+                                <span class="input-group-text">小於或等於</span>
+                              </div>
+                              <input type="number" class="form-control" name="sentiment_para_less" aria-label="Amount (to the nearest dollar)" placeholder="0-100">
+                              <div class="input-group-append">
+                                <span class="input-group-text">分</span>
+                              </div>
+                            </div>
+
+                                </div>
+
+                            <div id="sentiment_source" class="form-group sentiment_source">
+                                <label for="source">媒體來源</label>
+                                <select class="form-control" id="source" name="source">
+                                    <option value="ptt">PTT 論壇</option>
+                                    <option value="cnyes">新聞</option>
+                                </select>
+                            </div>
+
+                    </div>
+
+                </div>
+                <div class="basic_setting_para col-6">
+                    <h2>回測設定</h2>
+                    <br>
+                        <div class="form-group">
+                            <label for="start_date">開始日期</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" placeholder="2018/01/01">
+                        </div>
+                        <div class="form-group">
+                            <label for="end_date">結束日期</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" placeholder="2021/11/08">
+                        </div>
+                        <div class="form-group">
+                            <label for="money">資金(千)</label>
+                            <input type="number" class="form-control" name="money" id="money" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="discount">手續費折扣(%)</label>
+                            <input type="number" class="form-control" name="discount" id="discount" placeholder="0">
+                        </div>
+                </div>
+
+            </div>
+            <div class="d-flex flex-row justify-content-end">
+
+
+                <div>
+                    <button type="submit" class="btn btn-primary mr-3" id="sent-backtest" value="sent-backtest">送出回測
+                    </button>
+                </div>
+            </div>`
+})
+
+
+
+
+let strategy_form = {{ send_backtest | safe }}
+
+if (typeof strategy_form !== "null") {
+    strategyForm.innerHTML = `<div class="strategy_setting d-flex flex-row justify-content-between">
+                <div class="strategy_setting_para col-6">
+                    <h2>交易策略制定/選擇</h2>
+                    <br>
+                    <div>
+                        <div class="form-group">
+                              <label for="category">類股</label>
+                              <select class="form-control" id="category" name="category" onchange="insertOption('category', 'stock_code')">
+                                <option value="${strategy_form['category']}">${strategy_form['category_name']}</option>
+                                <option value="electric_car">電動車</option>
+                                <option value="electric">電子資訊</option>
+                                <option value="sail">航運</option>
+                                <option value="biotech">生技</option>
+                                <option value="finance">金融</option>
+                              </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="stock_code" class="control-label">個股選單</label>
+                                <select id="stock_code" class="form-control" name="stock_code">
+                                    <optgroup label="${strategy_form['category_name']}">
+                                        <option value="${strategy_form['stock_code']}">${strategy_form['stock_code']} ${strategy_form['stock_name']}</option>
+                                        <option value="2317">2317 鴻海</option>
+                                        <option value="3023">3023 信邦</option>
+                                        <option value="2308">2308 台達電</option>
+                                        <option value="2301">2301 光寶科</option>
+                                        <option value="1533">1533 車王電</option>
+                                        <option value="8358">8358 金居</option>
+                                        <option value="2357">2357 華碩</option>
+                                        <option value="3665">3665 貿聯-ＫＹ</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="strategy_line">進出場策略(技術線或自訂)</label>
+                                <select class="form-control strategy_line" id="strategy_line" name="strategy_line" onchange="showStrategy('strategy_line', 'custom_strategy')">
+                                    <option value="${strategy_form['kdj_line']}">${strategy_form['strategy_line_name']}</option>
+                                    <option value="none">--</option>
+                                    <option value="kdj_line">ＫＤ線交叉</option>
+                                    <option value="macd_line">ＭＡＣＤ線交叉</option>
+                                    <option value="none_line">自訂</option>
+                                </select>
+                            </div>
+
+                        <div id="custom_strategy" class="custom_strategy">
+                        <div class="form-group" >
+                                <label for="strategy_in">自訂進場策略(股價)</label>
+                                <select class="form-control" id="strategy_in" name="strategy_in" onchange="strategyStock('strategy_in', 'strategy_out')">
+                                    <option value="${strategy_form['strategy_in']}">${strategy_form['strategy_in_name']}</option>
+                                    <option value="none">--</option>
+                                    <option value="increase_in">股價連續上漲(3日)</option>
+                                    <option value="decrease_in">股價連續下跌(3日)</option>
+                                </select>
+                            </div>
+
+                        <div class="input-group mb-3">
+                              <div class="input-group-prepend">
+                                <span class="input-group-text">大於或等於</span>
+                              </div>
+                              <input type="number" class="form-control" name="strategy_in_para" aria-label="Amount (to the nearest dollar)" value="${strategy_form['strategy_in_para']}" placeholder="${strategy_form['strategy_in_para']}">
+                              <div class="input-group-append">
+                                <span class="input-group-text">％</span>
+                              </div>
+                            </div>
+
+                        <div class="form-group">
+                                <label for="strategy_out">自訂出場策略(股價)</label>
+                                <select class="form-control" id="strategy_out" name="strategy_out">
+                                    <option value="${strategy_form['strategy_out']}">${strategy_form['strategy_out_name']}</option>
+                                    <option value="none">--</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group mb-3">
+                              <div class="input-group-prepend">
+                                <span class="input-group-text">大於或等於</span>
+                              </div>
+                              <input type="number" class="form-control" name="strategy_out_para" aria-label="Amount (to the nearest dollar)" value="${strategy_form['strategy_out_para']}" placeholder="${strategy_form['strategy_out_para']}">
+                              <div class="input-group-append">
+                                <span class="input-group-text">％</span>
+                              </div>
+                            </div>
+                            </div>
+
+
+                            <div class="form-group">
+                                <label for="sentiment_condition">不進場條件依據</label>
+                                <select class="form-control" id="sentiment_condition" name="strategy_sentiment" onchange="strategySentiment('sentiment_condition', 'sentiment_grade', 'sentiment_source')">
+                                    <option value="${strategy_form['strategy_sentiment']}">${strategy_form['strategy_sentiment_name']}</option>
+                                    <option value="daily_sentiment_pass">當日情緒分數</option>
+                                    <option value="to_negative_pass">正轉負</option>
+                                    <option value="to_positive_pass">負轉正</option>
+                                    <option value="none_pass"> -- </option>
+                                </select>
+                            </div>
+
+
+                            <div id="sentiment_grade" class="sentiment_grade">
+
+                            <div class="input-group mb-3">
+                              <div class="input-group-prepend">
+                                <span class="input-group-text">大於或等於</span>
+                              </div>
+                              <input type="number" class="form-control" name="sentiment_para_more" aria-label="Amount (to the nearest dollar)" placeholder="${strategy_form['sentiment_para_more']}" value="${strategy_form['sentiment_para_more']}">
+                              <div class="input-group-append">
+                                <span class="input-group-text">分</span>
+                              </div>
+                            </div>
+
+                            <div class="input-group mb-3">
+                              <div class="input-group-prepend">
+                                <span class="input-group-text">小於或等於</span>
+                              </div>
+                              <input type="number" class="form-control" name="sentiment_para_less" aria-label="Amount (to the nearest dollar)" placeholder="${strategy_form['sentiment_para_less']}" value="${strategy_form['sentiment_para_less']}">
+                              <div class="input-group-append">
+                                <span class="input-group-text">分</span>
+                              </div>
+                            </div>
+
+                                </div>
+
+                            <div id="sentiment_source" class="form-group sentiment_source">
+                                <label for="source">媒體來源</label>
+                                <select class="form-control" id="source" name="source">
+                                    <option value="${strategy_form['source']}">${strategy_form['source_name']}</option>
+                                    <option value="ptt">PTT 論壇</option>
+                                    <option value="cnyes">鉅亨網新聞</option>
+                                </select>
+                            </div>
+
+                    </div>
+
+                </div>
+                <div class="basic_setting_para col-6">
+                    <h2>回測設定</h2>
+                    <br>
+                        <div class="form-group">
+                            <label for="start_date">開始日期</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="${strategy_form['start_date']}" placeholder="${strategy_form['start_date']}">
+                        </div>
+                        <div class="form-group">
+                            <label for="end_date">結束日期</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="${strategy_form['end_date']}" placeholder="${strategy_form['end_date']}">
+                        </div>
+                        <div class="form-group">
+                            <label for="money">資金(千)</label>
+                            <input type="number" class="form-control" name="money" id="money" value="${strategy_form['seed_money']}" placeholder="${strategy_form['seed_money']}">
+                        </div>
+                        <div class="form-group">
+                            <label for="discount">手續費折扣(%)</label>
+                            <input type="number" class="form-control" name="discount" id="discount" value="${strategy_form['discount']}" placeholder="${strategy_form['discount']}">
+                        </div>
+                </div>
+
+            </div>
+            <div class="d-flex flex-row justify-content-end">
+
+                <div>
+                    <button type="submit" class="btn btn-primary mr-3" id="sent-backtest" value="sent-backtest">送出回測
+                    </button>
+                </div>
+            </div>`
+} else {
+  // do nothing
+}
+
+</script>
+
+<script src="/static/js/strategy.js"></script>
 
 </body>
 
