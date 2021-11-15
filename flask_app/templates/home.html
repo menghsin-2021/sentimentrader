@@ -4,12 +4,22 @@
   <meta charset="UTF-8">
   <title>Sentimentrader Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/static/css/home.css">
-	<script>document.cookie = {{ resp | safe }};</script>
+
+	<!--    jquery-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+<!--	css-->
+    <link href="/static/css/loader.css" rel="stylesheet">
+
+
 </head>
 <body>
 <!-- partial:index.partial.html -->
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+
 
 <header>
     <nav class="navbar navbar-dark bg-primary flex-md-nowapr fixed-top p-0 shadow">
@@ -36,7 +46,7 @@
 	</li>
 
 	<li class="card">
-		<a class="card-image" href="/sentiment.html" target="_blank" style="background-image: url(https://cdn.pixabay.com/photo/2017/11/26/15/16/smiley-2979107_1280.jpg);" data-image-full="https://cdn.pixabay.com/photo/2017/11/26/15/16/smiley-2979107_1280.jpg">
+		<a id="sentiment" class="card-image" href="/sentiment.html" target="_blank" style="background-image: url(https://cdn.pixabay.com/photo/2017/11/26/15/16/smiley-2979107_1280.jpg);" data-image-full="https://cdn.pixabay.com/photo/2017/11/26/15/16/smiley-2979107_1280.jpg">
 			<img src="https://cdn.pixabay.com/photo/2017/11/26/15/16/smiley-2979107_1280.jpg" alt="let's go" />
 		</a>
 		<a class="card-description" href="/sentiment.html" target="_blank">
@@ -68,8 +78,29 @@
 </ul>
 
 	</div>
+
+ <div class="loader-wrapper">
+        <span class="loader"><span class="loader-inner"></span></span>
+         <br>
+         <h4 style="color: #ADB5BD; margin-left: 15px;">Loading...</h4>
+    </div>
+
+
 <!-- partial -->
-  <script src="/static/js/home.js"></script>
+<script src="/static/js/home.js"></script>
+
+<script>
+
+        $("#sentiment").on("click", function() {
+        $(".loader-wrapper").show()
+        });
+
+        $(window).on("load",function(){
+          $(".loader-wrapper").fadeOut("slow");
+        });
+
+</script>
+
 
 </body>
 </html>

@@ -10,7 +10,7 @@ window.addEventListener('load', function() {
 });
 
 function lazyLoad() {
-	var card_images = document.querySelectorAll('.card-image');
+	var card_images = document.querySelectorAll('.card-image')
 	
 	// loop over each card image
 	card_images.forEach(function(card_image) {

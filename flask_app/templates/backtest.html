@@ -11,9 +11,19 @@
     <!-- form CSS -->
     <link href="/static/css/dashboard.css" rel="stylesheet">
     <link href="/static/css/strategy.css" rel="stylesheet">
+    <link href="/static/css/loader.css" rel="stylesheet">
 
     <!--      plotly-->
     <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>
+
+    	<!--    jquery-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+<!--	css-->
+
+
+
 </head>
 <body>
 <nav class="navbar navbar-dark bg-primary flex-md-nowapr fixed-top p-0 shadow">
@@ -84,9 +94,9 @@
         <div class="strategy_card">
                 <h2>策略卡牌</h2>
                 <br>
-                <div id="card-deck" class="d-flex flex-row flex-nowrap overflow-auto" style="height: 250px; ">
+                <div id="card-deck" class="d-flex flex-row flex-nowrap overflow-auto" style="height: 300px;">
                     {% for i in range(strategy_backtest_dict_list_length) %}
-                    <div class="card col-3 p-2 bg-light border-dark" >
+                    <div id="card" class="card col-3 p-2 bg-light border-dark">
                         <div id="card-{{ i }}" class="card-body">
                             <h4 class="card-title">{{ strategy_backtest_dict_list[i]['stock_code'] | safe }}</h4>
                             <ul style="font-size:16px; list-style-type: none;">
@@ -95,6 +105,7 @@
                                 <li>總報酬率： {{ strategy_backtest_dict_list[i]['total_return_rate'] | safe }}%</li>
                                 <li>創建日期： {{ strategy_backtest_dict_list[i]['create_date'] | safe }}</li>
                             </ul>
+                            <div class="d-flex justify-content-end"><button id="change-card-{{ i }}" class="btn-sm btn-primary">選擇卡片</button></div>
                         </div>
                     </div>
                     {% endfor %}
@@ -106,7 +117,7 @@
         <div class="content d-flex flex-row mr-2">
             <div class="report figure col-8">
                 <div class="figure">
-                    <img src="{{ strategy_backtest_dict_list[0]['file_path'] | safe }}" alt="back test result" width="550" height="500" style="width: 550px; height: 500px; object-fit: cover; padding: -100px 500px 0 0">
+                    <img src="{{ strategy_backtest_dict_list[0]['file_path'] | safe }}" alt="back test result" width="950" height="500" style="object-position: -150px 0px;">
                 </div>
             </div>
 
@@ -201,13 +212,37 @@
             </div>
         </div>
     </div>
+
+    <div class="loader-wrapper">
+      <span class="loader"><span class="loader-inner"></span></span>
+    </div>
+
+
 </main>
 
 
 
+ <div class="loader-wrapper">
+        <span class="loader"><span class="loader-inner"></span></span>
+         <br>
+         <h4 style="color: #ADB5BD; margin-left: 15px;">Loading...</h4>
+    </div>
+
 <script>
 
-const cardDesk = document.querySelector("#card-deck");
+    $(window).on("load",function(){
+        $(".loader-wrapper").show().delay(2000).queue(function (next) {
+                $(this).hide();
+                next();
+            });
+          $(".loader-wrapper").fadeOut("slow");
+        });
+    </script>
+
+
+<script>
+
+const cardDeck = document.querySelector("#card-deck");
 const figure = document.querySelector(".figure");
 const table = document.querySelector(".table");
 const removeStrategyForm = document.querySelector("#remove-strategy-form");
@@ -216,16 +251,17 @@ const sentBacktestForm = document.querySelector("#send-backtest-form");
 let strategy_backtest_dict_list = {{ strategy_backtest_dict_list | safe }}
 let strategy_backtest_dict_list_length = {{ strategy_backtest_dict_list_length | safe }}
 
-cardDesk.addEventListener("click", (event) => {
+cardDeck.addEventListener("click", (event) => {
+    console.log(cardDeck)
     for (let i = 0; i < strategy_backtest_dict_list_length; i++){
-        if (event.target.id == `card-${i}`) {
+        if (event.target.id == `change-card-${i}`) {
             removeStrategyForm.innerHTML = `<input type="text" value="${strategy_backtest_dict_list[i]['strategy_id']}" style="display: none;" name="remove_strategy">
                                             <input type="submit" class="btn btn-primary mr-3" id="remove-strategy" value="捨棄策略">`
 
             sentBacktestForm.innerHTML = `<input type="text" value="${strategy_backtest_dict_list[i]['strategy_id']}" style="display: none;" name="send_backtest">
                                           <input type="submit" class="btn btn-primary mr-3" id="send-backtest" value="重新回測">`
 
-            figure.innerHTML = `<img src="${strategy_backtest_dict_list[i]['file_path']}" alt="back test result" width="550" height="500" style="width: 550px; height: 500px; object-fit: cover; padding: -100px 500px 0 0">`
+            figure.innerHTML = `<img src="${strategy_backtest_dict_list[i]['file_path']}" alt="back test result" width="950" height="500" style="object-position: -150px 0px;">`
 
             table.innerHTML = `<thead>
                         <tr>
@@ -298,7 +334,6 @@ cardDesk.addEventListener("click", (event) => {
  })
 
 </script>
-
 
 </body>
 

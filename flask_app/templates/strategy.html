@@ -11,9 +11,12 @@
     <!-- form CSS -->
     <link href="/static/css/dashboard.css" rel="stylesheet">
     <link href="/static/css/strategy.css" rel="stylesheet">
+    <link href="/static/css/loader.css" rel="stylesheet">
 
     <!--      plotly-->
     <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>
+
+
 </head>
 <body>
 <nav class="navbar navbar-dark bg-primary flex-md-nowapr fixed-top p-0 shadow">
@@ -178,7 +181,6 @@
                             <div class="form-group">
                                 <label for="strategy_line">進出場策略(技術線或自訂)</label>
                                 <select class="form-control strategy_line" id="strategy_line" name="strategy_line" onchange="showStrategy('strategy_line', 'custom_strategy')">
-                                    <option value="none">--</option>
                                     <option value="kdj_line">ＫＤ線交叉</option>
                                     <option value="macd_line">ＭＡＣＤ線交叉</option>
                                     <option value="none_line">自訂</option>
@@ -289,6 +291,21 @@
                             <label for="discount">手續費折扣(%)</label>
                             <input type="number" class="form-control" name="discount" id="discount" placeholder="0">
                         </div>
+
+                        <div class="col align-self-center">
+                          {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                              {% for category, message in messages %}
+
+                                    <div class="alert alert-{{category}}">
+                                        {{message}}
+                                    </div>
+
+                              {% endfor %}
+                            {% endif %}
+                          {% endwith%}
+                        </div>
+
                 </div>
 
             </div>
@@ -307,6 +324,8 @@
                 </div>
             </div>
     </div>
+
+
 </main>
 
 
@@ -354,7 +373,6 @@ clearSetting.addEventListener("click", (event) => {
                             <div class="form-group">
                                 <label for="strategy_line">進出場策略(技術線或自訂)</label>
                                 <select class="form-control strategy_line" id="strategy_line" name="strategy_line" onchange="showStrategy('strategy_line', 'custom_strategy')">
-                                    <option value="none">--</option>
                                     <option value="kdj_line">ＫＤ線交叉</option>
                                     <option value="macd_line">ＭＡＣＤ線交叉</option>
                                     <option value="none_line">自訂</option>
@@ -479,11 +497,18 @@ clearSetting.addEventListener("click", (event) => {
 })
 
 
-
-
 let strategy_form = {{ send_backtest | safe }}
 
-if (typeof strategy_form !== "null") {
+if (strategy_form === null) {
+    // do nothing
+} else {
+  let para_display = ''
+  if (strategy_form['strategy_sentiment'] !== 'daily_sentiment_pass') {
+        paraDisplay = 'none'
+    } else {
+        paraDisplay = 'block'
+    }
+
     strategyForm.innerHTML = `<div class="strategy_setting d-flex flex-row justify-content-between">
                 <div class="strategy_setting_para col-6">
                     <h2>交易策略制定/選擇</h2>
@@ -521,8 +546,7 @@ if (typeof strategy_form !== "null") {
                             <div class="form-group">
                                 <label for="strategy_line">進出場策略(技術線或自訂)</label>
                                 <select class="form-control strategy_line" id="strategy_line" name="strategy_line" onchange="showStrategy('strategy_line', 'custom_strategy')">
-                                    <option value="${strategy_form['kdj_line']}">${strategy_form['strategy_line_name']}</option>
-                                    <option value="none">--</option>
+                                    <option value="${strategy_form['strategy_line']}">${strategy_form['strategy_line_name']}</option>
                                     <option value="kdj_line">ＫＤ線交叉</option>
                                     <option value="macd_line">ＭＡＣＤ線交叉</option>
                                     <option value="none_line">自訂</option>
@@ -582,7 +606,7 @@ if (typeof strategy_form !== "null") {
                             </div>
 
 
-                            <div id="sentiment_grade" class="sentiment_grade">
+                            <div id="sentiment_grade" class="sentiment_grade" style="display: ${paraDisplay}">
 
                             <div class="input-group mb-3">
                               <div class="input-group-prepend">
@@ -647,9 +671,9 @@ if (typeof strategy_form !== "null") {
                     </button>
                 </div>
             </div>`
-} else {
-  // do nothing
+
 }
+
 
 </script>
 

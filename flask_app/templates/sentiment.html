@@ -10,9 +10,15 @@
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <!-- form CSS -->
     <link href="/static/css/dashboard.css" rel="stylesheet">
+    <link href="/static/css/loader.css" rel="stylesheet">
 
     <!--      plotly-->
     <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>
+
+    <!--    jquery-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
 </head>
 <body>
 <nav class="navbar navbar-dark bg-primary flex-md-nowapr fixed-top p-0 shadow">
@@ -23,6 +29,7 @@
         </li>
     </ul>
 </nav>
+
 
 <div class="container-fluid">
     <div class="row">
@@ -78,61 +85,92 @@
     </div>
 </div>
 <!--Main element-->
-<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4" style="height: 900px;">
+<main role="main" class="col-md-9 ml-sm-auto col-lg-9 px-4" style="height: 900px;">
 
-    <div class="d-flex flex-row justify-content-between" style="height: 900px" ;>
 
-        <div class="content col-4">
-            <div class="category-form">
-                <form action="/single_stock_sentiment" enctype="application/x-www-form-urlencoded" method=POST>
-                    <div class="form-group">
-                        <label for="category">類股</label>
-                        <select class="form-control" id="category" name="category"
-                                onchange="insertOption('category', 'stock_code')">
-                            <option value="electric_car">電動車</option>
-                            <option value="electric">電子資訊</option>
-                            <option value="sail">航運</option>
-                            <option value="biotech">生技</option>
-                            <option value="finance">金融</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="source">文章來源</label>
-                        <select class="form-control" id="source" name="source">
-                            <option value="ptt">PTT 貼文</option>
-                            <option value="cnyes">鉅亨網</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="stock_code" class="control-label">個股選單</label>
-                        <select id="stock_code" class="form-control" name="stock_code">
-                            <optgroup label="電動車">
-                                <option value="2317">2317 鴻海</option>
-                                <option value="3023">3023 信邦</option>
-                                <option value="2308">2308 台達電</option>
-                                <option value="2301">2301 光寶科</option>
-                                <option value="1533">1533 車王電</option>
-                                <option value="8358">8358 金居</option>
-                                <option value="2357">2357 華碩</option>
-                                <option value="3665">3665 貿聯-ＫＹ</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div>
-                        <button type="submit" class="btn btn-primary" id="search-sentiment" value="search-sentiment">
-                            送出
-                        </button>
-                    </div>
-                </form>
-                <div id="myDivNow" style="width: 200px; height: 200px;"></div>
+    <div class="content-loading">
+
+        <div class="d-flex flex-row justify-content-between" style="height: 900px" ;>
+
+            <div class="content col-4">
+                <div class="category-form">
+                    <form action="/single_stock_sentiment" enctype="application/x-www-form-urlencoded" method=POST>
+                        <div class="form-group">
+                            <label for="category">類股</label>
+                            <select class="form-control" id="category" name="category"
+                                    onchange="insertOption('category', 'stock_code')">
+                                <option value="electric_car">電動車</option>
+                                <option value="electric">電子資訊</option>
+                                <option value="sail">航運</option>
+                                <option value="biotech">生技</option>
+                                <option value="finance">金融</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="source">文章來源</label>
+                            <select class="form-control" id="source" name="source">
+                                <option value="ptt">PTT 貼文</option>
+                                <option value="cnyes">鉅亨網</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="stock_code" class="control-label">個股選單</label>
+                            <select id="stock_code" class="form-control" name="stock_code">
+                                <optgroup label="電動車">
+                                    <option value="2317">2317 鴻海</option>
+                                    <option value="3023">3023 信邦</option>
+                                    <option value="2308">2308 台達電</option>
+                                    <option value="2301">2301 光寶科</option>
+                                    <option value="1533">1533 車王電</option>
+                                    <option value="8358">8358 金居</option>
+                                    <option value="2357">2357 華碩</option>
+                                    <option value="3665">3665 貿聯-ＫＹ</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary" id="search-sentiment"
+                                    value="search-sentiment">
+                                送出
+                            </button>
+                        </div>
+                    </form>
+                    <div id="myDivNow" style="width: 200px; height: 200px;"></div>
+                </div>
+            </div>
+            <div class="col-7">
+                <div id="myDiv" style="width: 1000px; height: 600px; margin-left: 30px;"></div>
             </div>
         </div>
-        <div class="col-8">
-            <div id="myDiv" style="width: 1000px; height: 600px; margin-left: 30px;"></div>
-        </div>
+
     </div>
 
+
 </main>
+
+ <div class="loader-wrapper">
+        <span class="loader"><span class="loader-inner"></span></span>
+         <br>
+         <h4 style="color: #ADB5BD; margin-left: 15px;">Loading...</h4>
+    </div>
+
+    <script>
+        $("#search-sentiment").on("click", function() {
+        $(".loader-wrapper").show()
+        });
+
+
+
+        $(window).on("load",function(){
+        $(".loader-wrapper").show().delay(3000).queue(function (next) {
+                $(this).hide();
+                next();
+            });
+          $(".loader-wrapper").fadeOut("slow");
+        });
+    </script>
+
+
 
 <script>
        var trace1 = {
@@ -458,6 +496,7 @@ Plotly.newPlot("myDiv", data, layout);
 
 
 
+
 </script>
 
 <script>
@@ -524,6 +563,7 @@ var layout = {
 };
 
 Plotly.newPlot('myDivNow', data, layout, {showSendToCloud:true});
+
 
 
 
