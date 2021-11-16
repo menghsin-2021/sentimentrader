@@ -11,6 +11,7 @@
     <!-- form CSS -->
     <link href="/static/css/dashboard.css" rel="stylesheet">
     <link href="/static/css/loader.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
 
     <!--      plotly-->
     <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>
@@ -82,8 +83,6 @@
             </div>
             <!-- figure       -->
         </div>
-    </div>
-</div>
 <!--Main element-->
 <main role="main" class="col-md-9 ml-sm-auto col-lg-9 px-4" style="height: 900px;">
 
@@ -148,6 +147,11 @@
 
 </main>
 
+
+    </div>
+</div>
+
+
  <div class="loader-wrapper">
         <span class="loader"><span class="loader-inner"></span></span>
          <br>
@@ -158,8 +162,6 @@
         $("#search-sentiment").on("click", function() {
         $(".loader-wrapper").show()
         });
-
-
 
         $(window).on("load",function(){
         $(".loader-wrapper").show().delay(3000).queue(function (next) {

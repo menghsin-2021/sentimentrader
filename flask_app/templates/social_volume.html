@@ -11,6 +11,7 @@
     <!-- form CSS -->
     <link href="/static/css/dashboard.css" rel="stylesheet">
     <link href="/static/css/loader.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
 
 <!--      plotly-->
     <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>z
@@ -28,9 +29,9 @@
 </nav>
 
 <div class="container-fluid">
-  <div class="row">
+  <div class="row" style="height: 800px;">
     <!--     siderbar -->
-    <div class="col-md-2 bg-light d-md-block sidebar">
+    <div class="col-md-2 bg-active d-md-block sidebar">
       <div class="left-sidebar">
         <ul class="nav nav-pills flex-column mb-auto">
           <li class="nav-item">
@@ -78,15 +79,10 @@
       </div>
       <!-- figure       -->
     </div>
-  </div>
-</div>
 <!--Main element-->
-<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
-  <div>
-    <div id="myDiv" style="width: 800px; height: 500px;"></div>
-  </div>
-
-  <div>
+<main role="main" class="bg-light col-md-9 ml-sm-auto col-lg-10 px-4">
+<div class="col-12 shadow p-3 mb-5 rounded d-flex flex-row " style="background-color: white">
+  <div class="col-3">
     <form action="/social_volume_rank" enctype="application/x-www-form-urlencoded" method=POST>
       <div class="form-group">
         <label for="category">類股</label>
@@ -121,8 +117,17 @@
       </form>
   </div>
 
+  <div class="col-9">
+    <div id="myDiv" style="width: 800px; height: 500px;"></div>
+  </div>
+
+  </div>
 
 </main>
+
+
+  </div>
+</div>
 
     <script>
     var social_volume_rank = {{social_volume_rank | safe}}

@@ -12,6 +12,7 @@
     <link href="/static/css/dashboard.css" rel="stylesheet">
     <link href="/static/css/strategy.css" rel="stylesheet">
     <link href="/static/css/loader.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
 
     <!--      plotly-->
     <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>
@@ -38,7 +39,7 @@
 <div class="container-fluid">
     <div class="row">
         <!--     siderbar -->
-        <div class="col-md-2 bg-light d-md-block sidebar">
+        <div class="col-md-2 bg-active d-md-block sidebar">
             <div class="left-sidebar">
                 <ul class="nav nav-pills flex-column mb-auto">
                     <li class="nav-item">
@@ -86,17 +87,15 @@
             </div>
             <!-- figure       -->
         </div>
-    </div>
-</div>
 <!--Main element-->
-<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
-    <div class="content d-flex flex-column mr-2">
+<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4 bg-light">
+    <div class="content d-flex flex-column mr-2 col-12 shadow p-3 mb-5 rounded" style="background-color: white">
         <div class="strategy_card">
                 <h2>策略卡牌</h2>
                 <br>
                 <div id="card-deck" class="d-flex flex-row flex-nowrap overflow-auto" style="height: 300px;">
                     {% for i in range(strategy_backtest_dict_list_length) %}
-                    <div id="card" class="card col-3 p-2 bg-light border-dark">
+                    <div id="card" class="card col-3 p-2 bg-active border-dark">
                         <div id="card-{{ i }}" class="card-body">
                             <h4 class="card-title">{{ strategy_backtest_dict_list[i]['stock_code'] | safe }}</h4>
                             <ul style="font-size:16px; list-style-type: none;">
@@ -213,13 +212,12 @@
         </div>
     </div>
 
-    <div class="loader-wrapper">
-      <span class="loader"><span class="loader-inner"></span></span>
-    </div>
-
 
 </main>
 
+
+    </div>
+</div>
 
 
  <div class="loader-wrapper">

@@ -12,6 +12,7 @@
     <link href="/static/css/dashboard.css" rel="stylesheet">
     <link href="/static/css/strategy.css" rel="stylesheet">
     <link href="/static/css/loader.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
 
     <!--      plotly-->
     <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>
@@ -31,7 +32,7 @@
 <div class="container-fluid">
     <div class="row">
         <!--     siderbar -->
-        <div class="col-md-2 bg-light d-md-block sidebar">
+        <div class="col-md-2 bg-active d-md-block sidebar">
             <div class="left-sidebar">
                 <ul class="nav nav-pills flex-column mb-auto">
                     <li class="nav-item">
@@ -79,11 +80,11 @@
             </div>
             <!-- figure       -->
         </div>
-    </div>
-</div>
+
+
 <!--Main element-->
-<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
-    <div class="content d-flex flex-column mr-2">
+<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4 bg-light d-flex flex-row justify-content-center">
+<!--    <div class="content d-flex flex-column mr-2">-->
 <!--        <div class="strategy_card">-->
 <!--            <h2>策略卡牌</h2>-->
 <!--            <br>-->
@@ -141,10 +142,10 @@
 <!--            </div>-->
 <!--            <br>-->
 <!--            <br>-->
-        </div>
+<!--        </div>-->
 
-
-        <form id="strategy-form" action="/send_strategy" method="POST">
+    <div class="col-10 shadow p-3 mb-5 rounded form" style="background-color: white; height: 700px; padding: 20px;">
+        <form id="strategy-form" action="/send_strategy" method="POST" >
             <div class="strategy_setting d-flex flex-row justify-content-between">
 
                 <div class="strategy_setting_para col-6">
@@ -309,6 +310,8 @@
                 </div>
 
             </div>
+
+
             <div class="d-flex flex-row justify-content-end">
                 <div>
                     <button type="submit" class="btn btn-primary mr-3" id="sent-backtest" value="sent-backtest">送出回測
@@ -316,8 +319,8 @@
                 </div>
             </div>
         </form>
-    <br>
-            <div class="d-flex flex-row justify-content-end">
+
+            <div class="d-flex flex-row justify-content-start" style="margin-left: 10px;">
                 <div>
                     <button type="submit" class="btn btn-primary mr-3" id="clear-setting" value="clear-setting">清除重設
                     </button>
@@ -325,10 +328,11 @@
             </div>
     </div>
 
-
 </main>
 
 
+    </div>
+</div>
 
 
 <script>
