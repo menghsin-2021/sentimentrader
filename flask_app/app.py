@@ -747,7 +747,7 @@ def send_strategy():
             print(type(duration_year))
         except:
             flash("數值錯誤或沒有進出場點", 'danger')
-            return render_template('strategy.html')
+            return redirect('/strategy.html')
         else:
             engine = create_engine("mysql+pymysql://{user}:{pw}@{host}/{db}"
                                    .format(user=DBUSER,
@@ -1253,8 +1253,9 @@ def send_strategy():
                 add_plot = None
 
             if add_plot == None:
+                flash('沒有交易點', 'danger')
                 print('沒有交易點')
-                return render_template('strategy.html')
+                # return render_template('strategy.html')
             else:
                 try:
                     df.index = pd.DatetimeIndex(df.index)
@@ -1275,7 +1276,7 @@ def send_strategy():
                 except:
                     print('沒有交易點')
                     flash('沒有交易點', 'danger')
-                    return render_template('strategy.html')
+                    # return render_template('strategy.html')
 
                 else:
                     s3_save_filename = filename + '.png'

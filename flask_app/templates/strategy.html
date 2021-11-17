@@ -17,6 +17,9 @@
     <!--      plotly-->
     <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>
 
+        <!-- Sweet alert Js -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
 </head>
 <body>
@@ -30,7 +33,7 @@
 </nav>
 
 <div class="container-fluid">
-    <div class="row" style="height: 1300px;">
+    <div class="row" style="height: 3000px;">
         <!--     siderbar -->
         <div class="col-md-2 bg-active d-md-block sidebar">
             <div class="left-sidebar">
@@ -84,10 +87,10 @@
 
 <!--Main element-->
 <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4 bg-light d-flex flex-row justify-content-center">
-    <div class="content d-flex flex-column mr-2">
+    <div class="content d-flex flex-column mr-2 col-12">
 
         <div class="strategy_card">
-            <h2>策略卡牌</h2>
+            <h2>範例策略</h2>
             <br>
             <div id="card-deck" class="d-flex flex-row flex-nowrap overflow-auto" style="height: 300px;">
                     {% for i in range(sample_strategy_form_length) %}
@@ -110,9 +113,9 @@
         </div>
 
 
-    <div class="col-10 shadow p-3 mb-5 rounded form" style="background-color: white; padding: 20px;">
+    <div class="shadow p-3 mb-5 rounded form" style="background-color: white; padding: 20px; ">
         <form id="strategy-form" action="/send_strategy" method="POST" >
-            <div class="col-12 strategy_setting d-flex flex-row justify-content-between" style="width: 1000px;">
+            <div class="col-12 strategy_setting d-flex flex-row justify-content-between">
 
                 <div class="strategy_setting_para col-6">
                     <h2>交易策略制定/選擇</h2>
@@ -120,8 +123,8 @@
                     <div>
                         <div class="form-group">
                               <label for="category">類股</label>
-                              <select class="form-control" id="category" name="category" onchange="insertOption('category', 'stock_code')">
-                                  <option value="electric_car">請選擇類股</option>
+                              <select class="form-control" id="category" name="category" onchange="insertOption('category', 'stock_code')" required>
+                                  <option value="">請選擇類股</option>
                                   <option value="tsmc">台積電</option>
                                 <option value="electric_car">電動車</option>
                                 <option value="electric">電子資訊</option>
@@ -133,9 +136,9 @@
 
                             <div class="form-group">
                                 <label for="stock_code" class="control-label">個股選單</label>
-                                <select id="stock_code" class="form-control" name="stock_code">
+                                <select id="stock_code" class="form-control" name="stock_code" required>
                                     <optgroup label="--">
-                                        <option value="--">--</option>
+                                        <option value="">--</option>
                                     </optgroup>
                                 </select>
                             </div>
@@ -152,8 +155,8 @@
                         <div id="custom_strategy" class="custom_strategy">
                         <div class="form-group" >
                                 <label for="strategy_in">自訂進場策略(股價)</label>
-                                <select class="form-control" id="strategy_in" name="strategy_in" onchange="strategyStock('strategy_in', 'strategy_out')">
-                                    <option value="none">--</option>
+                                <select class="form-control" id="strategy_in" name="strategy_in" onchange="strategyStock('strategy_in', 'strategy_out')"  required>
+                                    <option value="">--</option>
                                     <option value="increase_in">股價連續上漲(3日)</option>
                                     <option value="decrease_in">股價連續下跌(3日)</option>
                                 </select>
@@ -163,7 +166,7 @@
                               <div class="input-group-prepend">
                                 <span class="input-group-text">大於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="strategy_in_para" aria-label="Amount (to the nearest dollar)">
+                              <input type="number" class="form-control" name="strategy_in_para" aria-label="Amount (to the nearest dollar)" required min="0" max="10">
                               <div class="input-group-append">
                                 <span class="input-group-text">％</span>
                               </div>
@@ -180,7 +183,7 @@
                               <div class="input-group-prepend">
                                 <span class="input-group-text">大於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="strategy_out_para" aria-label="Amount (to the nearest dollar)">
+                              <input type="number" class="form-control" name="strategy_out_para" aria-label="Amount (to the nearest dollar)" required min="0" max="10">
                               <div class="input-group-append">
                                 <span class="input-group-text">％</span>
                               </div>
@@ -205,7 +208,7 @@
                               <div class="input-group-prepend">
                                 <span class="input-group-text">大於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="sentiment_para_more" aria-label="Amount (to the nearest dollar)" placeholder="0-100">
+                              <input type="number" class="form-control" name="sentiment_para_more" aria-label="Amount (to the nearest dollar)" placeholder="多少以上不進場" required min="50" max="99">
                               <div class="input-group-append">
                                 <span class="input-group-text">分</span>
                               </div>
@@ -215,7 +218,7 @@
                               <div class="input-group-prepend">
                                 <span class="input-group-text">小於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="sentiment_para_less" aria-label="Amount (to the nearest dollar)" placeholder="0-100">
+                              <input type="number" class="form-control" name="sentiment_para_less" aria-label="Amount (to the nearest dollar)" placeholder="多少以下不進場" required min="1" max="50">
                               <div class="input-group-append">
                                 <span class="input-group-text">分</span>
                               </div>
@@ -239,33 +242,35 @@
                     <br>
                         <div class="form-group">
                             <label for="start_date">開始日期</label>
-                            <input type="date" class="form-control" id="start_date" name="start_date" placeholder="2018/01/01">
+                            <input type="date" class="form-control" id="start_date" name="start_date" placeholder="2018-01-01" required min="2015/01/01">
                         </div>
                         <div class="form-group">
                             <label for="end_date">結束日期</label>
-                            <input type="date" class="form-control" id="end_date" name="end_date" placeholder="2021/11/08">
+                            <input type="date" class="form-control" id="end_date" name="end_date" placeholder="2021-10-31" required min="2015/01/01">
                         </div>
                         <div class="form-group">
                             <label for="money">資金(千)</label>
-                            <input type="number" class="form-control" name="money" id="money" placeholder="0">
+                            <input type="number" class="form-control" name="money" id="money" placeholder="0" required min="300" max="999999">
                         </div>
                         <div class="form-group">
                             <label for="discount">手續費折扣(%)</label>
-                            <input type="number" class="form-control" name="discount" id="discount" placeholder="0">
+                            <input type="number" class="form-control" name="discount" id="discount" placeholder="0" required min="10" max="70">
                         </div>
 
                         <div class="col align-self-center">
-                          {% with messages = get_flashed_messages(with_categories=true) %}
-                            {% if messages %}
-                              {% for category, message in messages %}
+                            {% include "sweetalerts.html" %}
 
-                                    <div class="alert alert-{{category}}">
-                                        {{message}}
-                                    </div>
+<!--                          {% with messages = get_flashed_messages(with_categories=true) %}-->
+<!--                            {% if messages %}-->
+<!--                              {% for category, message in messages %}-->
 
-                              {% endfor %}
-                            {% endif %}
-                          {% endwith%}
+<!--                                    <div class="alert alert-{{category}}">-->
+<!--                                        {{message}}-->
+<!--                                    </div>-->
+
+<!--                              {% endfor %}-->
+<!--                            {% endif %}-->
+<!--                          {% endwith%}-->
                         </div>
 
                 </div>
@@ -328,14 +333,14 @@ cardDeck.addEventListener("click", (event) => {
                     paraDisplay = 'block'
                 }
 
-    strategyForm.innerHTML = `<div class="col-12 strategy_setting d-flex flex-row justify-content-between" style="width: 1000px;">
+    strategyForm.innerHTML = `<div class="col-12 strategy_setting d-flex flex-row justify-content-between"">
                 <div class="strategy_setting_para col-6">
                     <h2>交易策略制定/選擇</h2>
                     <br>
                     <div>
                         <div class="form-group">
                               <label for="category">類股</label>
-                              <select class="form-control" id="category" name="category" onchange="insertOption('category', 'stock_code')">
+                              <select class="form-control" id="category" name="category" onchange="insertOption('category', 'stock_code')" required>
                                 <option value="${sample_strategy_form[i]['category']}">${sample_strategy_form[i]['category_name']}</option>
                                 <option value="tsmc">台積電</option>
                                 <option value="electric_car">電動車</option>
@@ -348,10 +353,9 @@ cardDeck.addEventListener("click", (event) => {
 
                             <div class="form-group">
                                 <label for="stock_code" class="control-label">個股選單</label>
-                                <select id="stock_code" class="form-control" name="stock_code">
+                                <select id="stock_code" class="form-control" name="stock_code" required>
                                     <optgroup label="${sample_strategy_form[i]['category_name']}">
                                         <option value="${sample_strategy_form[i]['stock_code']}">${sample_strategy_form[i]['stock_code']} ${sample_strategy_form[i]['stock_name']}</option>
-                                        <option value="--">--</option>
                                     </optgroup>
                                 </select>
                             </div>
@@ -369,9 +373,9 @@ cardDeck.addEventListener("click", (event) => {
                         <div id="custom_strategy" class="custom_strategy" style="display:${paraDisplayLine}">
                         <div class="form-group" >
                                 <label for="strategy_in">自訂進場策略(股價)</label>
-                                <select class="form-control" id="strategy_in" name="strategy_in" onchange="strategyStock('strategy_in', 'strategy_out')">
+                                <select class="form-control" id="strategy_in" name="strategy_in" onchange="strategyStock('strategy_in', 'strategy_out')" required>
                                     <option value="${sample_strategy_form[i]['strategy_in']}">${sample_strategy_form[i]['strategy_in_name']}</option>
-                                    <option value="none">--</option>
+                                    <option value="">--</option>
                                     <option value="increase_in">股價連續上漲(3日)</option>
                                     <option value="decrease_in">股價連續下跌(3日)</option>
                                 </select>
@@ -381,7 +385,7 @@ cardDeck.addEventListener("click", (event) => {
                               <div class="input-group-prepend">
                                 <span class="input-group-text">大於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="strategy_in_para" aria-label="Amount (to the nearest dollar)" value="${sample_strategy_form[i]['strategy_in_para']}" placeholder="${sample_strategy_form[i]['strategy_in_para']}">
+                              <input type="number" class="form-control" name="strategy_in_para" aria-label="Amount (to the nearest dollar)" value="${sample_strategy_form[i]['strategy_in_para']}" placeholder="${sample_strategy_form[i]['strategy_in_para']}" required min="0" max="10">
                               <div class="input-group-append">
                                 <span class="input-group-text">％</span>
                               </div>
@@ -399,7 +403,7 @@ cardDeck.addEventListener("click", (event) => {
                               <div class="input-group-prepend">
                                 <span class="input-group-text">大於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="strategy_out_para" aria-label="Amount (to the nearest dollar)" value="${sample_strategy_form[i]['strategy_out_para']}" placeholder="${sample_strategy_form[i]['strategy_out_para']}">
+                              <input type="number" class="form-control" name="strategy_out_para" aria-label="Amount (to the nearest dollar)" value="${sample_strategy_form[i]['strategy_out_para']}" placeholder="${sample_strategy_form[i]['strategy_out_para']}" required min="0" max="10">
                               <div class="input-group-append">
                                 <span class="input-group-text">％</span>
                               </div>
@@ -425,7 +429,7 @@ cardDeck.addEventListener("click", (event) => {
                               <div class="input-group-prepend">
                                 <span class="input-group-text">大於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="sentiment_para_more" aria-label="Amount (to the nearest dollar)" placeholder="${sample_strategy_form[i]['sentiment_para_more']}" value="${sample_strategy_form[i]['sentiment_para_more']}">
+                              <input type="number" class="form-control" name="sentiment_para_more" aria-label="Amount (to the nearest dollar)" placeholder="${sample_strategy_form[i]['sentiment_para_more']}" value="${sample_strategy_form[i]['sentiment_para_more']}" required min="50" max="99">
                               <div class="input-group-append">
                                 <span class="input-group-text">分</span>
                               </div>
@@ -435,7 +439,7 @@ cardDeck.addEventListener("click", (event) => {
                               <div class="input-group-prepend">
                                 <span class="input-group-text">小於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="sentiment_para_less" aria-label="Amount (to the nearest dollar)" placeholder="${sample_strategy_form[i]['sentiment_para_less']}" value="${sample_strategy_form[i]['sentiment_para_less']}">
+                              <input type="number" class="form-control" name="sentiment_para_less" aria-label="Amount (to the nearest dollar)" placeholder="${sample_strategy_form[i]['sentiment_para_less']}" value="${sample_strategy_form[i]['sentiment_para_less']}" required min="1" max="50">
                               <div class="input-group-append">
                                 <span class="input-group-text">分</span>
                               </div>
@@ -460,20 +464,25 @@ cardDeck.addEventListener("click", (event) => {
                     <br>
                         <div class="form-group">
                             <label for="start_date">開始日期</label>
-                            <input type="date" class="form-control" id="start_date" name="start_date" value="${sample_strategy_form[i]['start_date']}" placeholder="${sample_strategy_form[i]['start_date']}">
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="${sample_strategy_form[i]['start_date']}" placeholder="${sample_strategy_form[i]['start_date']}" required min="2015/01/01">
                         </div>
                         <div class="form-group">
                             <label for="end_date">結束日期</label>
-                            <input type="date" class="form-control" id="end_date" name="end_date" value="${sample_strategy_form[i]['end_date']}" placeholder="${sample_strategy_form[i]['end_date']}">
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="${sample_strategy_form[i]['end_date']}" placeholder="${sample_strategy_form[i]['end_date']}" required min="2015/01/01">
                         </div>
                         <div class="form-group">
                             <label for="money">資金(千)</label>
-                            <input type="number" class="form-control" name="money" id="money" value="${sample_strategy_form[i]['seed_money']}" placeholder="${sample_strategy_form[i]['seed_money']}">
+                            <input type="number" class="form-control" name="money" id="money" value="${sample_strategy_form[i]['seed_money']}" placeholder="${sample_strategy_form[i]['seed_money']}" required min="300" max="999999">
                         </div>
                         <div class="form-group">
                             <label for="discount">手續費折扣(%)</label>
-                            <input type="number" class="form-control" name="discount" id="discount" value="${sample_strategy_form[i]['discount']}" placeholder="${sample_strategy_form[i]['discount']}">
+                            <input type="number" class="form-control" name="discount" id="discount" value="${sample_strategy_form[i]['discount']}" placeholder="${sample_strategy_form[i]['discount']}" required min="10" max="70">
                         </div>
+
+                        <div class="col align-self-center">
+                            {% include "sweetalerts.html" %}
+                        </div>
+
                 </div>
 
             </div>
@@ -491,7 +500,7 @@ cardDeck.addEventListener("click", (event) => {
  })
 
 clearSetting.addEventListener("click", (event) => {
-    strategyForm.innerHTML = `<div class="strategy_setting d-flex flex-row justify-content-between">
+    strategyForm.innerHTML = `<div class="col-12 strategy_setting d-flex flex-row justify-content-between">
 
                 <div class="strategy_setting_para col-6">
                     <h2>交易策略制定/選擇</h2>
@@ -499,8 +508,8 @@ clearSetting.addEventListener("click", (event) => {
                     <div>
                         <div class="form-group">
                               <label for="category">類股</label>
-                              <select class="form-control" id="category" name="category" onchange="insertOption('category', 'stock_code')">
-                                  <option value="electric_car">請選擇類股</option>
+                              <select class="form-control" id="category" name="category" onchange="insertOption('category', 'stock_code')" required>
+                                  <option value="">請選擇類股</option>
                                   <option value="tsmc">台積電</option>
                                 <option value="electric_car">電動車</option>
                                 <option value="electric">電子資訊</option>
@@ -512,9 +521,9 @@ clearSetting.addEventListener("click", (event) => {
 
                             <div class="form-group">
                                 <label for="stock_code" class="control-label">個股選單</label>
-                                <select id="stock_code" class="form-control" name="stock_code">
+                                <select id="stock_code" class="form-control" name="stock_code" required>
                                     <optgroup label="--">
-                                        <option value="--">--</option>
+                                        <option value="">--</option>
                                     </optgroup>
                                 </select>
                             </div>
@@ -531,8 +540,8 @@ clearSetting.addEventListener("click", (event) => {
                         <div id="custom_strategy" class="custom_strategy">
                         <div class="form-group" >
                                 <label for="strategy_in">自訂進場策略(股價)</label>
-                                <select class="form-control" id="strategy_in" name="strategy_in" onchange="strategyStock('strategy_in', 'strategy_out')">
-                                    <option value="none">--</option>
+                                <select class="form-control" id="strategy_in" name="strategy_in" onchange="strategyStock('strategy_in', 'strategy_out')"  required>
+                                    <option value="">--</option>
                                     <option value="increase_in">股價連續上漲(3日)</option>
                                     <option value="decrease_in">股價連續下跌(3日)</option>
                                 </select>
@@ -542,7 +551,7 @@ clearSetting.addEventListener("click", (event) => {
                               <div class="input-group-prepend">
                                 <span class="input-group-text">大於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="strategy_in_para" aria-label="Amount (to the nearest dollar)">
+                              <input type="number" class="form-control" name="strategy_in_para" aria-label="Amount (to the nearest dollar)" required min="0" max="10">
                               <div class="input-group-append">
                                 <span class="input-group-text">％</span>
                               </div>
@@ -559,7 +568,7 @@ clearSetting.addEventListener("click", (event) => {
                               <div class="input-group-prepend">
                                 <span class="input-group-text">大於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="strategy_out_para" aria-label="Amount (to the nearest dollar)">
+                              <input type="number" class="form-control" name="strategy_out_para" aria-label="Amount (to the nearest dollar)" required min="0" max="10">
                               <div class="input-group-append">
                                 <span class="input-group-text">％</span>
                               </div>
@@ -584,7 +593,7 @@ clearSetting.addEventListener("click", (event) => {
                               <div class="input-group-prepend">
                                 <span class="input-group-text">大於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="sentiment_para_more" aria-label="Amount (to the nearest dollar)" placeholder="0-100">
+                              <input type="number" class="form-control" name="sentiment_para_more" aria-label="Amount (to the nearest dollar)" placeholder="多少以上不進場" required min="50" max="99">
                               <div class="input-group-append">
                                 <span class="input-group-text">分</span>
                               </div>
@@ -594,7 +603,7 @@ clearSetting.addEventListener("click", (event) => {
                               <div class="input-group-prepend">
                                 <span class="input-group-text">小於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="sentiment_para_less" aria-label="Amount (to the nearest dollar)" placeholder="0-100">
+                              <input type="number" class="form-control" name="sentiment_para_less" aria-label="Amount (to the nearest dollar)" placeholder="多少以下不進場" required min="1" max="50">
                               <div class="input-group-append">
                                 <span class="input-group-text">分</span>
                               </div>
@@ -618,26 +627,31 @@ clearSetting.addEventListener("click", (event) => {
                     <br>
                         <div class="form-group">
                             <label for="start_date">開始日期</label>
-                            <input type="date" class="form-control" id="start_date" name="start_date" placeholder="2018/01/01">
+                            <input type="date" class="form-control" id="start_date" name="start_date" placeholder="2018-01-01" required min="2015/01/01">
                         </div>
                         <div class="form-group">
                             <label for="end_date">結束日期</label>
-                            <input type="date" class="form-control" id="end_date" name="end_date" placeholder="2021/11/08">
+                            <input type="date" class="form-control" id="end_date" name="end_date" placeholder="2021-10-31" required min="2015/01/01">
                         </div>
                         <div class="form-group">
                             <label for="money">資金(千)</label>
-                            <input type="number" class="form-control" name="money" id="money" placeholder="0">
+                            <input type="number" class="form-control" name="money" id="money" placeholder="0" required min="300" max="999999">
                         </div>
                         <div class="form-group">
                             <label for="discount">手續費折扣(%)</label>
-                            <input type="number" class="form-control" name="discount" id="discount" placeholder="0">
+                            <input type="number" class="form-control" name="discount" id="discount" placeholder="0" required min="10" max="70">
                         </div>
+
+                        <div class="col align-self-center">
+                            {% include "sweetalerts.html" %}
+                        </div>
+
                 </div>
 
             </div>
+
+
             <div class="d-flex flex-row justify-content-end">
-
-
                 <div>
                     <button type="submit" class="btn btn-primary mr-3" id="sent-backtest" value="sent-backtest">送出回測
                     </button>
@@ -669,7 +683,7 @@ try {
                     <div>
                         <div class="form-group">
                               <label for="category">類股</label>
-                              <select class="form-control" id="category" name="category" onchange="insertOption('category', 'stock_code')">
+                              <select class="form-control" id="category" name="category" onchange="insertOption('category', 'stock_code')" required>
                                 <option value="${strategy_form['category']}">${strategy_form['category_name']}</option>
                                 <option value="tsmc">台積電</option>
                                 <option value="electric_car">電動車</option>
@@ -682,10 +696,10 @@ try {
 
                             <div class="form-group">
                                 <label for="stock_code" class="control-label">個股選單</label>
-                                <select id="stock_code" class="form-control" name="stock_code">
+                                <select id="stock_code" class="form-control" name="stock_code" required>
                                     <optgroup label="${strategy_form['category_name']}">
                                         <option value="${strategy_form['stock_code']}">${strategy_form['stock_code']} ${strategy_form['stock_name']}</option>
-                                        <option value="--">--</option>
+                                        <option value="">--</option>
                                     </optgroup>
                                 </select>
                             </div>
@@ -703,9 +717,9 @@ try {
                         <div id="custom_strategy" class="custom_strategy" style="display:${paraDisplayLine}">
                         <div class="form-group" >
                                 <label for="strategy_in">自訂進場策略(股價)</label>
-                                <select class="form-control" id="strategy_in" name="strategy_in" onchange="strategyStock('strategy_in', 'strategy_out')">
+                                <select class="form-control" id="strategy_in" name="strategy_in" onchange="strategyStock('strategy_in', 'strategy_out')" required>
                                     <option value="${strategy_form['strategy_in']}">${strategy_form['strategy_in_name']}</option>
-                                    <option value="none">--</option>
+                                    <option value="">--</option>
                                     <option value="increase_in">股價連續上漲(3日)</option>
                                     <option value="decrease_in">股價連續下跌(3日)</option>
                                 </select>
@@ -715,7 +729,7 @@ try {
                               <div class="input-group-prepend">
                                 <span class="input-group-text">大於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="strategy_in_para" aria-label="Amount (to the nearest dollar)" value="${strategy_form['strategy_in_para']}" placeholder="${strategy_form['strategy_in_para']}">
+                              <input type="number" class="form-control" name="strategy_in_para" aria-label="Amount (to the nearest dollar)" value="${strategy_form['strategy_in_para']}" placeholder="${strategy_form['strategy_in_para']}" required min="0" max="10">
                               <div class="input-group-append">
                                 <span class="input-group-text">％</span>
                               </div>
@@ -733,7 +747,7 @@ try {
                               <div class="input-group-prepend">
                                 <span class="input-group-text">大於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="strategy_out_para" aria-label="Amount (to the nearest dollar)" value="${strategy_form['strategy_out_para']}" placeholder="${strategy_form['strategy_out_para']}">
+                              <input type="number" class="form-control" name="strategy_out_para" aria-label="Amount (to the nearest dollar)" value="${strategy_form['strategy_out_para']}" placeholder="${strategy_form['strategy_out_para']}" required min="0" max="10">
                               <div class="input-group-append">
                                 <span class="input-group-text">％</span>
                               </div>
@@ -759,7 +773,7 @@ try {
                               <div class="input-group-prepend">
                                 <span class="input-group-text">大於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="sentiment_para_more" aria-label="Amount (to the nearest dollar)" placeholder="${strategy_form['sentiment_para_more']}" value="${strategy_form['sentiment_para_more']}">
+                              <input type="number" class="form-control" name="sentiment_para_more" aria-label="Amount (to the nearest dollar)" placeholder="${strategy_form['sentiment_para_more']}" value="${strategy_form['sentiment_para_more']}" required min="50" max="99">
                               <div class="input-group-append">
                                 <span class="input-group-text">分</span>
                               </div>
@@ -769,7 +783,7 @@ try {
                               <div class="input-group-prepend">
                                 <span class="input-group-text">小於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="sentiment_para_less" aria-label="Amount (to the nearest dollar)" placeholder="${strategy_form['sentiment_para_less']}" value="${strategy_form['sentiment_para_less']}">
+                              <input type="number" class="form-control" name="sentiment_para_less" aria-label="Amount (to the nearest dollar)" placeholder="${strategy_form['sentiment_para_less']}" value="${strategy_form['sentiment_para_less']}" required min="1" max="50">
                               <div class="input-group-append">
                                 <span class="input-group-text">分</span>
                               </div>
@@ -794,19 +808,23 @@ try {
                     <br>
                         <div class="form-group">
                             <label for="start_date">開始日期</label>
-                            <input type="date" class="form-control" id="start_date" name="start_date" value="${strategy_form['start_date']}" placeholder="${strategy_form['start_date']}">
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="${strategy_form['start_date']}" placeholder="${strategy_form['start_date']}" required min="2015/01/01">
                         </div>
                         <div class="form-group">
                             <label for="end_date">結束日期</label>
-                            <input type="date" class="form-control" id="end_date" name="end_date" value="${strategy_form['end_date']}" placeholder="${strategy_form['end_date']}">
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="${strategy_form['end_date']}" placeholder="${strategy_form['end_date']}" required min="2015/01/01">
                         </div>
                         <div class="form-group">
                             <label for="money">資金(千)</label>
-                            <input type="number" class="form-control" name="money" id="money" value="${strategy_form['seed_money']}" placeholder="${strategy_form['seed_money']}">
+                            <input type="number" class="form-control" name="money" id="money" value="${strategy_form['seed_money']}" placeholder="${strategy_form['seed_money']}" required min="300" max="999999">
                         </div>
                         <div class="form-group">
                             <label for="discount">手續費折扣(%)</label>
-                            <input type="number" class="form-control" name="discount" id="discount" value="${strategy_form['discount']}" placeholder="${strategy_form['discount']}">
+                            <input type="number" class="form-control" name="discount" id="discount" value="${strategy_form['discount']}" placeholder="${strategy_form['discount']}" required min="10" max="70">
+                        </div>
+
+                        <div class="col align-self-center">
+                            {% include "sweetalerts.html" %}
                         </div>
                 </div>
 
@@ -827,14 +845,21 @@ try {
     // do nothing
 }
 
+const inputs = document.querySelectorAll('input')
+inputs.forEach( input => {
+input.addEventListener('input', function() {
+    if (input.checkValidity()) {
+        input.classList.add('is-valid')
+        input.classList.remove('is-invalid')
+    } else {
+        input.classList.remove('is-valid')
+        input.classList.add('is-invalid')
+        }
+    })
+})
 
-
-
-
-
-
-
-
+start_date.max = new Date().toISOString().split("T")[0];
+end_date.max = new Date().toISOString().split("T")[0];
 
 </script>
 

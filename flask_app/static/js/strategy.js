@@ -138,3 +138,21 @@ sentiment_condition = document.getElementById("sentiment_condition");
   }
 
 }
+
+
+const inputs = document.querySelectorAll('input')
+inputs.forEach( input => {
+input.addEventListener('input', function() {
+    if (input.checkValidity()) {
+        input.classList.add('is-valid')
+        input.classList.remove('is-invalid')
+    } else {
+        input.classList.remove('is-valid')
+        input.classList.add('is-invalid')
+        }
+    })
+})
+
+
+start_date.max = new Date().toISOString().split("T")[0];
+end_date.max = new Date().toISOString().split("T")[0];

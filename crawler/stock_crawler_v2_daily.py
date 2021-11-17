@@ -49,8 +49,8 @@ def craw_stock(stock_code, timestamp_start, timestamp_end):
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{stock_code}.TW?period1={timestamp_start}&period2={timestamp_end}&interval=1d&events=history&=hP2rOschxO0"
     else:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{stock_code}.TWO?period1={timestamp_start}&period2={timestamp_end}&interval=1d&events=history&=hP2rOschxO0"
-    # driver = webdriver.Chrome('/usr/local/bin/chromedriver')
-    driver = webdriver.Chrome('/usr/bin/chromedriver', options=options)
+    driver = webdriver.Chrome('/usr/local/bin/chromedriver')
+    # driver = webdriver.Chrome('/usr/bin/chromedriver', options=options)
     driver.get(url)
     # 等待網頁載入
     driver.implicitly_wait(15)  # seconds
@@ -128,9 +128,10 @@ for list in all_list:
             continue
 
 # stock_fail = []
-# for stock_code in electric_car_stock_list:
+# for stock_code in stock_fail:
 #     try:
-#         df = craw_stock(stock_code, timestamp_end)
+#         df = craw_stock(stock_code, timestamp_day_before, timestamp_today)
+#         # print(df)
 #         df_row_insert(df)
 #         time.sleep(1)
 #     except:
