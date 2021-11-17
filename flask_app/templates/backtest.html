@@ -71,7 +71,7 @@
                             <svg class="bi me-2" width="16" height="16">
                                 <use xlink:href="#grid"></use>
                             </svg>
-                            Strategy
+                            Strategy & Backtest
                         </a>
                     </li>
                     <li>
@@ -79,7 +79,7 @@
                             <svg class="bi me-2" width="16" height="16">
                                 <use xlink:href="#people-circle"></use>
                             </svg>
-                            Backtest
+                            Report
                         </a>
                     </li>
                 </ul>
@@ -112,8 +112,11 @@
                 <br>
                 <br>
         </div>
-
+        <h2>策略進出場點 ＆ 報酬率計算結果報表</h2>
+        <br>
         <div class="content d-flex flex-row mr-2">
+
+
             <div class="report figure col-8">
                 <div class="figure">
                     <img src="{{ strategy_backtest_dict_list[0]['file_path'] | safe }}" alt="back test result" width="950" height="500" style="object-position: -150px 0px;">
@@ -224,7 +227,7 @@
         <span class="loader"><span class="loader-inner"></span></span>
          <br>
          <h4 style="color: #ADB5BD; margin-left: 15px;">Loading...</h4>
-    </div>
+ </div>
 
 <script>
 

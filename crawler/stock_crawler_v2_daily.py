@@ -33,7 +33,7 @@ def get_today():
     today_strftime = datetime.today().strftime('%Y-%m-%d') + 'T00:00:00.000+00:00'
 
     timestamp_today = int(datetime.fromisoformat(today_strftime).timestamp())
-    timestamp_day_before = int((datetime.fromisoformat(today_strftime) - timedelta(days=1)).timestamp())  # for 自動化
+    timestamp_day_before = int((datetime.fromisoformat(today_strftime) - timedelta(days=2)).timestamp())  # for 自動化
     # timestamp_day_before_check = int(datetime.fromisoformat('2021-11-01T00:00:00.000+00:00').timestamp())
     print(timestamp_today)
     print(timestamp_day_before)

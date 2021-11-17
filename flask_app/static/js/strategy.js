@@ -52,7 +52,14 @@ function insertOption(category, stock_code) {
         opt.value = stock_list_finance[i][0];
         opt.innerHTML = stock_list_finance[i][0] +' '+ stock_list_finance[i][1];
         stock_code.add(opt);
-  }} else {
+  }} else if (category.options[category.selectedIndex].value == "tsmc") {
+  removeAll(stock_code);
+    for (let i=0; i<stock_list_tsmc.length; i++) {
+        let opt = document.createElement("option");
+        opt.value = stock_list_tsmc[i][0];
+        opt.innerHTML = stock_list_tsmc[i][0] +' '+ stock_list_tsmc[i][1];
+        stock_code.add(opt);
+  }}else {
     let opt = document.createElement("option");
     opt.value = "--";
     opt.innerHTML = "--";

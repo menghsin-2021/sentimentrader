@@ -32,10 +32,10 @@
 </nav>
 
 
-<div class="container-fluid">
-    <div class="row">
+<div class="container-fluid" >
+    <div class="row" style="height: 1300px; width: 2300px;">
         <!--     siderbar -->
-        <div class="col-md-2 bg-light d-md-block sidebar">
+        <div class="col-md-1 bg-active d-md-block sidebar">
             <div class="left-sidebar">
                 <ul class="nav nav-pills flex-column mb-auto">
                     <li class="nav-item">
@@ -67,7 +67,7 @@
                             <svg class="bi me-2" width="16" height="16">
                                 <use xlink:href="#grid"></use>
                             </svg>
-                            Strategy
+                            Strategy & Backtest
                         </a>
                     </li>
                     <li>
@@ -75,7 +75,7 @@
                             <svg class="bi me-2" width="16" height="16">
                                 <use xlink:href="#people-circle"></use>
                             </svg>
-                            Backtest
+                            Report
                         </a>
                     </li>
                 </ul>
@@ -84,16 +84,9 @@
             <!-- figure       -->
         </div>
 <!--Main element-->
-<main role="main" class="col-md-9 ml-sm-auto col-lg-9 px-4" style="height: 900px;">
-
-
-    <div class="content-loading">
-
-        <div class="d-flex flex-row justify-content-between" style="height: 900px" ;>
-
-            <div class="content col-4">
-                <div class="category-form">
-                    <form action="/single_stock_sentiment" enctype="application/x-www-form-urlencoded" method=POST>
+<main role="main" class="col-11 px-4 bg-light d-flex flex-row justify-content-center">
+                <div class="content d-flex flex-column col-3" style="height: 1300px;">
+                    <form class="shadow p-3 mb-5 rounded" style="background-color: white; " action="/single_stock_sentiment" enctype="application/x-www-form-urlencoded" method=POST>
                         <div class="form-group">
                             <label for="category">類股</label>
                             <select class="form-control" id="category" name="category"
@@ -134,16 +127,12 @@
                             </button>
                         </div>
                     </form>
-                    <div id="myDivNow" style="width: 200px; height: 200px;"></div>
+                    <div id="myDivNow" class="shadow p-3 mb-5 rounded" style="background-color: white; height: 440px;"></div>
                 </div>
-            </div>
-            <div class="col-7">
-                <div id="myDiv" style="width: 1000px; height: 600px; margin-left: 30px;"></div>
-            </div>
-        </div>
 
-    </div>
-
+            <div class="d-flex flex-column col-8 shadow p-3 mb-5 rounded justify-content-center align-items-center" style="background-color: white; height: 804px;">
+                <div id="myDiv"  style="width: 1200px; height: 750px; margin-left: 30px;"></div>
+            </div>
 
 </main>
 
@@ -254,7 +243,7 @@
                   decreasing: [{ line: { color: "green" }}],
                         high: [{{ weekly_stock_price['high'] | safe}}],
                   increasing: [{line: { color: "red" }}],
-                        line: [{ color: "rgba(31,119,180,1)" }],
+                        line: [{ color: "rgba(31,119,180,1)", width: 1  }],
                          low: [{{ weekly_stock_price['low'] | safe }}],
                         open: [{{ weekly_stock_price['open'] | safe }}],
                           y1: [{{ weekly_sentiment['avg_valence'] | safe }}],
@@ -270,7 +259,7 @@
                   decreasing: [{ line: { color: "green" }}],
                         high: [{{ monthly_stock_price['high'] | safe}}],
                   increasing: [{line: { color: "red" }}],
-                        line: [{ color: "rgba(31,119,180,1)" }],
+                        line: [{ color: "rgba(31,119,180,1)", width: 1  }],
                          low: [{{ monthly_stock_price['low'] | safe }}],
                         open: [{{ monthly_stock_price['open'] | safe }}],
                           y1: [{{ monthly_sentiment['avg_valence'] | safe }}],
@@ -286,7 +275,7 @@
                   decreasing: [{ line: { color: "green" }}],
                         high: [{{ yearly_stock_price['high'] | safe}}],
                   increasing: [{line: { color: "red" }}],
-                        line: [{ color: "rgba(31,119,180,1)" }],
+                        line: [{ color: "rgba(31,119,180,1)", width: 1  }],
                          low: [{{ yearly_stock_price['low'] | safe }}],
                         open: [{{ yearly_stock_price['open'] | safe }}],
                           y1: [{{ yearly_sentiment['avg_valence'] | safe }}],
@@ -302,7 +291,7 @@
                   decreasing: [{ line: { color: "green" }}],
                         high: [{{ three_yearly_stock_price['high'] | safe}}],
                   increasing: [{line: { color: "red" }}],
-                        line: [{ color: "rgba(31,119,180,1)" }],
+                        line: [{ color: "rgba(31,119,180,1)", width: 1  }],
                          low: [{{ three_yearly_stock_price['low'] | safe }}],
                         open: [{{ three_yearly_stock_price['open'] | safe }}],
                           y1: [{{ three_yearly_sentiment['avg_valence'] | safe }}],
@@ -318,7 +307,7 @@
                   decreasing: [{ line: { color: "green" }}],
                         high: [{{ five_yearly_stock_price['high'] | safe}}],
                   increasing: [{line: { color: "red" }}],
-                        line: [{ color: "rgba(31,119,180,1)" }],
+                        line: [{ color: "rgba(31,119,180,1)", width: 1 }],
                          low: [{{ five_yearly_stock_price['low'] | safe }}],
                         open: [{{ five_yearly_stock_price['open'] | safe }}],
                           y1: [{{ five_yearly_sentiment['avg_valence'] | safe }}],
@@ -334,7 +323,7 @@
                   decreasing: [{ line: { color: "green" }}],
                         high: [{{ daily_stock_price['high'] | safe}}],
                   increasing: [{line: { color: "red" }}],
-                        line: [{ color: "rgba(31,119,180,1)" }],
+                        line: [{ color: "rgba(31,119,180,1)", width: 1  }],
                          low: [{{ daily_stock_price['low'] | safe }}],
                         open: [{{ daily_stock_price['open'] | safe }}],
                           y1: [{{ daily_sentiment['avg_valence'] | safe }}],
@@ -393,15 +382,15 @@
         }, {
             method: 'restyle',
             args: ['visible', [true, true, false, false]],
-            label: '平均正向情感分數'
+            label: '情感分數(貪婪 vs 恐懼、50分以上為正)'
         }, {
             method: 'restyle',
             args: ['visible', [true, false, true, false]],
-            label: '平均強烈情感分數'
+            label: '情感分數(強烈 vs 柔弱、50分以上為正)'
         }, {
             method: 'restyle',
             args: ['visible', [true, false, false, true]],
-            label: '股市關鍵字情感分數'
+            label: '以股市漲跌關鍵字計算情感分數'
         }]
             }],
 
@@ -527,17 +516,15 @@ var data = [{ type: 'scatter',
 	name: 'speed',
 	text: level,
 	hoverinfo: 'text+name'},
-  { values: [36, 36, 36, 36, 36, 180],
-  rotation: 90,
-  text: ['Extreme Greed', '', 'Average'
-			,'', 'Extreme Fear', ''],
+  { values: [36, 36, 36, 36, 36, 60, 60, 60],
+  rotation: 210,
+  text: ['', '', 'Average', '', '','Extreme Greed', '', 'Extreme Fear'],
   font_size: 13,
   textinfo: 'text',
   textposition:'inside',
-  marker: {colors:['rgba(49, 235, 49, 1)','rgba(158, 199, 0, 1)' ,
-						 'rgba(207, 156, 0, 1)', 'rgba(235, 107, 0, 1)','rgba(240, 44, 44, 1)',
-						 'rgba(255, 255, 255, 0)']},
-  labels: ['80-100', '60-80', '40-60', '20-40', '0-25', ''],
+  marker: {colors:['rgba(235, 107, 0, 1)', 'rgba(207, 156, 0, 1)','rgba(204,255,51,1)','rgba(158,240,26,1)' ,
+						 'rgba(112,224,0,1)', 'rgba(49, 235, 49, 1)', 'rgba(255, 255, 255, 0)', 'rgba(240, 44, 44, 1)']},
+  labels: ['70-100', '60-70', '40-60', '30-40', '0-30','Extreme Greed' , 'q', 'Extreme Fear'],
   hoverinfo: 'label',
   hole: .5,
   type: 'pie',
@@ -556,8 +543,8 @@ var layout = {
       }
     }],
   title: '<b>今日情緒分數({{daily_sentiment['chosen_stock_name']}}): {{daily_sentiment['avg_valence_now']}} </b> <br> 恐懼(0) vs 貪婪(100)',
-  height: 500,
-  width: 500,
+  height: 420,
+  width: 420,
   xaxis: {zeroline:false, showticklabels: false,
 			 showgrid: false, range: [-1, 1]},
   yaxis: {zeroline:false, showticklabels: false,
