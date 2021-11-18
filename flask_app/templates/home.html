@@ -2,7 +2,8 @@
 <html lang="en" >
 <head>
   <meta charset="UTF-8">
-  <title>Sentimentrader Home</title>
+  <title>Home</title>
+	<link rel="icon" type="image/x-icon" href="/static/img/logo/sentimentrader_favicon.ico">
   <meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/static/css/home.css">
 
 	<!--    jquery-->
@@ -16,6 +17,9 @@
 <!--	css-->
     <link href="/static/css/loader.css" rel="stylesheet">
 	<link rel="stylesheet" href="/static/css/bootstrap.css">
+
+<!-- Sweet alert Js -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
 </head>
@@ -90,6 +94,7 @@
 
 
 <!-- partial -->
+{% include "sweetalerts.html" %}
 <script src="/static/js/home.js"></script>
 
 <script>

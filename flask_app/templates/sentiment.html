@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/html">
+<html lang="en">
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
+    <title>sentiment</title>
+    <link rel="icon" type="image/x-icon" href="/static/img/logo/sentimentrader_favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
@@ -20,6 +22,9 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"
             integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
+    <!-- Sweet alert Js -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 <body>
 <nav class="navbar navbar-dark bg-primary flex-md-nowapr fixed-top p-0 shadow">
@@ -33,9 +38,9 @@
 
 
 <div class="container-fluid" >
-    <div class="row" style="height: 1300px; width: 2300px;">
+    <div class="d-flex flex-row" style="height: 1300px; width: 2300px;">
         <!--     siderbar -->
-        <div class="col-md-1 bg-active d-md-block sidebar">
+        <div class="col-1 bg-active d-md-block sidebar">
             <div class="left-sidebar">
                 <ul class="nav nav-pills flex-column mb-auto">
                     <li class="nav-item">
@@ -84,55 +89,70 @@
             <!-- figure       -->
         </div>
 <!--Main element-->
-<main role="main" class="col-11 px-4 bg-light d-flex flex-row justify-content-center">
-                <div class="content d-flex flex-column col-3" style="height: 1300px;">
-                    <form class="shadow p-3 mb-5 rounded" style="background-color: white; " action="/single_stock_sentiment" enctype="application/x-www-form-urlencoded" method=POST>
-                        <div class="form-group">
-                            <label for="category">類股</label>
-                            <select class="form-control" id="category" name="category"
-                                    onchange="insertOption('category', 'stock_code')">
-                                <option value="electric_car">電動車</option>
-                                <option value="electric">電子資訊</option>
-                                <option value="sail">航運</option>
-                                <option value="biotech">生技</option>
-                                <option value="finance">金融</option>
-                            </select>
+<main role="main" class="col-11 px-4 bg-light d-flex flex-column justify-content-center align-items-around">
+                    <div class="content d-flex flex-row col-5" style="width: 1200px; margin-top: 60px;">
+                        <form class="shadow p-3 mb-5 rounded col-5 d-flex flex-column" style="background-color: white; margin-right: 40px;" action="/single_stock_sentiment" enctype="application/x-www-form-urlencoded" method=POST>
+                            <div class="form-group">
+                                <label for="category">類股</label>
+                                <select class="form-control" id="category" name="category"
+                                        onchange="insertOption('category', 'stock_code')" required>
+                                    <option value="">請選擇類股</option>
+                                    <option value="electric_car">電動車</option>
+                                    <option value="electric">電子資訊</option>
+                                    <option value="sail">航運</option>
+                                    <option value="biotech">生技</option>
+                                    <option value="finance">金融</option>
+                                </select>
+                            </div>
+                            <br>
+                            <div class="form-group">
+                                <label for="source">文章來源</label>
+                                <select class="form-control" id="source" name="source">
+                                    <option value="ptt">PTT 貼文</option>
+                                    <option value="cnyes">鉅亨網</option>
+                                </select>
+                            </div>
+                            <br>
+                            <div class="form-group">
+                                <label for="stock_code" class="control-label">個股選單</label>
+                                <select id="stock_code" class="form-control" name="stock_code">
+                                    <optgroup label="電動車">
+                                        <option value="2317">2317 鴻海</option>
+                                        <option value="3023">3023 信邦</option>
+                                        <option value="2308">2308 台達電</option>
+                                        <option value="2301">2301 光寶科</option>
+                                        <option value="1533">1533 車王電</option>
+                                        <option value="8358">8358 金居</option>
+                                        <option value="2357">2357 華碩</option>
+                                        <option value="3665">3665 貿聯-ＫＹ</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <br>
+                            <div>
+                                <button type="submit" class="btn btn-primary" id="search-sentiment"
+                                        value="search-sentiment" style="margin-left: 250px;">
+                                    送出
+                                </button>
+                            </div>
+                        </form>
+                        <br>
+                        <br>
+                        <div class="shadow p-3 mb-5 rounded col-12 d-flex flex-row justify-content-around align-items-center" style="background-color: white;">
+                            <div id="myDivNow" class="col-6"></div>
+                             <div class="col-4" style="margin-right: 50px;">
+                                <h5>今日正向情緒分數</h5>
+                                <p>大於 50 分： 市場偏向樂觀、貪婪 (歷年漲跌以正數表示)</p>
+                                <p>小於 50 分： 市場偏向悲觀、恐懼 (歷年漲跌以負數表示)</p>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="source">文章來源</label>
-                            <select class="form-control" id="source" name="source">
-                                <option value="ptt">PTT 貼文</option>
-                                <option value="cnyes">鉅亨網</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="stock_code" class="control-label">個股選單</label>
-                            <select id="stock_code" class="form-control" name="stock_code">
-                                <optgroup label="電動車">
-                                    <option value="2317">2317 鴻海</option>
-                                    <option value="3023">3023 信邦</option>
-                                    <option value="2308">2308 台達電</option>
-                                    <option value="2301">2301 光寶科</option>
-                                    <option value="1533">1533 車王電</option>
-                                    <option value="8358">8358 金居</option>
-                                    <option value="2357">2357 華碩</option>
-                                    <option value="3665">3665 貿聯-ＫＹ</option>
-                                </optgroup>
-                            </select>
-                        </div>
-                        <div>
-                            <button type="submit" class="btn btn-primary" id="search-sentiment"
-                                    value="search-sentiment">
-                                送出
-                            </button>
-                        </div>
-                    </form>
-                    <div id="myDivNow" class="shadow p-3 mb-5 rounded" style="background-color: white; height: 440px;"></div>
-                </div>
+                    </div>
 
-            <div class="d-flex flex-column col-8 shadow p-3 mb-5 rounded justify-content-center align-items-center" style="background-color: white; height: 804px;">
-                <div id="myDiv"  style="width: 1200px; height: 750px; margin-left: 30px;"></div>
-            </div>
+                    <div class="d-flex flex-column col-7 shadow p-3 mb-5 rounded justify-content-center align-items-center" style="background-color: white; margin-left:15px;">
+                        <div id="myDiv" style="width: 1100px; height: 650px;"></div>
+                    </div>
+
+
 
 </main>
 
@@ -143,13 +163,14 @@
 
  <div class="loader-wrapper">
         <span class="loader"><span class="loader-inner"></span></span>
-         <br>
-         <h4 style="color: #ADB5BD; margin-left: 15px;">Loading...</h4>
-    </div>
+ </div>
+
+{% include "sweetalerts.html" %}
 
     <script>
         $("#search-sentiment").on("click", function() {
-        $(".loader-wrapper").show()
+        $("main").hide();
+        $(".loader-wrapper").show();
         });
 
         $(window).on("load",function(){
@@ -157,7 +178,8 @@
                 $(this).hide();
                 next();
             });
-          $(".loader-wrapper").fadeOut("slow");
+        $(".loader-wrapper").fadeOut("slow");
+        $("main").show();
         });
     </script>
 
@@ -232,7 +254,7 @@
             direction: 'right',
             yanchor: 'bottom',
             xanchor: 'left',
-            y: -0.7,
+            y: -0.5,
             x: 0.8,
             buttons: [{
                   label: '週',

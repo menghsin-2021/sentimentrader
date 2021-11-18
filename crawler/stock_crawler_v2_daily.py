@@ -115,31 +115,31 @@ all_list = [computer_stock_list, light_eletric_stock_list, internet_stock_list, 
 
 timestamp_day_before, timestamp_today = get_today()
 
-for list in all_list:
-    for stock_code in list:
-        try:
-            df = craw_stock(stock_code, timestamp_day_before, timestamp_today)
-            # print(df)
-            df_row_insert(df)
-            time.sleep(1)
-
-        except:
-            print(f"{stock_code} fail")
-            continue
-
-# stock_fail = []
-# for stock_code in stock_fail:
-#     try:
-#         df = craw_stock(stock_code, timestamp_day_before, timestamp_today)
-#         # print(df)
-#         df_row_insert(df)
-#         time.sleep(1)
-#     except:
-#         print(f"{stock_code} fail")
-#         stock_fail.append(stock_code)
-#         continue
+# for list in all_list:
+#     for stock_code in list:
+#         try:
+#             df = craw_stock(stock_code, timestamp_day_before, timestamp_today)
+#             # print(df)
+#             df_row_insert(df)
+#             time.sleep(1)
 #
-# print(stock_fail)
+#         except:
+#             print(f"{stock_code} fail")
+#             continue
+
+stock_fail = [3046, 3051]
+for stock_code in stock_fail:
+    try:
+        df = craw_stock(stock_code, timestamp_day_before, timestamp_today)
+        # print(df)
+        df_row_insert(df)
+        time.sleep(1)
+    except:
+        print(f"{stock_code} fail")
+        stock_fail.append(stock_code)
+        continue
+
+print(stock_fail)
 
 
 # stock fail

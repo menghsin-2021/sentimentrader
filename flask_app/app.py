@@ -56,11 +56,11 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 def get_cookie_check():
-    try:
-        token = request.cookies.get('token')
-        print(token)
-    except:
-        render_template('login.html')
+    token = request.cookies.get('token')
+    print(token)
+    if not token:
+        flash('需要登入', 'danger')
+        return render_template('login.html')
     else:
         try:
             decoded_token = jwt.decode(token, SECRET_KEY, algorithms=["HS256"], issuer='stock-sentimentrader.com', audience='www.stock-sentimentrader.com', verify_iss=3600)
@@ -77,11 +77,12 @@ def get_cookie_check():
         except jwt.exceptions.InvalidAudienceError:
             return Response('Invalid audience', status=403)
         except:
-              return False
+            flash('需要登入', 'danger')
+            return render_template('login.html')
         else:
             sql_uid = "SELECT `id` as `uid` \
-                                   FROM `user` \
-                                   WHERE `email` = '{}'".format(user_email)
+                      FROM `user` \
+                      WHERE `email` = '{}'".format(user_email)
             db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
             uid = db_mysql.query_tb_one(sql_uid)[0]
             print(uid)
@@ -214,7 +215,8 @@ def logout():
 def home():
     uid = get_cookie_check()
     print(uid)
-    if not isinstance(uid, int):
+    if isinstance(uid, int) is False:
+        flash('需要登入', 'danger')
         return render_template('login.html')
     else:
         return render_template('home.html')
@@ -222,6 +224,11 @@ def home():
 
 @app.route('/social_volume.html', methods=['GET'])
 def social_volume():
+    uid = get_cookie_check()
+    print(uid)
+    if isinstance(uid, int) is False:
+        flash('需要登入', 'danger')
+        return render_template('login.html')
     # user count
     sql_social_volume = "SELECT *, (`count` + `article_count`) as total \
                          FROM `social_volume_daily` \
@@ -240,7 +247,13 @@ def social_volume():
         'stock_name_code': stock_name_code,
         'stock_count': stock_count,
         'article_count': article_count,
-        'title': '個股媒體熱度排名(當日)'
+        'title': '個股媒體熱度排名(當日)',
+        'category': "",
+        'category_name': '所有類別',
+        'duration': "daily",
+        'duration_name': '當日',
+        'source': 'ptt',
+        'source_name': 'PTT 論壇',
     }, indent=2, ensure_ascii=False)
     print(social_volume_rank)
     return render_template('social_volume.html', social_volume_rank=social_volume_rank)
@@ -325,19 +338,30 @@ def social_volume_rank():
         'stock_name_code': stock_name_code,
         'stock_count': stock_count,
         'article_count': article_count,
-        'title': f"{category_name}, {duration_name}, {source_name} 個股媒體熱度排名"
+        'title': f"{category_name}, {duration_name}, {source_name} 個股媒體熱度排名",
+        'category': category,
+        'category_name': category_name,
+        'duration': duration,
+        'duration_name': duration_name,
+        'source': source,
+        'source_name': source_name,
     }, indent=2, ensure_ascii=False)
     print(social_volume_rank)
 
-
-
-
-
-    return render_template('social_volume.html', social_volume_rank=social_volume_rank)
+    if len(stock_name_code) == 0:
+        flash('本日於該媒體還未有此類股相關提及', 'info')
+        return render_template('social_volume.html', social_volume_rank=social_volume_rank)
+    else:
+        return render_template('social_volume.html', social_volume_rank=social_volume_rank)
 
 
 @app.route('/sentiment.html')
 def sentiment():
+    uid = get_cookie_check()
+    print(uid)
+    if isinstance(uid, int) is False:
+        flash('需要登入', 'danger')
+        return render_template('login.html')
     result_stock_price = fetch_stock_price(2330)
 
     daily_stock_price = create_stock_price_json('days', result_stock_price)
@@ -401,8 +425,10 @@ def single_stock_sentiment():
 def strategy():
     uid = get_cookie_check()
     print(uid)
-    if not isinstance(uid, int):
+    if isinstance(uid, int) is False:
+        flash('需要登入', 'danger')
         return render_template('login.html')
+
     else:
         sql_sample_strategy = "SELECT * \
                             FROM `strategy_backtest` \
@@ -411,7 +437,6 @@ def strategy():
                             WHERE `user_id` = '20' \
                             ORDER BY `create_date` DESC, `id` DESC \
                             limit 15;"
-
         db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
         result = db_mysql.query_tb_all(sql_sample_strategy)
         # pprint(result[0])
@@ -451,7 +476,6 @@ def strategy():
         sample_strategy_form_length = int(len(sample_strategy_form))
         # pprint(strategy_backtest_dict_list[0])
         print(sample_strategy_form)
-
         category_name = {
             "electric_electric_car": "電動車",
             "electric_car": "電動車",
@@ -461,7 +485,6 @@ def strategy():
             "finance": "金融",
             "stock_market": "台積電",
         }
-
         strategy_line_name = {
             "none": "--",
             "undefined": "--",
@@ -469,33 +492,27 @@ def strategy():
             "macd_line": "ＭＡＣＤ線交叉",
             "none_line": "自訂",
         }
-
         strategy_in_name = {
             "none": "--",
             "increase_in": "股價連續上漲(3日)",
             "decrease_in": "股價連續下跌(3日)"
         }
-
         strategy_out_name = {
             "none": "--",
             "increase_out": "股價連續上漲(3日)",
             "decrease_out": "股價連續下跌(3日)"
         }
-
         strategy_sentiment_name = {
             "none_pass": "--",
             "daily_sentiment_pass": "當日情緒分數",
             "to_negative_pass": "正轉負",
             "to_positive_pass": "負轉正",
         }
-
         source_name = {
             "ptt": "PTT 論壇",
             "cnyes": "鉅亨網新聞",
         }
-
         pprint(send_backtest)
-
         for sample_strategy in sample_strategy_form:
             sample_strategy['category_name'] = category_name[sample_strategy['category']]
             sample_strategy['strategy_line_name'] = strategy_line_name[sample_strategy['strategy_line']]
@@ -503,8 +520,6 @@ def strategy():
             sample_strategy['strategy_out_name'] = strategy_out_name[sample_strategy['strategy_out']]
             sample_strategy['strategy_sentiment_name'] = strategy_sentiment_name[sample_strategy['strategy_sentiment']]
             sample_strategy['source_name'] = source_name[sample_strategy['source']]
-
-
         return render_template('strategy.html', sample_strategy_form=sample_strategy_form, sample_strategy_form_length=sample_strategy_form_length)
 
 
@@ -512,7 +527,8 @@ def strategy():
 def send_backtest():
     uid = get_cookie_check()
     print(uid)
-    if not isinstance(uid, int):
+    if isinstance(uid, int) is False:
+        flash('需要登入', 'danger')
         return render_template('login.html')
     else:
         send_backtest_strategy_id = request.form.to_dict()['send_backtest']
@@ -682,7 +698,8 @@ def send_backtest():
 def send_strategy():
     uid = get_cookie_check()
     print(uid)
-    if not isinstance(uid, int):
+    if isinstance(uid, int) is False:
+        flash('需要登入', 'danger')
         return render_template('login.html')
     else:
         try:
@@ -698,6 +715,18 @@ def send_strategy():
             end_date = form['end_date']
             print('start_date:', start_date)
             print('end_date:', end_date)
+
+            start_date_datetime = datetime.fromisoformat(start_date)
+            end_date_datetime = datetime.fromisoformat(end_date)
+            print(start_date_datetime)
+            print(end_date_datetime)
+
+            if end_date_datetime <= start_date_datetime:
+                flash("開始日期須小於結束日期", 'error')
+                return redirect(url_for('strategy'))
+            else:
+                pass
+
             # KD, MACD, or custom
             strategy_line = form['strategy_line']
             print('strategy_line:', strategy_line)
@@ -746,8 +775,8 @@ def send_strategy():
             print('duration_year: ', duration_year)
             print(type(duration_year))
         except:
-            flash("數值錯誤或沒有進出場點", 'danger')
-            return redirect('/strategy.html')
+            flash("數值錯誤或沒有進出場點", 'error')
+            return redirect(url_for('strategy'))
         else:
             engine = create_engine("mysql+pymysql://{user}:{pw}@{host}/{db}"
                                    .format(user=DBUSER,
@@ -758,10 +787,7 @@ def send_strategy():
             connection = engine.connect()
 
             # set date
-            start_date_datetime = datetime.fromisoformat(start_date)
-            end_date_datetime = datetime.fromisoformat(end_date)
-            print(start_date_datetime)
-            print(end_date_datetime)
+
 
             resoverall_stock_price = connection.execute("SELECT DATE_FORMAT(date,'%%Y-%%m-%%d') AS Date, open AS Open, high AS High, \
                                                          low AS Low, close AS Close, volume AS Volume \
@@ -814,7 +840,7 @@ def send_strategy():
             money = set_money
             if strategy_line == 'macd_line':
                 flash(f'MACD功能近期製作中，敬請期待!', 'danger')
-                return render_template('strategy.html')
+                return redirect(url_for('strategy'))
 
             # KD line
             elif strategy_line == 'kdj_line':
@@ -1255,7 +1281,7 @@ def send_strategy():
             if add_plot == None:
                 flash('沒有交易點', 'danger')
                 print('沒有交易點')
-                # return render_template('strategy.html')
+                return redirect(url_for('strategy'))
             else:
                 try:
                     df.index = pd.DatetimeIndex(df.index)
@@ -1266,8 +1292,6 @@ def send_strategy():
                     timestamp = int(datetime.today().timestamp())
                     timestamp_str = str(timestamp)
                     filename = f"{stock_code}_{timestamp_str}"
-                    # path = os.path.join("/home/ec2-user/sentimentrader/flask_app/static/img/report", filename)  # app.py
-                    # path = os.path.join("flask_app/static/img/report", filename)
                     path = os.path.join(basedir, "static/img/report", filename)
                     print(path)
                     mpf.plot(df, **kwargs, savefig=path)
@@ -1280,8 +1304,6 @@ def send_strategy():
 
                 else:
                     s3_save_filename = filename + '.png'
-                    # s3_save_path = os.path.join('/home/ec2-user/sentimentrader/flask_app/static/img/report', s3_save_filename)  # app.py
-                    # s3_save_path = os.path.join('flask_app/static/img/report',s3_save_filename)
                     s3_save_path = os.path.join(basedir, "static/img/report", s3_save_filename)
                     print(s3_save_path)
                     # open file
@@ -1370,49 +1392,6 @@ def send_strategy():
 
                 # 策略參數
 
-                strategy_dict = {
-                    'user_id': uid,
-                    'stock_code': stock_code,
-                    'start_date': start_date,
-                    'end_date': end_date,
-                    'strategy_line': strategy_line,
-                    'strategy_in': strategy_in,
-                    'strategy_in_para': strategy_in_para,
-                    'strategy_out': strategy_out,
-                    'strategy_out_para': strategy_out_para,
-                    'strategy_sentiment': strategy_sentiment,
-                    'source': source,
-                    'sentiment_para_more': sentiment_para_more,
-                    'sentiment_para_less': sentiment_para_less,
-                    'seed_money': set_money,
-                    'discount': discount,
-                    'create_date': today_strftime
-                }
-
-                print(strategy_dict)
-
-                # 回測報告
-                backtest_report = {
-                    'user_id': uid,
-                    'stock_code': stock_code,
-                    'total_buy_count': total_buy_count,
-                    'total_sell_count': total_sell_count,
-                    'total_return_rate': total_return_rate,
-                    'highest_return': height_return,
-                    'lowest_return': lowest_return,
-                    'total_win': total_win,
-                    'total_lose': total_lose,
-                    'total_trade': total_trade,
-                    'win_rate': win_rate,
-                    'avg_return_rate':  avg_return_rate,
-                    'irr': irr,
-                    'file_path': file_path,
-                    'create_date': today_strftime
-                }
-
-
-                print(backtest_report)
-
                 # strategy_backtest_dict = {
                 #     'user_id': uid,
                 #     'stock_code': stock_code,
@@ -1449,18 +1428,6 @@ def send_strategy():
                                            set_money, discount, total_buy_count, total_sell_count, total_return_rate, height_return, lowest_return,
                                            total_win, total_lose, total_trade, win_rate, avg_return_rate, irr, file_path, today_strftime)
 
-
-
-                # sql_insert_strategy = "INSERT INTO `strategy` (`user_id`, `stock_code`, `start_date`, `end_date`, \
-                #                                                `strategy_line`, `strategy_in`, `strategy_in_para`, `strategy_out`, `strategy_out_para`, \
-                #                                                `strategy_sentiment`, `source`, `sentiment_para_more`, `sentiment_para_less`, `seed_money`, \
-                #                                                `discount`, 'create_date') VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-                #
-                # sql_insert_backtest = "INSERT INTO `backtest` (`user_id`, `stock_code`, `total_buy_count`, `total_sell_count`, \
-                #                                                `total_return_rate`, `highest_return`, `lowest_return`, `total_win`, `total_lose` \
-                #                                                `total_trade`, `win_rate`, `avg_return_rate`, `irr`, `file_path`, 'create_date') \
-                #                                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-
                 sql_insert_strategy_backtest = "INSERT INTO `strategy_backtest` (`user_id`, `stock_code`, `start_date`, `end_date`, \
                                                                                  `strategy_line`, `strategy_in`, `strategy_in_para`, `strategy_out`, `strategy_out_para`, \
                                                                                  `strategy_sentiment`, `source`, `sentiment_para_more`, `sentiment_para_less`, `seed_money`, \
@@ -1469,8 +1436,6 @@ def send_strategy():
                                                                                  `irr`, `file_path`, `create_date`) \
                                                                                  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
-                # db_mysql.insert_tb(sql_insert_strategy, strategy_tuple)
-                # db_mysql.insert_tb(sql_insert_backtest, backtest_tuple)
                 db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
                 db_mysql.insert_tb(sql_insert_strategy_backtest, strategy_backtest_tuple)
 
@@ -1484,7 +1449,8 @@ def send_strategy():
 def backtest():
     uid = get_cookie_check()
     print(uid)
-    if not isinstance(uid, int):
+    if isinstance(uid, int) is False:
+        flash('需要登入', 'danger')
         return render_template('login.html')
     else:
         sql_social_volume = "SELECT * \
@@ -1535,7 +1501,8 @@ def backtest():
             return render_template('backtest.html', strategy_backtest_dict_list=strategy_backtest_dict_list, strategy_backtest_dict_list_length=strategy_backtest_dict_list_length)
 
         except:
-            return render_template('strategy.html')
+            flash('請先建立策略做回測', 'info')
+            return redirect(url_for('strategy'))
 
 
 @app.route('/remove_strategy', methods=['POST'])
@@ -1633,7 +1600,8 @@ def signup():
     # check Basic Auth
     basic_auth = check_basic_auth_signup(name, email, pwd, con_pwd)
     if not basic_auth:
-        return Response('error: wrong format or miss something', status=400)
+        flash('兩次密碼輸入不同', 'error')
+        return redirect(url_for('login'))
 
     else:
         # 搜尋是否有相同的email
@@ -1642,7 +1610,8 @@ def signup():
 
         if result_email:
             db_mysql.close_db()
-            return Response('error: email is exist', status=403)
+            flash('這個信箱已註冊過', 'error')
+            return redirect(url_for('login'))
 
         else:
             # 處理 password
@@ -1697,6 +1666,7 @@ def signup():
             # 回應為set cookie
             resp.set_cookie(key='token', value=signup_user_info['data']['access_token'])
             # 重新導向到 myName.html
+            flash('註冊成功', 'success')
             return resp
 
 
@@ -1711,13 +1681,15 @@ def signin():
     basic_auth = check_basic_auth_signin(email, pwd)
 
     if not basic_auth:
-        return Response('error: wrong format', status=400)
+        flash('輸入長度過長', 'error')
+        return redirect(url_for('login'))
     else:
         db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
         sql_email = "SELECT `id`, `name`, `email`, `password`, `password_salt` FROM `user` WHERE `email`= %s"
         result = db_mysql.query_tb_one(sql_email, (email,))
         if not result:
-            return Response('error: sign in fail', status=403)
+            flash('此信箱未被註冊，請重新輸入', 'error')
+            return redirect(url_for('login'))
         else:
             db_id = result[0]
             db_name = result[1]
@@ -1766,19 +1738,12 @@ def signin():
                                                  'email': db_email,
                                              }}}
 
-                # # convert content type from text/html to application/json
-                # resp = Response(response=signin_api,
-                #                 status=200,
-                #                 mimetype="application/json")
-                # return render_template('home.html', resp=resp)
 
                 resp = make_response(redirect(url_for('home')))
                 # 回應為set cookie
                 resp.set_cookie(key='token', value=signin_user_info['data']['access_token'])
                 # 重新導向到 myName.html
 
-                # set_cookie(key, value='', max_age=None, expires=None, path='/', domain=None, secure=False,
-                #            httponly=False, samesite=None)
 
                 return resp
 

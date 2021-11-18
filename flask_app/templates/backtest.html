@@ -3,6 +3,8 @@
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
+    <title>result</title>
+    <link rel="icon" type="image/x-icon" href="/static/img/logo/sentimentrader_favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
@@ -21,7 +23,8 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"
             integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
-<!--	css-->
+<!-- Sweet alert Js -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
 
@@ -225,9 +228,9 @@
 
  <div class="loader-wrapper">
         <span class="loader"><span class="loader-inner"></span></span>
-         <br>
-         <h4 style="color: #ADB5BD; margin-left: 15px;">Loading...</h4>
  </div>
+
+{% include "sweetalerts.html" %}
 
 <script>
 

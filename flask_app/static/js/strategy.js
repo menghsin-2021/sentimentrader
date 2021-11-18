@@ -74,14 +74,20 @@ function showStrategy(strategy_line, custom_strategy) {
   custom_strategy = document.getElementById("custom_strategy");
   if (strategy_line.options[strategy_line.selectedIndex].value == "kdj_line") {
     custom_strategy.style.display = "none";
+    strategy_in_para.removeAttribute("required")
+    strategy_out_para.removeAttribute("required")
     console.log(custom_strategy.style.display)
     }
    else if (strategy_line.options[strategy_line.selectedIndex].value == "macd_line") {
     custom_strategy.style.display = "none";
+    strategy_in_para.removeAttribute("required")
+    strategy_out_para.removeAttribute("required")
     console.log(custom_strategy.style.display)
     } else if (strategy_line.options[strategy_line.selectedIndex].value == "none_line") {
     custom_strategy.style.display = 'block';
     console.log(custom_strategy.style.display)
+    strategy_in_para.addAttribute("required")
+    strategy_out_para.addAttribute("required")
   } else {
     console.log('error')
   }
@@ -116,22 +122,30 @@ sentiment_condition = document.getElementById("sentiment_condition");
   sentiment_source = document.getElementById("sentiment_source");
   if (sentiment_condition.options[sentiment_condition.selectedIndex].value == "daily_sentiment_pass") {
     sentiment_grade.style.display = "block";
+    sentiment_para_more.addAttribute("required")
+    sentiment_para_less.addAttribute("required")
     console.log(sentiment_grade.style.display)
     sentiment_source.style.display = "block";
     console.log(sentiment_source.style.display)
     }
    else if (sentiment_condition.options[sentiment_condition.selectedIndex].value == "to_negative_pass") {
     sentiment_grade.style.display = "none";
+    sentiment_para_more.removeAttribute("required")
+    sentiment_para_less.removeAttribute("required")
     console.log(sentiment_grade.style.display)
     sentiment_source.style.display = "block";
     console.log(sentiment_source.style.display)
     } else if (sentiment_condition.options[sentiment_condition.selectedIndex].value == "to_positive_pass") {
     sentiment_grade.style.display = "none";
+    sentiment_para_more.removeAttribute("required")
+    sentiment_para_less.removeAttribute("required")
     console.log(sentiment_grade.style.display)
     sentiment_source.style.display = "block";
     console.log(sentiment_source.style.display)
     } else {
     sentiment_grade.style.display = "none";
+    sentiment_para_more.removeAttribute("required")
+    sentiment_para_less.removeAttribute("required")
     console.log(sentiment_grade.style.display)
     sentiment_source.style.display = "none";
     console.log(sentiment_source.style.display)
@@ -139,20 +153,3 @@ sentiment_condition = document.getElementById("sentiment_condition");
 
 }
 
-
-const inputs = document.querySelectorAll('input')
-inputs.forEach( input => {
-input.addEventListener('input', function() {
-    if (input.checkValidity()) {
-        input.classList.add('is-valid')
-        input.classList.remove('is-invalid')
-    } else {
-        input.classList.remove('is-valid')
-        input.classList.add('is-invalid')
-        }
-    })
-})
-
-
-start_date.max = new Date().toISOString().split("T")[0];
-end_date.max = new Date().toISOString().split("T")[0];

@@ -3,6 +3,8 @@
   <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
+    <title>social volume</title>
+    <link rel="icon" type="image/x-icon" href="/static/img/logo/sentimentrader_favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
@@ -14,8 +16,10 @@
     <link rel="stylesheet" href="/static/css/bootstrap.css">
 
 <!--      plotly-->
-    <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>z
+    <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>
 
+<!-- Sweet alert Js -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   </head>
   <body>
@@ -83,10 +87,10 @@
 <main role="main" class="bg-light col-md-10 ml-sm-auto col-lg-10 px-4">
 <div class="col-12 shadow p-3 mb-5 rounded d-flex flex-row " style="background-color: white">
   <div class="col-3">
-    <form action="/social_volume_rank" enctype="application/x-www-form-urlencoded" method=POST>
+    <form id="socail-volume-form" action="/social_volume_rank" enctype="application/x-www-form-urlencoded" method=POST>
       <div class="form-group">
         <label for="category">類股</label>
-        <select class="form-control" id="category" name="category">
+        <select class="form-control" id="category" name="category" required>
           <option value="electric_car">電動車</option>
           <option value="electric">電子資訊</option>
           <option value="sail">航運</option>
@@ -128,6 +132,8 @@
 
   </div>
 </div>
+
+{% include "sweetalerts.html" %}
 
     <script>
     var social_volume_rank = {{social_volume_rank | safe}}
@@ -193,6 +199,44 @@
 
       Plotly.newPlot("myDiv", data, layout);
 <!--     color gradient https://mycolor.space/gradient?ori=to+right&hex=%23F01313&hex2=%230F0FE0&sub=1-->
+
+
+const socailVolumeForm = document.querySelector("#socail-volume-form");
+
+socailVolumeForm.innerHTML = `<div class="form-group">
+        <label for="category">類股</label>
+        <select class="form-control" id="category" name="category" required>
+          <option value="${social_volume_rank['category']}">${social_volume_rank['category_name']}</option>
+          <option value="electric_car">電動車</option>
+          <option value="electric">電子資訊</option>
+          <option value="sail">航運</option>
+          <option value="biotech">生技</option>
+          <option value="finance">金融</option>
+          </select>
+      </div>
+      <div class="form-group">
+         <label for="source">文章來源</label>
+         <select class="form-control" id="source" name="source">
+         <option value="${social_volume_rank['source']}">${social_volume_rank['source_name']}</option>
+          <option value="ptt">PTT 貼文</option>
+          <option value="cnyes">鉅亨網</option>
+        </select>
+      </div>
+      <div class="form-group">
+          <label for="duration">時間範圍</label>
+          <select class="form-control" id="duration" name="duration">
+            <option value="${social_volume_rank['duration']}">${social_volume_rank['duration_name']}</option>
+            <option value="daily">當日</option>
+            <option value="weekly">當周</option>
+            <option value="monthly">當月</option>
+            <option value="yearly">一年內</option>
+            <option value="three_yearly">三年內</option>
+          </select>
+      </div>
+      <div>
+    <button type="submit" class="btn btn-primary" id="search_rank" value="search_rank">送出</button>
+        </div>`
+
     </script>
 
   </body>
