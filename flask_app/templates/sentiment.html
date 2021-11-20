@@ -4,7 +4,7 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <title>sentiment</title>
-    <link rel="icon" type="image/x-icon" href="/static/img/logo/sentimentrader_favicon.ico">
+<link rel="icon" type="image/png" href="/static/img/logo/s_word_logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
@@ -27,6 +27,9 @@
 
 </head>
 <body>
+
+
+
 <nav class="navbar navbar-dark bg-primary flex-md-nowapr fixed-top p-0 shadow">
     <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/home.html">Sentimentrader</a>
     <ul class="navbar-nav px-3">
@@ -96,7 +99,7 @@
                                 <label for="category">類股</label>
                                 <select class="form-control" id="category" name="category"
                                         onchange="insertOption('category', 'stock_code')" required>
-                                    <option value="">請選擇類股</option>
+                                    <option value="{{ form_info['category'] | safe}}">{{ form_info['category_name'] | safe}}</option>
                                     <option value="electric_car">電動車</option>
                                     <option value="electric">電子資訊</option>
                                     <option value="sail">航運</option>
@@ -108,6 +111,7 @@
                             <div class="form-group">
                                 <label for="source">文章來源</label>
                                 <select class="form-control" id="source" name="source">
+                                    <option value="{{ form_info['source'] | safe}}">{{ form_info['source_name'] | safe}}</option>
                                     <option value="ptt">PTT 貼文</option>
                                     <option value="cnyes">鉅亨網</option>
                                 </select>
@@ -116,15 +120,8 @@
                             <div class="form-group">
                                 <label for="stock_code" class="control-label">個股選單</label>
                                 <select id="stock_code" class="form-control" name="stock_code">
-                                    <optgroup label="電動車">
-                                        <option value="2317">2317 鴻海</option>
-                                        <option value="3023">3023 信邦</option>
-                                        <option value="2308">2308 台達電</option>
-                                        <option value="2301">2301 光寶科</option>
-                                        <option value="1533">1533 車王電</option>
-                                        <option value="8358">8358 金居</option>
-                                        <option value="2357">2357 華碩</option>
-                                        <option value="3665">3665 貿聯-ＫＹ</option>
+                                    <optgroup label="台積電">
+                                        <option value="{{ form_info['stock_code'] | safe}}">{{ form_info['stock_code'] | safe}} {{ form_info['stock_name'] | safe}} </option>
                                     </optgroup>
                                 </select>
                             </div>
@@ -160,10 +157,10 @@
     </div>
 </div>
 
-
- <div class="loader-wrapper">
+<div class="loader-wrapper">
         <span class="loader"><span class="loader-inner"></span></span>
  </div>
+
 
 {% include "sweetalerts.html" %}
 
@@ -173,28 +170,34 @@
         $(".loader-wrapper").show();
         });
 
-        $(window).on("load",function(){
-        $(".loader-wrapper").show().delay(3000).queue(function (next) {
-                $(this).hide();
-                next();
-            });
-        $(".loader-wrapper").fadeOut("slow");
-        $("main").show();
-        });
+       $(window).on("load",function(){
+       $(".loader-wrapper").show().queue(function (next) {
+               $(this).hide();
+               next();
+           });
+       $(".loader-wrapper").fadeOut("slow");
+       $("main").show();
+      });
     </script>
 
 
 
 <script>
+
+       // var start = performance.now();
+
+       const daily_stock_price = {{ daily_stock_price | safe }}
+       const daily_sentiment = {{ daily_sentiment | safe }}
+
        var trace1 = {
-          x: {{ five_yearly_stock_price['date'] | safe }},
-          close: {{ five_yearly_stock_price['close'] | safe}},
+          x: daily_stock_price['date'].slice(0,1825),
+          close: daily_stock_price['close'].slice(0,1825),
             decreasing: { line: { color: "#7F7F7F" } },
-          high: {{ five_yearly_stock_price['high'] | safe}},
+          high: daily_stock_price['high'].slice(0,1825),
             increasing: { line: { color: "#17BECF" } },
             line: { color: "rgba(31,119,180,1)" },
-          low: {{ five_yearly_stock_price['low'] | safe }},
-          open: {{ five_yearly_stock_price['open'] | safe }},
+          low: daily_stock_price['low'].slice(0,1825),
+          open: daily_stock_price['open'].slice(0,1825),
           name: '歷年股價',
 
        // customise colors
@@ -209,8 +212,8 @@
        };
 
         var trace2 = {
-          x: {{ five_yearly_stock_price['date']| safe }},
-          y: {{ five_yearly_sentiment['avg_valence'] | safe }},
+          x: daily_stock_price['date'].slice(0,1825),
+          y: daily_sentiment['avg_valence'].slice(0,1825),
           type: 'scatter',
           yaxis: 'y2',
           name: '平均正向分數',
@@ -221,8 +224,8 @@
         };
 
         var trace3 = {
-          x: {{ five_yearly_stock_price['date'] | safe }},
-          y: {{ five_yearly_sentiment['avg_arousal'] | safe }},
+          x: daily_sentiment['date'].slice(0,1825),
+          y: daily_sentiment['avg_arousal'].slice(0,1825),
           type: 'scatter',
           yaxis: 'y2',
           name: '平均強烈分數',
@@ -234,8 +237,8 @@
         };
 
         var trace4 = {
-          x: {{ five_yearly_stock_price['date'][:1825] | safe }},
-          y: {{ five_yearly_sentiment['sum_sentiment'][:1825] | safe }},
+          x: daily_stock_price['date'].slice(0,1825),
+          y: daily_sentiment['sum_sentiment'].slice(0,1825),
           type: 'bar',
           yaxis: 'y3',
           name: '股市關鍵字情感分數',
@@ -260,97 +263,97 @@
                   label: '週',
                   method: 'restyle',
                   args: [{
-                           x: [{{ weekly_stock_price['date'] | safe }}],
-                       close: [{{ weekly_stock_price['close'] | safe}}],
+                           x: [daily_stock_price['date'].slice(0,7)],
+                       close: [daily_stock_price['close'].slice(0,7)],
                   decreasing: [{ line: { color: "green" }}],
-                        high: [{{ weekly_stock_price['high'] | safe}}],
+                        high: [daily_stock_price['high'].slice(0,7)],
                   increasing: [{line: { color: "red" }}],
                         line: [{ color: "rgba(31,119,180,1)", width: 1  }],
-                         low: [{{ weekly_stock_price['low'] | safe }}],
-                        open: [{{ weekly_stock_price['open'] | safe }}],
-                          y1: [{{ weekly_sentiment['avg_valence'] | safe }}],
-                          y2: [{{ weekly_sentiment['avg_arousal'] | safe }}],
-                          y3: [{{ weekly_sentiment['sum_sentiment'] | safe }}]
+                         low: [daily_stock_price['low'].slice(0,7)],
+                        open: [daily_stock_price['open'].slice(0,7)],
+                          y1: [daily_sentiment['avg_valence'].slice(0,7)],
+                          y2: [daily_sentiment['avg_arousal'].slice(0,7)],
+                          y3: [daily_sentiment['sum_sentiment'].slice(0,7)]
                           }]
                     }, {
                   label: '月',
                   method: 'restyle',
                   args: [{
-                           x: [{{ monthly_stock_price['date'] | safe }}],
-                       close: [{{ monthly_stock_price['close'] | safe}}],
+                           x: [daily_stock_price['date'].slice(0,30)],
+                       close: [daily_stock_price['close'].slice(0,30)],
                   decreasing: [{ line: { color: "green" }}],
-                        high: [{{ monthly_stock_price['high'] | safe}}],
+                        high: [daily_stock_price['high'].slice(0,30)],
                   increasing: [{line: { color: "red" }}],
                         line: [{ color: "rgba(31,119,180,1)", width: 1  }],
-                         low: [{{ monthly_stock_price['low'] | safe }}],
-                        open: [{{ monthly_stock_price['open'] | safe }}],
-                          y1: [{{ monthly_sentiment['avg_valence'] | safe }}],
-                          y2: [{{ monthly_sentiment['avg_arousal'] | safe }}],
-                          y3: [{{ monthly_sentiment['sum_sentiment'] | safe }}]
+                         low: [daily_stock_price['low'].slice(0,30)],
+                        open: [daily_stock_price['open'].slice(0,30)],
+                          y1: [daily_sentiment['avg_valence'].slice(0,30)],
+                          y2: [daily_sentiment['avg_arousal'].slice(0,30)],
+                          y3: [daily_sentiment['sum_sentiment'].slice(0,30)]
                         }]
                     }, {
                   label: '年',
                   method: 'restyle',
                   args: [{
-                           x: [{{ yearly_stock_price['date'] | safe }}],
-                       close: [{{ yearly_stock_price['close'] | safe}}],
+                           x: [daily_stock_price['date'].slice(0,365)],
+                       close: [daily_stock_price['close'].slice(0,365)],
                   decreasing: [{ line: { color: "green" }}],
-                        high: [{{ yearly_stock_price['high'] | safe}}],
+                        high: [daily_stock_price['high'].slice(0,365)],
                   increasing: [{line: { color: "red" }}],
                         line: [{ color: "rgba(31,119,180,1)", width: 1  }],
-                         low: [{{ yearly_stock_price['low'] | safe }}],
-                        open: [{{ yearly_stock_price['open'] | safe }}],
-                          y1: [{{ yearly_sentiment['avg_valence'] | safe }}],
-                          y2: [{{ yearly_sentiment['avg_arousal'] | safe }}],
-                          y3: [{{ yearly_sentiment['sum_sentiment'] | safe }}]
+                         low: [daily_stock_price['low'].slice(0,365)],
+                        open: [daily_stock_price['open'].slice(0,365)],
+                          y1: [daily_sentiment['avg_valence'].slice(0,365)],
+                          y2: [daily_sentiment['avg_arousal'].slice(0,365)],
+                          y3: [daily_sentiment['sum_sentiment'].slice(0,365)]
                         }]
                   }, {
                   label: '三年',
                   method: 'restyle',
                   args: [{
-                           x: [{{ three_yearly_stock_price['date'] | safe }}],
-                       close: [{{ three_yearly_stock_price['close'] | safe}}],
+                           x: [daily_stock_price['date'].slice(0,1095)],
+                       close: [daily_stock_price['close'].slice(0,1095)],
                   decreasing: [{ line: { color: "green" }}],
-                        high: [{{ three_yearly_stock_price['high'] | safe}}],
+                        high: [daily_stock_price['high'].slice(0,1095)],
                   increasing: [{line: { color: "red" }}],
                         line: [{ color: "rgba(31,119,180,1)", width: 1  }],
-                         low: [{{ three_yearly_stock_price['low'] | safe }}],
-                        open: [{{ three_yearly_stock_price['open'] | safe }}],
-                          y1: [{{ three_yearly_sentiment['avg_valence'] | safe }}],
-                          y2: [{{ three_yearly_sentiment['avg_arousal'] | safe }}],
-                          y3: [{{ three_yearly_sentiment['sum_sentiment'] | safe }}]
+                         low: [daily_stock_price['low'].slice(0,1095)],
+                        open: [daily_stock_price['open'].slice(0,1095)],
+                          y1: [daily_sentiment['avg_valence'].slice(0,1095)],
+                          y2: [daily_sentiment['avg_arousal'].slice(0,1095)],
+                          y3: [daily_sentiment['sum_sentiment'].slice(0,1095)]
                         }]
                   },{
                   label: '五年',
                   method: 'restyle',
                   args: [{
-                           x: [{{ five_yearly_stock_price['date'] | safe }}],
-                       close: [{{ five_yearly_stock_price['close'] | safe}}],
+                           x: [daily_stock_price['date'].slice(0,1825)],
+                       close: [daily_stock_price['close'].slice(0,1825)],
                   decreasing: [{ line: { color: "green" }}],
-                        high: [{{ five_yearly_stock_price['high'] | safe}}],
+                        high: [daily_stock_price['high'].slice(0,1825)],
                   increasing: [{line: { color: "red" }}],
                         line: [{ color: "rgba(31,119,180,1)", width: 1 }],
-                         low: [{{ five_yearly_stock_price['low'] | safe }}],
-                        open: [{{ five_yearly_stock_price['open'] | safe }}],
-                          y1: [{{ five_yearly_sentiment['avg_valence'] | safe }}],
-                          y2: [{{ five_yearly_sentiment['avg_arousal'] | safe }}],
-                          y3: [{{ five_yearly_sentiment['sum_sentiment'] | safe }}]
+                         low: [daily_stock_price['low'].slice(0,1825)],
+                        open: [daily_stock_price['open'].slice(0,1825)],
+                          y1: [daily_sentiment['avg_valence'].slice(0,1825)],
+                          y2: [daily_sentiment['avg_arousal'].slice(0,1825)],
+                          y3: [daily_sentiment['sum_sentiment'].slice(0,1825)]
                         }]
                   }, {
               label: '全部',
               method: 'restyle',
               args: [{
-                           x: [{{ daily_stock_price['date'] | safe }}],
-                       close: [{{ daily_stock_price['close'] | safe}}],
+                           x: [daily_stock_price['date']],
+                       close: [daily_stock_price['close']],
                   decreasing: [{ line: { color: "green" }}],
-                        high: [{{ daily_stock_price['high'] | safe}}],
+                        high: [daily_stock_price['high']],
                   increasing: [{line: { color: "red" }}],
                         line: [{ color: "rgba(31,119,180,1)", width: 1  }],
-                         low: [{{ daily_stock_price['low'] | safe }}],
-                        open: [{{ daily_stock_price['open'] | safe }}],
-                          y1: [{{ daily_sentiment['avg_valence'] | safe }}],
-                          y2: [{{ daily_sentiment['avg_arousal'] | safe }}],
-                          y3: [{{ daily_sentiment['sum_sentiment'] | safe }}]
+                         low: [daily_stock_price['low']],
+                        open: [daily_stock_price['open']],
+                          y1: [daily_sentiment['avg_valence']],
+                          y2: [daily_sentiment['avg_arousal']],
+                          y3: [daily_sentiment['sum_sentiment']]
                         }]
                     },
 
@@ -505,7 +508,8 @@
 
 Plotly.newPlot("myDiv", data, layout);
 
-
+// var end = performance.now();
+// alert('total took ' + (end - start) + ' ms.');
 
 
 

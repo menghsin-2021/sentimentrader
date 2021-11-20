@@ -50,6 +50,16 @@ def upload_file(uid, file, file_name , bucket_name, object_path=None):
     else:
         return file_name
 
+def delete_file(bucket_name, object_path, uid, file_name):
+    try:
+        client = boto3.client('s3')
+        object = object_path + '/' + str(uid) + '/' + file_name
+        client.delete_object(Bucket=bucket_name, Key=object)
+        print('delete success')
+        return True
+    except:
+        print('delete fail')
+        return False
 
 
 

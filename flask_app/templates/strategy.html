@@ -4,7 +4,7 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <title>strategy & backtest</title>
-    <link rel="icon" type="image/x-icon" href="/static/img/logo/sentimentrader_favicon.ico">
+<link rel="icon" type="image/png" href="/static/img/logo/s_word_logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
@@ -21,6 +21,7 @@
 
         <!-- Sweet alert Js -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
 
 </head>
@@ -91,14 +92,14 @@
 <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4 bg-light d-flex flex-row justify-content-center">
     <div class="content d-flex flex-column mr-2 col-12">
 
-        <div class="strategy_card">
+        <div class="strategy_card form">
             <h2>範例策略</h2>
             <br>
-            <div id="card-deck" class="d-flex flex-row flex-nowrap overflow-auto" style="height: 300px;">
+            <div id="card-deck" class="d-flex flex-row flex-nowrap overflow-auto" style="height: 280px;">
                     {% for i in range(sample_strategy_form_length) %}
                     <div id="card" class="card col-3 p-2 bg-active border-dark">
                         <div id="card-{{ i }}" class="card-body">
-                            <h4 class="card-title">{{ sample_strategy_form[i]['stock_code'] | safe }}</h4>
+                            <h4 class="card-title">{{ sample_strategy_form[i]['stock_code'] | safe }} / {{ sample_strategy_form[i]['stock_name'] | safe }}</h4>
                             <ul style="font-size:16px; list-style-type: none;">
                                 <li>勝率： {{ sample_strategy_form[i]['win_rate'] | safe }}%</li>
                                 <li>年化報酬率： {{ sample_strategy_form[i]['irr'] | safe }}%</li>
@@ -120,7 +121,7 @@
             <div class="col-12 strategy_setting d-flex flex-row justify-content-between">
 
                 <div class="strategy_setting_para col-6">
-                    <h2>交易策略制定/選擇</h2>
+                    <h2>策略制定</h2>
                     <br>
                     <div>
                         <div class="form-group">
@@ -240,7 +241,7 @@
 
                 </div>
                 <div class="basic_setting_para col-6">
-                    <h2>回測設定</h2>
+                    <h2>基本設定</h2>
                     <br>
                         <div class="form-group">
                             <label for="start_date">開始日期</label>
@@ -274,7 +275,8 @@
             </div>
         </form>
 
-            <div class="d-flex flex-row justify-content-start" style="margin-left: 10px;">
+        <br>
+            <div class="d-flex flex-row justify-content-end" style="margin-left: 10px;">
                 <div>
                     <button type="submit" class="btn btn-primary mr-3" id="clear-setting" value="clear-setting">清除重設
                     </button>

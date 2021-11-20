@@ -45,7 +45,7 @@ cardDeck.addEventListener("click", (event) => {
 
     strategyForm.innerHTML = `<div class="col-12 strategy_setting d-flex flex-row justify-content-between"">
                 <div class="strategy_setting_para col-6">
-                    <h2>交易策略制定/選擇</h2>
+                    <h2>策略制定</h2>
                     <br>
                     <div>
                         <div class="form-group">
@@ -170,7 +170,7 @@ cardDeck.addEventListener("click", (event) => {
 
                 </div>
                 <div class="basic_setting_para col-6">
-                    <h2>回測設定</h2>
+                    <h2>基本設定</h2>
                     <br>
                         <div class="form-group">
                             <label for="start_date">開始日期</label>
@@ -205,11 +205,26 @@ cardDeck.addEventListener("click", (event) => {
     }
  })
 
-clearSetting.addEventListener("click", (event) => {
+clearSetting.addEventListener("click",function(){
+  swal({
+    icon: "warning",
+    text: "確認要重設嗎？",
+    buttons:{
+      A: {
+        text: "確認重設",
+        value: true
+      },
+      B: {
+        text: "取消",
+        value: false
+      }
+    }
+  }).then((value) => {
+    if (value === true) {
     strategyForm.innerHTML = `<div class="col-12 strategy_setting d-flex flex-row justify-content-between">
 
                 <div class="strategy_setting_para col-6">
-                    <h2>交易策略制定/選擇</h2>
+                    <h2>策略制定</h2>
                     <br>
                     <div>
                         <div class="form-group">
@@ -329,7 +344,7 @@ clearSetting.addEventListener("click", (event) => {
 
                 </div>
                 <div class="basic_setting_para col-6">
-                    <h2>回測設定</h2>
+                    <h2>基本設定</h2>
                     <br>
                         <div class="form-group">
                             <label for="start_date">開始日期</label>
@@ -359,7 +374,13 @@ clearSetting.addEventListener("click", (event) => {
                     </button>
                 </div>
             </div>`
-})
+            } else {
+            // do nothing
+      }
+  });
+});
+
+
 
 
 try {
@@ -380,7 +401,7 @@ try {
 
     strategyForm.innerHTML = `<div class="strategy_setting d-flex flex-row justify-content-between">
                 <div class="strategy_setting_para col-6">
-                    <h2>交易策略制定/選擇</h2>
+                    <h2>策略制定</h2>
                     <br>
                     <div>
                         <div class="form-group">
@@ -506,7 +527,7 @@ try {
 
                 </div>
                 <div class="basic_setting_para col-6">
-                    <h2>回測設定</h2>
+                    <h2>基本設定</h2>
                     <br>
                         <div class="form-group">
                             <label for="start_date">開始日期</label>
@@ -707,6 +728,8 @@ sentiment_condition = document.getElementById("sentiment_condition");
   }
 
 }
+
+
 
 
 </script>

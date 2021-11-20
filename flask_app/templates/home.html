@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Home</title>
-	<link rel="icon" type="image/x-icon" href="/static/img/logo/sentimentrader_favicon.ico">
+<link rel="icon" type="image/png" href="/static/img/logo/s_word_logo.png">
   <meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/static/css/home.css">
 
 	<!--    jquery-->
@@ -86,29 +86,16 @@
 
 	</div>
 
- <div class="loader-wrapper">
-        <span class="loader"><span class="loader-inner"></span></span>
-         <br>
-         <h4 style="color: #ADB5BD; margin-left: 15px;">Loading...</h4>
-    </div>
+<!-- <div class="loader-wrapper">-->
+<!--        <span class="loader"><span class="loader-inner"></span></span>-->
+<!--         <br>-->
+<!--         <h4 style="color: #ADB5BD; margin-left: 15px;">Loading...</h4>-->
+<!--    </div>-->
 
 
 <!-- partial -->
 {% include "sweetalerts.html" %}
 <script src="/static/js/home.js"></script>
-
-<script>
-
-        $("#sentiment").on("click", function() {
-        $(".loader-wrapper").show()
-        });
-
-        $(window).on("load",function(){
-          $(".loader-wrapper").fadeOut("slow");
-        });
-
-</script>
-
 
 </body>
 </html>

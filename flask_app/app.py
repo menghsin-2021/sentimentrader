@@ -20,8 +20,11 @@ from hashlib import pbkdf2_hmac
 # token
 import jwt
 
+# test time
+import time
 
-from photo_downloader_uploader import upload_file
+
+from photo_downloader_uploader import upload_file, delete_file
 bucket_name = 'sentimentraderbucket'
 object_path = 'backtest'
 
@@ -53,7 +56,12 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 # img_folder_path = os.path.join(basedir, 'static/img')
 # ssl_txt_path = os.path.join(basedir, '.well-known/pki-validation')
 
+@app.errorhandler(404)
+def page_not_found(e):
+    # note that we set the 404 status explicitly
+    return render_template('404.html'), 404
 
+app.register_error_handler(404, page_not_found)
 
 def get_cookie_check():
     token = request.cookies.get('token')
@@ -107,95 +115,76 @@ seven_days_ago_strftime = get_day_before(7)
 
 
 def fetch_stock_price(stock_code):
-    sql_stock_price = "SELECT `days`, `stock_code`, `stock_name`, `category`, `open`, `low`, `high`, `close`, `volume` \
+    sql_stock_price = "SELECT `days`, `open`, `low`, `high`, `close`, `volume` \
                        FROM `stock_price_view` \
                        WHERE stock_code = {} \
                        ORDER BY `days` desc;".format(stock_code)
-    print(sql_stock_price)
+    # print(sql_stock_price)
     db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
     result = db_mysql.query_tb_all(sql_stock_price)
-    print(result)
+    # print(result)
     return result
 
 
-def create_stock_price_json(range, result):
-    duration_dict = {'days': -1, 'weeks': 7, 'months': 30, 'years': 365, 'three_years': 1095, 'five_years': 1825}
-    if range not in duration_dict.keys():
-        print('time_rage error')
-    else:
-        duration = duration_dict[range]
-        date = [daily_info[0] for daily_info in result][:duration]
-        # print(date)
-        open = [daily_info[4] if daily_info[4] is not None else 0 for daily_info in result][:duration]
-        low = [daily_info[5] if daily_info[5] is not None else 0 for daily_info in result][:duration]
-        high = [daily_info[6] if daily_info[6] is not None else 0 for daily_info in result][:duration]
-        close = [daily_info[7] if daily_info[7] is not None else 0 for daily_info in result][:duration]
-        volume = [daily_info[8] if daily_info[8] is not None else 0 for daily_info in result][:duration]
-
-        # print(result)
-        stock_price = {
-            'date': date,
-            'open': open,
-            'low': low,
-            'high': high,
-            'close': close,
-            'volume': volume
-        }
-        # print(stock_price)
-        return stock_price
+def create_stock_price_json(result):
+    date = [daily_info[0] for daily_info in result]
+    # print(date)
+    open = [daily_info[1] if daily_info[1] is not None else 0 for daily_info in result]
+    low = [daily_info[2] if daily_info[2] is not None else 0 for daily_info in result]
+    high = [daily_info[3] if daily_info[3] is not None else 0 for daily_info in result]
+    close = [daily_info[4] if daily_info[4] is not None else 0 for daily_info in result]
+    volume = [daily_info[5] if daily_info[5] is not None else 0 for daily_info in result]
+    # print(result)
+    stock_price = {
+        'date': date,
+        'open': open,
+        'low': low,
+        'high': high,
+        'close': close,
+        'volume': volume
+    }
+    # print(stock_price)
+    return stock_price
 
 def fetch_sentiment(source, stock_code):
 
-        sql_sentiment = "SELECT `days`, `source`, `stock_code`, `stock_name`, `category`, `sum_valence`, `avg_valence`, `sum_arousal`, `avg_arousal`, `sum_sentiment` \
+        sql_sentiment = "SELECT `days`, `stock_name`, `sum_valence`, `avg_valence`, `sum_arousal`, `avg_arousal`, `sum_sentiment` \
                          FROM `sentiment_view` \
                          WHERE `source` = '{}' \
                          AND `stock_code` = '{}' \
                          ORDER BY `days` desc;".format(source, stock_code)
 
-        print(sql_sentiment)
+        # print(sql_sentiment)
         db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
         result = db_mysql.query_tb_all(sql_sentiment)
-        print(result)
+        # print(result)
 
         return result
 
-def create_sentiment_json(range, result):
-    duration_dict = {'days': -1, 'weeks': 7, 'months': 30, 'years': 365, 'three_years': 1095, 'five_years': 1825}
-    if range not in duration_dict.keys():
-        print('time_rage error')
-    else:
-        duration = duration_dict[range]
-        date = [daily_info[0] for daily_info in result][:duration]
-        chosen_source = [daily_info[1] for daily_info in result][:duration][0]
-        chosen_stock_code = [daily_info[2] for daily_info in result][:duration][0]
-        chosen_stock_name = [daily_info[3] for daily_info in result][:duration][0]
-        sum_valence = [daily_info[5] for daily_info in result][:duration]
-        avg_valence = [daily_info[6] for daily_info in result][:duration]
-        sum_arousal = [daily_info[7] for daily_info in result][:duration]
-        avg_arousal = [daily_info[8] for daily_info in result][:duration]
-        sum_sentiment = [int(daily_info[9]) for daily_info in result][:duration]
-        avg_valence_now = int((avg_valence[0] + 5) / 10 * 100)
-        avg_arousal_now = int((avg_arousal[0] + 5) / 10 * 100)
-        sum_sentiment_now = int((sum_sentiment[0] + 5) / 100 * 100)
-        avg_valence_angular = int(avg_valence_now / 100 * 180)
-
-        sentiment = {
-            'date': date,
-            'sum_valence': sum_valence,
-            'avg_valence': avg_valence,
-            'sum_arousal': sum_arousal,
-            'avg_arousal': avg_arousal,
-            'sum_sentiment': sum_sentiment,
-            'avg_valence_now': avg_valence_now,
-            'avg_valence_angular': avg_valence_angular,
-            'avg_arousal_now': avg_arousal_now,
-            'sum_sentiment_now': sum_sentiment_now,
-            'chosen_source': chosen_source,
-            'chosen_stock_code': chosen_stock_code,
-            'chosen_stock_name': chosen_stock_name
-        }
-
-        return sentiment
+def create_sentiment_json(result):
+    date = [daily_info[0] for daily_info in result]
+    chosen_stock_name = [daily_info[1] for daily_info in result][0]
+    sum_valence = [daily_info[2] for daily_info in result]
+    avg_valence = [daily_info[3] for daily_info in result]
+    sum_arousal = [daily_info[4] for daily_info in result]
+    avg_arousal = [daily_info[5] for daily_info in result]
+    sum_sentiment = [int(daily_info[6]) for daily_info in result]
+    avg_valence_now = int((avg_valence[0] + 5) / 10 * 100)
+    avg_arousal_now = int((avg_arousal[0] + 5) / 10 * 100)
+    avg_valence_angular = int(avg_valence_now / 100 * 180)
+    sentiment = {
+        'date': date,
+        'sum_valence': sum_valence,
+        'avg_valence': avg_valence,
+        'sum_arousal': sum_arousal,
+        'avg_arousal': avg_arousal,
+        'sum_sentiment': sum_sentiment,
+        'avg_valence_now': avg_valence_now,
+        'avg_valence_angular': avg_valence_angular,
+        'avg_arousal_now': avg_arousal_now,
+        'chosen_stock_name': chosen_stock_name
+    }
+    return sentiment
 
 
 @app.route('/', methods=['GET'])
@@ -362,63 +351,110 @@ def sentiment():
     if isinstance(uid, int) is False:
         flash('需要登入', 'danger')
         return render_template('login.html')
+
     result_stock_price = fetch_stock_price(2330)
-
-    daily_stock_price = create_stock_price_json('days', result_stock_price)
-    weekly_stock_price = create_stock_price_json('weeks', result_stock_price)
-    monthly_stock_price = create_stock_price_json('months', result_stock_price)
-    yearly_stock_price = create_stock_price_json('years', result_stock_price)
-    three_yearly_stock_price = create_stock_price_json('three_years', result_stock_price)
-    five_yearly_stock_price = create_stock_price_json('five_years', result_stock_price)
-
+    daily_stock_price = create_stock_price_json(result_stock_price)
     result_sentiment = fetch_sentiment('cnyes', 2330)
-    daily_sentiment = create_sentiment_json('days', result_sentiment)
-    weekly_sentiment = create_sentiment_json('weeks', result_sentiment)
-    monthly_sentiment = create_sentiment_json('months', result_sentiment)
-    yearly_sentiment = create_sentiment_json('years', result_sentiment)
-    three_yearly_sentiment = create_sentiment_json('three_years', result_sentiment)
-    five_yearly_sentiment = create_sentiment_json('five_years', result_sentiment)
 
-    return render_template('sentiment.html' , daily_stock_price=daily_stock_price, daily_sentiment=daily_sentiment
-                                            , weekly_stock_price=weekly_stock_price, weekly_sentiment=weekly_sentiment
-                                            , monthly_stock_price=monthly_stock_price, monthly_sentiment=monthly_sentiment
-                                            , yearly_stock_price=yearly_stock_price, yearly_sentiment=yearly_sentiment
-                                            , three_yearly_stock_price=three_yearly_stock_price, three_yearly_sentiment=three_yearly_sentiment
-                                            , five_yearly_stock_price=five_yearly_stock_price, five_yearly_sentiment=five_yearly_sentiment)
+    daily_sentiment = create_sentiment_json(result_sentiment)
+
+    form_info = {
+        'category': 'None',
+        'category_name': '請選擇類股',
+        'stock_code': '2330',
+        'stock_name':'台積電',
+        'source': 'cnyes',
+        'source_name': '鉅亨網'
+    }
+
+    return render_template('sentiment.html', daily_stock_price=daily_stock_price, daily_sentiment=daily_sentiment, form_info=form_info)
+
 
 @app.route('/single_stock_sentiment', methods=['POST'])
 def single_stock_sentiment():
     form = request.form.to_dict()
     pprint(form)
     category = form['category']
+
+    if category == 'None':
+        flash('請選擇類股', "error")
+        return redirect(url_for('sentiment'))
+
     stock_code = form['stock_code']
     source = form['source']
-    print(stock_code, source)
+    # print(stock_code, source)
+
+    form_info = form
 
     result_stock_price = fetch_stock_price(stock_code)
-
-    daily_stock_price = create_stock_price_json('days', result_stock_price)
-    weekly_stock_price = create_stock_price_json('weeks', result_stock_price)
-    monthly_stock_price = create_stock_price_json('months', result_stock_price)
-    yearly_stock_price = create_stock_price_json('years', result_stock_price)
-    three_yearly_stock_price = create_stock_price_json('three_years', result_stock_price)
-    five_yearly_stock_price = create_stock_price_json('five_years', result_stock_price)
+    daily_stock_price = create_stock_price_json(result_stock_price)
 
     result_sentiment = fetch_sentiment(source, stock_code)
-    daily_sentiment = create_sentiment_json('days', result_sentiment)
-    weekly_sentiment = create_sentiment_json('weeks', result_sentiment)
-    monthly_sentiment = create_sentiment_json('months', result_sentiment)
-    yearly_sentiment = create_sentiment_json('years', result_sentiment)
-    three_yearly_sentiment = create_sentiment_json('three_years', result_sentiment)
-    five_yearly_sentiment = create_sentiment_json('five_years', result_sentiment)
+    daily_sentiment = create_sentiment_json(result_sentiment)
+
+    # start_time = time.time()  # 使用 time 模組的 time 功能 紀錄當時系統時間 從 start_time
+    #
+    # import sys
+    #
+    # result_stock_price = fetch_stock_price(stock_code)
+    # second_time = time.time()
+    # print(f'fetch stock_price elapsed {second_time - start_time} seconds')
+    # # print(result_stock_price)
+    # word_count = 0
+    # for stock_price in result_stock_price:
+    #     for words in stock_price:
+    #         word_count += sys.getsizeof(words)
+    #
+    # print(f'stock price: {word_count} bytes')
+    #
+    #
+    # daily_stock_price = create_stock_price_json(result_stock_price)
+    # third_time = time.time()
+    # print(f'create stock_price json elapsed {third_time - second_time} seconds')
+    #
+    #
+    # result_sentiment = fetch_sentiment(source, stock_code)
+    # fourth_time = time.time()
+    # print(f'fetch sentiment elapsed {fourth_time - third_time} seconds')
+    # # print(len(result_sentiment))
+    # word_count = 0
+    # for sentiment in result_sentiment:
+    #     for words in stock_price:
+    #         word_count += sys.getsizeof(words)
+    #
+    # print(f'sentiment: {word_count} bytes')
+    #
+    #
+    #
+    # daily_sentiment = create_sentiment_json(result_sentiment)
+    # fifth_time = time.time()
+    # print(f'create sentiment json elapsed {fifth_time - fourth_time} seconds')
+    #
+    #
+    # end_time = time.time()  # 使用 time 模組的 time 功能 紀錄當時系統時間 到 end_time
+    # print(f'total elapsed {end_time - start_time} seconds')
+
+    category_name = {
+        "electric_electric_car": "電動車",
+        "electric_car": "電動車",
+        "electric": "電子資訊",
+        "sail": "航運",
+        "biotech": "生技",
+        "finance": "金融",
+        "stock_market": "台積電",
+    }
+
+    source_name = {
+        "ptt": "PTT 論壇",
+        "cnyes": "鉅亨網",
+    }
+
+    form_info['category_name'] = category_name[form_info['category']]
+    form_info['stock_name'] = daily_sentiment['chosen_stock_name']
+    form_info['source_name'] = source_name[form_info['source']]
 
 
-    return render_template('sentiment.html', daily_stock_price=daily_stock_price, daily_sentiment=daily_sentiment
-                           , weekly_stock_price=weekly_stock_price, weekly_sentiment=weekly_sentiment
-                           , monthly_stock_price=monthly_stock_price, monthly_sentiment=monthly_sentiment
-                           , yearly_stock_price=yearly_stock_price, yearly_sentiment=yearly_sentiment
-                           , three_yearly_stock_price=three_yearly_stock_price, three_yearly_sentiment=three_yearly_sentiment
-                           , five_yearly_stock_price=five_yearly_stock_price, five_yearly_sentiment=five_yearly_sentiment)
+    return render_template('sentiment.html', daily_stock_price=daily_stock_price, daily_sentiment=daily_sentiment, form_info=form_info)
 
 
 @app.route('/strategy.html', methods=['GET'])
@@ -470,8 +506,8 @@ def strategy():
                 'irr': strategy_backtest[26],
                 'file_path': strategy_backtest[27],
                 'create_date': strategy_backtest[28],
-            'stock_name': strategy_backtest[30],
-            'category': strategy_backtest[31]
+                'stock_name': strategy_backtest[30],
+                'category': strategy_backtest[31]
             } for strategy_backtest in result]
         sample_strategy_form_length = int(len(sample_strategy_form))
         # pprint(strategy_backtest_dict_list[0])
@@ -1455,6 +1491,8 @@ def backtest():
     else:
         sql_social_volume = "SELECT * \
                              FROM `strategy_backtest` \
+                             JOIN `stocks` \
+                             ON `strategy_backtest`.`stock_code` = `stocks`.`stock_code` \
                              WHERE `user_id` = '{}' \
                              ORDER BY `create_date` DESC, `id` DESC \
                              limit 15;".format(uid)
@@ -1492,7 +1530,8 @@ def backtest():
                     'avg_return_rate': strategy_backtest[25],
                     'irr': strategy_backtest[26],
                     'file_path': strategy_backtest[27],
-                    'create_date': strategy_backtest[28]
+                    'create_date': strategy_backtest[28],
+                    'stock_name': strategy_backtest[30]
                 } for strategy_backtest in result]
 
             strategy_backtest_dict_list_length = int(len(strategy_backtest_dict_list))
@@ -1507,9 +1546,11 @@ def backtest():
 
 @app.route('/remove_strategy', methods=['POST'])
 def remove_strategy():
-    form = request.form.to_dict()
+    form = json.loads(list(request.form.keys())[0])
     pprint(form)
-    strategy_id = form['remove_strategy']
+    strategy_id = form['strategy_id']
+    file_path = form['file_path']
+    user_id = form['user_id']
     print(strategy_id)
 
     sql_delete_strategy = "DELETE FROM `strategy_backtest` WHERE `id` = '{}'".format(strategy_id)
@@ -1517,9 +1558,11 @@ def remove_strategy():
     db_mysql.delete_row(sql_delete_strategy)
     print(f"strategy {strategy_id} is deleted")
 
-    resp = make_response(redirect(url_for('backtest')))
+    # https://dwkrd7hfr3x4e.cloudfront.net/backtest/22/2301_1637246115.png
+    file_name = file_path.split("/")[-1]
+    delete_file(bucket_name, object_path, user_id, file_name)
 
-    return resp
+    return redirect(url_for('backtest'))
 
 
 # user api
@@ -1767,7 +1810,10 @@ if __name__ == "__main__":  # 如果以主程式執行
     db_mysql.create_tb_all()
 
     # run sever
+
+
     app.run(debug=DEBUG, host=HOST, port=PORT)
+
 
     # socketio.run(app, debug=True)
 
