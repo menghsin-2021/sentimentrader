@@ -811,7 +811,7 @@ def send_strategy():
             print('duration_year: ', duration_year)
             print(type(duration_year))
         except:
-            flash("數值錯誤或沒有進出場點", 'error')
+            flash("數值錯誤", 'error')
             return redirect(url_for('strategy'))
         else:
             engine = create_engine("mysql+pymysql://{user}:{pw}@{host}/{db}"
@@ -875,8 +875,129 @@ def send_strategy():
             # 進場時機判定
             money = set_money
             if strategy_line == 'macd_line':
-                flash(f'MACD功能近期製作中，敬請期待!', 'danger')
-                return redirect(url_for('strategy'))
+                df['MACD'], df['MACDsignal'], df['MACDhist'] = talib.MACD(df['Close'],
+                                                                          fastperiod=12,
+                                                                          slowperiod=26,
+                                                                          signalperiod=9)
+
+                df["B_MACD"] = df["MACD"].shift(1)
+                df["B_MACDsignal"] = df["MACDsignal"].shift(1)
+
+                # only MACD
+                if strategy_sentiment == 'none_pass':
+                    buy = []
+                    sell = []
+                    buy_count = 0
+                    for i in range(len(df)):
+                        if money >= df["Close"][i] and df["B_MACD"][i] < df["B_MACDsignal"][i] and df["MACD"][i] > df["MACDsignal"][i]:
+                            buy.append(1)
+                            sell.append(0)
+                            buy_count += 1
+                            money -= df["Close"][i]
+                        elif buy_count > 0 and df["B_MACD"][i] > df["B_MACDsignal"][i] and df["MACD"][i] < df["MACDsignal"][i]:
+                            sell.append(-1)
+                            buy.append(0)
+                            buy_count -= 1
+                            money += df["Close"][i]
+                        else:
+                            buy.append(0)
+                            sell.append(0)
+
+                    df["buy"] = buy
+                    df["sell"] = sell
+
+                # MACD + sentiment over less
+                elif strategy_sentiment == 'daily_sentiment_pass':
+                    buy = []
+                    sell = []
+                    buy_count = 0
+                    for i in range(len(df)):
+                        if df['avg_valence'][i] < (float(sentiment_para_more) / 100 * 10 - 5) and df['avg_valence'][
+                            i] > (
+                                float(sentiment_para_less) / 100 * 10 - 5):
+                            if money >= df["Close"][i] and df["B_MACD"][i] < df["B_MACDsignal"][i] and df["MACD"][i] > df["MACDsignal"][i]:
+                                buy.append(1)
+                                sell.append(0)
+                                buy_count += 1
+                                money -= df["Close"][i]
+                            elif buy_count > 0 and df["B_MACD"][i] > df["B_MACDsignal"][i] and df["MACD"][i] < df["MACDsignal"][i]:
+                                sell.append(-1)
+                                buy.append(0)
+                                buy_count -= 1
+                                money += df["Close"][i]
+                            else:
+                                buy.append(0)
+                                sell.append(0)
+                        else:
+                            buy.append(0)
+                            sell.append(0)
+
+                    print('money', money)
+                    df["buy"] = buy
+                    df["sell"] = sell
+
+                # MACD + sentiment to negative
+                elif strategy_sentiment == 'to_negative_pass':
+                    buy = []
+                    sell = []
+                    buy_count = 0
+                    for i in range(len(df)):
+                        if i > 0:
+                            if money >= df["Close"][i] and df["B_MACD"][i] < df["B_MACDsignal"][i] and df["MACD"][i] > df["MACDsignal"][i]:
+                                buy.append(1)
+                                sell.append(0)
+                                buy_count += 1
+                                money -= df["Close"][i]
+                            elif buy_count > 0 and df["B_MACD"][i] > df["B_MACDsignal"][i] and df["MACD"][i] < df["MACDsignal"][i]:
+                                sell.append(-1)
+                                buy.append(0)
+                                buy_count -= 1
+                                money += df["Close"][i]
+                            else:
+                                buy.append(0)
+                                sell.append(0)
+
+                        elif df['avg_valence'][i] < 0 and df['avg_valence'][i - 1] > 0:
+                            buy.append(0)
+                            sell.append(0)
+
+                        else:
+                            buy.append(0)
+                            sell.append(0)
+
+                    df["buy"] = buy
+                    df["sell"] = sell
+
+                # MACD + sentiment to positive
+                elif strategy_sentiment == 'to_positive_pass':
+                    buy = []
+                    sell = []
+                    buy_count = 0
+                    for i in range(len(df)):
+                        if i > 0:
+                            if money >= df["Close"][i] and df["B_MACD"][i] < df["B_MACDsignal"][i] and df["MACD"][i] > df["MACDsignal"][i]:
+                                buy.append(1)
+                                sell.append(0)
+                                buy_count += 1
+                                money -= df["Close"][i]
+                            elif buy_count > 0 and df["B_MACD"][i] > df["B_MACDsignal"][i] and df["MACD"][i] < df["MACDsignal"][i]:
+                                sell.append(-1)
+                                buy.append(0)
+                                buy_count -= 1
+                                money += df["Close"][i]
+                            else:
+                                buy.append(0)
+                                sell.append(0)
+
+                        elif df['avg_valence'][i] > 0 and df['avg_valence'][i - 1] < 0:
+                            buy.append(0)
+                            sell.append(0)
+                        else:
+                            buy.append(0)
+                            sell.append(0)
+
+                    df["buy"] = buy
+                    df["sell"] = sell
 
             # KD line
             elif strategy_line == 'kdj_line':
@@ -1301,6 +1422,24 @@ def send_strategy():
                                 mpf.make_addplot(df["K"], panel=2, color="r"),
                                 mpf.make_addplot(df["D"], panel=2, color="g")
                                 ]
+
+                elif strategy_line == 'macd_line' and strategy_sentiment != 'none_pass':
+                    add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                                mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
+                                mpf.make_addplot(df["MACD"], panel=2, color="b"),
+                                mpf.make_addplot(df["MACDsignal"], panel=2, color="r"),
+                                mpf.make_addplot(df["MACDhist"], panel=2, color="g", type='bar'),
+                                mpf.make_addplot(df["avg_valence"], panel=3, color="b")
+                                ]
+
+                elif strategy_line == 'macd_line' and strategy_sentiment == 'none_pass':
+                    add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                                mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
+                                mpf.make_addplot(df["MACD"], panel=2, color="b"),
+                                mpf.make_addplot(df["MACDsignal"], panel=2, color="r"),
+                                mpf.make_addplot(df["MACDhist"], panel=2, color="g", type='bar'),
+                                ]
+
 
                 elif strategy_sentiment != 'none_pass':
                     add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
