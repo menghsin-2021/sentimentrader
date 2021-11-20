@@ -165,19 +165,20 @@
 {% include "sweetalerts.html" %}
 
     <script>
+
+       $(window).on("load",function(){
+        $(".loader-wrapper").show().delay(2000).queue(function (next) {
+                $(this).hide();
+                next();
+            });
+          $(".loader-wrapper").fadeOut("slow");
+        });
+
+
         $("#search-sentiment").on("click", function() {
         $("main").hide();
         $(".loader-wrapper").show();
         });
-
-       $(window).on("load",function(){
-       $(".loader-wrapper").show().queue(function (next) {
-               $(this).hide();
-               next();
-           });
-       $(".loader-wrapper").fadeOut("slow");
-       $("main").show();
-      });
     </script>
 
 
