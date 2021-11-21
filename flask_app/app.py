@@ -362,41 +362,65 @@ def sentiment():
 
     redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
 
-    daily_stock_price = redis_client.get('2330_stock_price')
-    daily_sentiment = redis_client.get('2330_sentiment_cnyes')
+    tag_stock_price = '2330' + '_' + 'stock_price'
+    tag_sentiment = '2330' + '_' + 'sentiment' + '_' + 'cnyes'
 
-    if not daily_stock_price and not daily_sentiment:
+    try:
+        daily_stock_price = redis_client.get(tag_stock_price)
+        daily_sentiment = redis_client.get(tag_sentiment)
+
+    except:
+        redis_client.flushall()
         result_stock_price = fetch_stock_price(2330)
         daily_stock_price = create_stock_price_json(result_stock_price)
         result_sentiment = fetch_sentiment('cnyes', 2330)
         daily_sentiment = create_sentiment_json(result_sentiment)
 
-        redis_store_daily_stock_price = json.dumps({'data': daily_stock_price}, indent=2, ensure_ascii=False)
-        redis_store_daily_sentiment = json.dumps({'data': daily_sentiment}, indent=2, ensure_ascii=False)
+        form_info = {
+            'category': 'None',
+            'category_name': '請選擇類股',
+            'stock_code': '2330',
+            'stock_name': '台積電',
+            'source': 'cnyes',
+            'source_name': '鉅亨網'
+        }
 
-        tag_stock_price = '2330' + '_' + 'stock_price'
-        tag_sentiment = '2330' + '_' + 'sentiment' + '_' + 'cnyes'
-
-        redis_client.set(tag_stock_price, redis_store_daily_stock_price)
-        redis_client.expire(tag_stock_price, timedelta(hours=2))
-        redis_client.set(tag_sentiment, redis_store_daily_sentiment)
-        redis_client.expire(tag_sentiment, timedelta(hours=2))
+        return render_template('sentiment.html', daily_stock_price=daily_stock_price, daily_sentiment=daily_sentiment,
+                               form_info=form_info)
 
     else:
-        daily_stock_price = json.loads(redis_client.get('2330_stock_price'))['data']
-        daily_sentiment = json.loads(redis_client.get('2330_sentiment_cnyes'))['data']
+        if not daily_stock_price or not daily_sentiment:
+            result_stock_price = fetch_stock_price(2330)
+            daily_stock_price = create_stock_price_json(result_stock_price)
+            result_sentiment = fetch_sentiment('cnyes', 2330)
+            daily_sentiment = create_sentiment_json(result_sentiment)
+
+            redis_store_daily_stock_price = json.dumps({'data': daily_stock_price}, indent=2, ensure_ascii=False)
+            redis_store_daily_sentiment = json.dumps({'data': daily_sentiment}, indent=2, ensure_ascii=False)
+
+            tag_stock_price = '2330' + '_' + 'stock_price'
+            tag_sentiment = '2330' + '_' + 'sentiment' + '_' + 'cnyes'
+
+            redis_client.set(tag_stock_price, redis_store_daily_stock_price)
+            redis_client.expire(tag_stock_price, timedelta(hours=2))
+            redis_client.set(tag_sentiment, redis_store_daily_sentiment)
+            redis_client.expire(tag_sentiment, timedelta(hours=2))
+
+        else:
+            daily_stock_price = json.loads(redis_client.get('2330_stock_price'))['data']
+            daily_sentiment = json.loads(redis_client.get('2330_sentiment_cnyes'))['data']
 
         # print(daily_stock_price)
         # print(daily_sentiment)
 
     form_info = {
-        'category': 'None',
-        'category_name': '請選擇類股',
-        'stock_code': '2330',
-        'stock_name': '台積電',
-        'source': 'cnyes',
-        'source_name': '鉅亨網'
-    }
+            'category': 'None',
+            'category_name': '請選擇類股',
+            'stock_code': '2330',
+            'stock_name': '台積電',
+            'source': 'cnyes',
+            'source_name': '鉅亨網'
+        }
 
     return render_template('sentiment.html', daily_stock_price=daily_stock_price, daily_sentiment=daily_sentiment, form_info=form_info)
 
@@ -417,32 +441,62 @@ def single_stock_sentiment():
 
     redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
 
-    tag_stock_price = str(stock_code) + '_' + 'stock_price'
-    tag_sentiment = str(stock_code) + '_' + 'sentiment' + '_' + source
-    daily_stock_price = redis_client.get(tag_stock_price)
-    daily_sentiment = redis_client.get(tag_sentiment)
+    try:
+        tag_stock_price = str(stock_code) + '_' + 'stock_price'
+        tag_sentiment = str(stock_code) + '_' + 'sentiment' + '_' + source
+        daily_stock_price = redis_client.get(tag_stock_price)
+        daily_sentiment = redis_client.get(tag_sentiment)
 
-    if not daily_stock_price or not daily_sentiment:
+    except:
+        redis_client.flushall()
         result_stock_price = fetch_stock_price(stock_code)
         daily_stock_price = create_stock_price_json(result_stock_price)
         result_sentiment = fetch_sentiment(source, stock_code)
         daily_sentiment = create_sentiment_json(result_sentiment)
 
-        redis_store_daily_stock_price = json.dumps({'data': daily_stock_price}, indent=2, ensure_ascii=False)
-        redis_store_daily_sentiment = json.dumps({'data': daily_sentiment}, indent=2, ensure_ascii=False)
+        category_name = {
+            "electric_electric_car": "電動車",
+            "electric_car": "電動車",
+            "electric": "電子資訊",
+            "sail": "航運",
+            "biotech": "生技",
+            "finance": "金融",
+            "stock_market": "台積電",
+        }
 
-        redis_client.set(tag_stock_price, redis_store_daily_stock_price)
-        redis_client.expire(tag_stock_price, timedelta(hours=2))
-        redis_client.set(tag_sentiment, redis_store_daily_sentiment)
-        redis_client.expire(tag_sentiment, timedelta(hours=2))
+        source_name = {
+            "ptt": "PTT 論壇",
+            "cnyes": "鉅亨網",
+        }
 
+        form_info = form
+        form_info['category_name'] = category_name[form_info['category']]
+        form_info['stock_name'] = daily_sentiment['chosen_stock_name']
+        form_info['source_name'] = source_name[form_info['source']]
+
+        return render_template('sentiment.html', daily_stock_price=daily_stock_price, daily_sentiment=daily_sentiment,
+                               form_info=form_info)
     else:
-        daily_stock_price = json.loads(redis_client.get(tag_stock_price))['data']
-        daily_sentiment = json.loads(redis_client.get(tag_sentiment))['data']
+        if not daily_stock_price or not daily_sentiment:
+            result_stock_price = fetch_stock_price(stock_code)
+            daily_stock_price = create_stock_price_json(result_stock_price)
+            result_sentiment = fetch_sentiment(source, stock_code)
+            daily_sentiment = create_sentiment_json(result_sentiment)
 
-        # print(daily_stock_price)
-        # print(daily_sentiment)
+            redis_store_daily_stock_price = json.dumps({'data': daily_stock_price}, indent=2, ensure_ascii=False)
+            redis_store_daily_sentiment = json.dumps({'data': daily_sentiment}, indent=2, ensure_ascii=False)
 
+            redis_client.set(tag_stock_price, redis_store_daily_stock_price)
+            redis_client.expire(tag_stock_price, timedelta(hours=2))
+            redis_client.set(tag_sentiment, redis_store_daily_sentiment)
+            redis_client.expire(tag_sentiment, timedelta(hours=2))
+
+        else:
+            daily_stock_price = json.loads(redis_client.get(tag_stock_price))['data']
+            daily_sentiment = json.loads(redis_client.get(tag_sentiment))['data']
+
+            # print(daily_stock_price)
+            # print(daily_sentiment)
 
 
     # start_time = time.time()  # 使用 time 模組的 time 功能 紀錄當時系統時間 從 start_time
@@ -1984,6 +2038,41 @@ def signin():
                 return resp
 
 
+@app.route('/set_sentiment_cache', methods=['POST'])
+def set_sentiment_cache():
+    try:
+        form = request.form.to_dict()
+        stock_code = form['stock_code']
+        source = form['source']
+        secret_key = form['secret_key']
+
+    except:
+        pass
+
+    else:
+        if secret_key == config.SECRET_KEY:
+            print(stock_code, source)
+
+            redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
+
+            tag_stock_price = str(stock_code) + '_' + 'stock_price'
+            tag_sentiment = str(stock_code) + '_' + 'sentiment' + '_' + source
+
+            result_stock_price = fetch_stock_price(stock_code)
+            daily_stock_price = create_stock_price_json(result_stock_price)
+            result_sentiment = fetch_sentiment(source, stock_code)
+            daily_sentiment = create_sentiment_json(result_sentiment)
+
+            redis_store_daily_stock_price = json.dumps({'data': daily_stock_price}, indent=2, ensure_ascii=False)
+            redis_store_daily_sentiment = json.dumps({'data': daily_sentiment}, indent=2, ensure_ascii=False)
+
+            redis_client.set(tag_stock_price, redis_store_daily_stock_price)
+            redis_client.set(tag_sentiment, redis_store_daily_sentiment)
+
+        else:
+            pass
+
+    return render_template('login.html')
 
 
 # # for ssl certificate
