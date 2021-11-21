@@ -23,6 +23,8 @@ import jwt
 # test time
 import time
 
+# redis
+import redis
 
 from photo_downloader_uploader import upload_file, delete_file
 bucket_name = 'sentimentraderbucket'
@@ -55,6 +57,12 @@ app.config['SECRET_KEY'] = SECRET_KEY
 basedir = os.path.abspath(os.path.dirname(__file__))
 # img_folder_path = os.path.join(basedir, 'static/img')
 # ssl_txt_path = os.path.join(basedir, '.well-known/pki-validation')
+
+
+# redis
+REDIS_HOST = config.REDIS_HOST
+REDIS_PORT = config.REDIS_PORT
+
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -352,17 +360,40 @@ def sentiment():
         flash('需要登入', 'danger')
         return render_template('login.html')
 
-    result_stock_price = fetch_stock_price(2330)
-    daily_stock_price = create_stock_price_json(result_stock_price)
-    result_sentiment = fetch_sentiment('cnyes', 2330)
+    redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
 
-    daily_sentiment = create_sentiment_json(result_sentiment)
+    daily_stock_price = redis_client.get('2330_stock_price')
+    daily_sentiment = redis_client.get('2330_sentiment_cnyes')
+
+    if not daily_stock_price and not daily_sentiment:
+        result_stock_price = fetch_stock_price(2330)
+        daily_stock_price = create_stock_price_json(result_stock_price)
+        result_sentiment = fetch_sentiment('cnyes', 2330)
+        daily_sentiment = create_sentiment_json(result_sentiment)
+
+        redis_store_daily_stock_price = json.dumps({'data': daily_stock_price}, indent=2, ensure_ascii=False)
+        redis_store_daily_sentiment = json.dumps({'data': daily_sentiment}, indent=2, ensure_ascii=False)
+
+        tag_stock_price = '2330' + '_' + 'stock_price'
+        tag_sentiment = '2330' + '_' + 'sentiment' + '_' + 'cnyes'
+
+        redis_client.set(tag_stock_price, redis_store_daily_stock_price)
+        redis_client.expire(tag_stock_price, timedelta(hours=2))
+        redis_client.set(tag_sentiment, redis_store_daily_sentiment)
+        redis_client.expire(tag_sentiment, timedelta(hours=2))
+
+    else:
+        daily_stock_price = json.loads(redis_client.get('2330_stock_price'))['data']
+        daily_sentiment = json.loads(redis_client.get('2330_sentiment_cnyes'))['data']
+
+        # print(daily_stock_price)
+        # print(daily_sentiment)
 
     form_info = {
         'category': 'None',
         'category_name': '請選擇類股',
         'stock_code': '2330',
-        'stock_name':'台積電',
+        'stock_name': '台積電',
         'source': 'cnyes',
         'source_name': '鉅亨網'
     }
@@ -373,7 +404,7 @@ def sentiment():
 @app.route('/single_stock_sentiment', methods=['POST'])
 def single_stock_sentiment():
     form = request.form.to_dict()
-    pprint(form)
+    # pprint(form)
     category = form['category']
 
     if category == 'None':
@@ -384,13 +415,35 @@ def single_stock_sentiment():
     source = form['source']
     # print(stock_code, source)
 
-    form_info = form
+    redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
 
-    result_stock_price = fetch_stock_price(stock_code)
-    daily_stock_price = create_stock_price_json(result_stock_price)
+    tag_stock_price = str(stock_code) + '_' + 'stock_price'
+    tag_sentiment = str(stock_code) + '_' + 'sentiment' + '_' + source
+    daily_stock_price = redis_client.get(tag_stock_price)
+    daily_sentiment = redis_client.get(tag_sentiment)
 
-    result_sentiment = fetch_sentiment(source, stock_code)
-    daily_sentiment = create_sentiment_json(result_sentiment)
+    if not daily_stock_price or not daily_sentiment:
+        result_stock_price = fetch_stock_price(stock_code)
+        daily_stock_price = create_stock_price_json(result_stock_price)
+        result_sentiment = fetch_sentiment(source, stock_code)
+        daily_sentiment = create_sentiment_json(result_sentiment)
+
+        redis_store_daily_stock_price = json.dumps({'data': daily_stock_price}, indent=2, ensure_ascii=False)
+        redis_store_daily_sentiment = json.dumps({'data': daily_sentiment}, indent=2, ensure_ascii=False)
+
+        redis_client.set(tag_stock_price, redis_store_daily_stock_price)
+        redis_client.expire(tag_stock_price, timedelta(hours=2))
+        redis_client.set(tag_sentiment, redis_store_daily_sentiment)
+        redis_client.expire(tag_sentiment, timedelta(hours=2))
+
+    else:
+        daily_stock_price = json.loads(redis_client.get(tag_stock_price))['data']
+        daily_sentiment = json.loads(redis_client.get(tag_sentiment))['data']
+
+        # print(daily_stock_price)
+        # print(daily_sentiment)
+
+
 
     # start_time = time.time()  # 使用 time 模組的 time 功能 紀錄當時系統時間 從 start_time
     #
@@ -449,6 +502,7 @@ def single_stock_sentiment():
         "cnyes": "鉅亨網",
     }
 
+    form_info = form
     form_info['category_name'] = category_name[form_info['category']]
     form_info['stock_name'] = daily_sentiment['chosen_stock_name']
     form_info['source_name'] = source_name[form_info['source']]
@@ -1383,7 +1437,7 @@ def send_strategy():
                         df["buy"] = buy
                         df["sell"] = sell
 
-            print(df)
+            # print(df)
 
             # tag buy marker
             buy_mark = []
@@ -1946,7 +2000,7 @@ def signin():
 if __name__ == "__main__":  # 如果以主程式執行
     # initial db
     db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
-    db_mysql.create_tb_all()
+    # db_mysql.create_tb_all()
 
     # run sever
 
