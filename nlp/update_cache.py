@@ -31,7 +31,7 @@ all_list = [computer_stock_list, light_eletric_stock_list, internet_stock_list, 
 
 secret_key = config.SECRET_KEY
 
-url = 'https://www.stock-sentimentrader.com/XXX'
+url = 'https://www.stock-sentimentrader.com/set_sentiment_cache'
 
 # for list in all_list:
 #     for stock_code in list:
@@ -48,5 +48,5 @@ url = 'https://www.stock-sentimentrader.com/XXX'
 #             continue
 
 
-data_ptt = {'stock_code': '2330', 'source': 'cnyes', 'secret_key': secret_key}
+data_ptt = {'stock_code': '2610', 'source': 'cnyes', 'secret_key': secret_key}
 requests.post(url, data=data_ptt)
