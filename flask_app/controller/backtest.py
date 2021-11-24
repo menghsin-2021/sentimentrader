@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for
 import json
 
 import config
-import model_mysql
+from model import model_mysql
 from utils import get_cookie_check, delete_file
 
 

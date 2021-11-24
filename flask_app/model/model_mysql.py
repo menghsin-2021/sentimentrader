@@ -262,52 +262,7 @@ create_sql_format_user_strategy = {
                 PRIMARY KEY (`id`), \
                 FOREIGN KEY (`user_id`) REFERENCES user(id), \
                 FOREIGN KEY (`stock_code`) REFERENCES stocks(stock_code) \
-                )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_strategy_backtest),
-
-    # "strategy": "CREATE TABLE IF NOT EXISTS {}( \
-    #             `id` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-    #             `user_id` BIGINT COLLATE utf8mb4_bin NOT NULL AUTO_INCREMENT, \
-    #             `stock_code` varchar(255) COLLATE utf8mb4_bin NOT NULL, \
-    #             `start_date` text COLLATE utf8mb4_bin NOT NULL, \
-    #             `end_date` text COLLATE utf8mb4_bin NOT NULL, \
-    #             `strategy_line` text COLLATE utf8mb4_bin NOT NULL, \
-    #             `strategy_in` text COLLATE utf8mb4_bin, \
-    #             `strategy_in_para` float COLLATE utf8mb4_bin, \
-    #             `strategy_out` text COLLATE utf8mb4_bin, \
-    #             `strategy_out_para` float COLLATE utf8mb4_bin, \
-    #             `strategy_sentiment` text COLLATE utf8mb4_bin, \
-    #             `source` text COLLATE utf8mb4_bin, \
-    #             `sentiment_para_more` float COLLATE utf8mb4_bin, \
-    #             `sentiment_para_less` float COLLATE utf8mb4_bin, \
-    #             `seed_money` text COLLATE utf8mb4_bin NOT NULL, \
-    #             `discount` text COLLATE utf8mb4_bin NOT NULL, \
-    #             PRIMARY KEY (`id`), \
-    #             FOREIGN KEY (`user_id`) REFERENCES user(id), \
-    #             FOREIGN KEY (`stock_code`) REFERENCES stocks(stock_code) \
-    #             )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_strategy),
-    #
-    # "backtest": "CREATE TABLE IF NOT EXISTS {}( \
-    #             `id` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-    #             `user_id` BIGINT COLLATE utf8mb4_bin NOT NULL AUTO_INCREMENT, \
-    #             `strategy_id` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-    #             `stock_code` varchar(255) COLLATE utf8mb4_bin NOT NULL, \
-    #             `total_buy_count` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-    #             `total_sell_count` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-    #             `total_return_rate` float COLLATE utf8mb4_bin NOT NULL, \
-    #             `highest_return` float COLLATE utf8mb4_bin NOT NULL, \
-    #             `lowest_return` float COLLATE utf8mb4_bin NOT NULL, \
-    #             `total_win` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-    #             `total_lose` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-    #             `total_trade` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-    #             `win_rate` float COLLATE utf8mb4_bin NOT NULL, \
-    #             `avg_return_rate` float COLLATE utf8mb4_bin NOT NULL, \
-    #             `irr` float COLLATE utf8mb4_bin NOT NULL, \
-    #             `file_path` text COLLATE utf8mb4_bin NOT NULL, \
-    #             PRIMARY KEY (`id`), \
-    #             FOREIGN KEY (`user_id`) REFERENCES user(id), \
-    #             FOREIGN KEY (`stock_code`) REFERENCES stocks(stock_code), \
-    #             FOREIGN KEY (`strategy_id`) REFERENCES strategy(id) \
-    #             )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_backtest)
+                )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_strategy_backtest)
 }
 
 

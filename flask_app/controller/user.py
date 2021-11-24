@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, make_response, Response
 from datetime import datetime, timedelta
 
-import model_mysql
+from model import model_mysql
 import config
 from utils import generate_salt, generate_hash, b_type_to_str, check_basic_auth_signup, check_basic_auth_signin, set_token
 

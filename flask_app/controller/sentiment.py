@@ -1,19 +1,15 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
-from utils import get_cookie_check, StockSentimentFetch
+from utils import get_cookie_check, StockSentimentFetch, GetName
 import json
 import config
 from datetime import timedelta
-
-# redis
 import redis
 
-# redis
 REDIS_HOST = config.REDIS_HOST
 REDIS_PORT = config.REDIS_PORT
 
 # Blueprint
 sentiment = Blueprint('sentiment', __name__, static_folder='static', template_folder='templates')
-stock_sentiment_fetch = StockSentimentFetch()
 
 
 @sentiment.route('/sentiment.html')
@@ -23,6 +19,9 @@ def sentiment_page():
     if isinstance(uid, int) is False:
         flash('需要登入', 'danger')
         return render_template('login.html')
+
+    # create fetch instance
+    stock_sentiment_fetch = StockSentimentFetch()
 
     # set redis tag
     redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
@@ -48,17 +47,18 @@ def sentiment_page():
             daily_stock_price = stock_sentiment_fetch.fetch_stock_price(tsmc_stock_code)
             daily_sentiment = stock_sentiment_fetch.fetch_sentiment(source, tsmc_stock_code)
 
-            # set redis key
+            # create redis value
             redis_store_daily_stock_price = json.dumps({'data': daily_stock_price}, indent=2, ensure_ascii=False)
             redis_store_daily_sentiment = json.dumps({'data': daily_sentiment}, indent=2, ensure_ascii=False)
 
+            # set data
             redis_client.set(tag_stock_price, redis_store_daily_stock_price)
             redis_client.expire(tag_stock_price, timedelta(hours=2))
             redis_client.set(tag_sentiment, redis_store_daily_sentiment)
             redis_client.expire(tag_sentiment, timedelta(hours=2))
 
         else:
-            # get redis value
+            # get redis data
             daily_stock_price = json.loads(redis_client.get(tag_stock_price))['data']
             daily_sentiment = json.loads(redis_client.get(tag_sentiment))['data']
 
@@ -87,54 +87,57 @@ def single_stock_sentiment():
     stock_code = form['stock_code']
     source = form['source']
 
+    # create fetch instance
+    stock_sentiment_fetch = StockSentimentFetch()
+
+    # link redis
     redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
 
     try:
+        # create key
         tag_stock_price, tag_sentiment = stock_sentiment_fetch.redis_tag(stock_code, source)
+
+        # try fetch from redis
         daily_stock_price = redis_client.get(tag_stock_price)
         daily_sentiment = redis_client.get(tag_sentiment)
 
     except:
+        # redis is crash => flushall
         redis_client.flushall()
+
+        # fetch from mysql
         daily_stock_price = stock_sentiment_fetch.fetch_stock_price(stock_code)
         daily_sentiment = stock_sentiment_fetch.fetch_sentiment(source, stock_code)
 
     else:
         if not daily_stock_price or not daily_sentiment:
+            # fetch stock price and sentiment
             daily_stock_price = stock_sentiment_fetch.fetch_stock_price(stock_code)
             daily_sentiment = stock_sentiment_fetch.fetch_sentiment(source, stock_code)
 
+            # create redis value
             redis_store_daily_stock_price = json.dumps({'data': daily_stock_price}, indent=2, ensure_ascii=False)
             redis_store_daily_sentiment = json.dumps({'data': daily_sentiment}, indent=2, ensure_ascii=False)
 
+            # set data
             redis_client.set(tag_stock_price, redis_store_daily_stock_price)
             redis_client.expire(tag_stock_price, timedelta(hours=2))
             redis_client.set(tag_sentiment, redis_store_daily_sentiment)
             redis_client.expire(tag_sentiment, timedelta(hours=2))
 
         else:
+            # get redis data
             daily_stock_price = json.loads(redis_client.get(tag_stock_price))['data']
             daily_sentiment = json.loads(redis_client.get(tag_sentiment))['data']
 
-    category_name = {
-        "electric_electric_car": "電動車",
-        "electric_car": "電動車",
-        "electric": "電子資訊",
-        "sail": "航運",
-        "biotech": "生技",
-        "finance": "金融",
-        "stock_market": "台積電",
-    }
-
-    source_name = {
-        "ptt": "PTT 論壇",
-        "cnyes": "鉅亨網",
-    }
 
     form_info = form
-    form_info['category_name'] = category_name[form_info['category']]
+
+    get_name = GetName()
+    form_info['category_name'] = get_name.category(form_info['category'])
+    form_info['source_name'] = get_name.source(form_info['source'])
     form_info['stock_name'] = daily_sentiment['chosen_stock_name']
-    form_info['source_name'] = source_name[form_info['source']]
+
 
     return render_template('sentiment.html', daily_stock_price=daily_stock_price, daily_sentiment=daily_sentiment, form_info=form_info)
 
@@ -152,19 +155,24 @@ def set_sentiment_cache():
 
     else:
         if secret_key == config.SECRET_KEY:
-            print(stock_code, source)
+            # create fetch instance
+            stock_sentiment_fetch = StockSentimentFetch()
 
-            redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
-
-            tag_stock_price = str(stock_code) + '_' + 'stock_price'
-            tag_sentiment = str(stock_code) + '_' + 'sentiment' + '_' + source
-
+            # fetch stock price and sentiment
             daily_stock_price = stock_sentiment_fetch.fetch_stock_price(stock_code)
             daily_sentiment = stock_sentiment_fetch.fetch_sentiment(source, stock_code)
 
+            # link redis
+            redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
+
+            # create key
+            tag_stock_price, tag_sentiment = stock_sentiment_fetch.redis_tag(stock_code, stock_code)
+
+            # create value
             redis_store_daily_stock_price = json.dumps({'data': daily_stock_price}, indent=2, ensure_ascii=False)
             redis_store_daily_sentiment = json.dumps({'data': daily_sentiment}, indent=2, ensure_ascii=False)
 
+            # set data
             redis_client.set(tag_stock_price, redis_store_daily_stock_price)
             redis_client.set(tag_sentiment, redis_store_daily_sentiment)
 

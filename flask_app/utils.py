@@ -1,7 +1,7 @@
 import os
 from flask import flash, request, render_template, Response
-import model_mysql
-import model_mysql_query
+from model import model_mysql_query
+from model import model_mysql
 import config
 from datetime import datetime, timedelta
 
@@ -11,7 +11,6 @@ import jwt
 
 # s3
 import boto3
-import requests
 
 SECRET_KEY = config.SECRET_KEY
 
@@ -48,6 +47,33 @@ def get_cookie_check():
             uid = db_mysql.query_tb_one(sql_uid)[0]
 
             return uid
+
+class SocialVolumeFetch:
+    def __init__(self):
+        pass
+
+    def fetch_social_volume(self, category=None, source=None, duration=None):
+        # create sql
+        if category == None:
+            query_tuple = None
+            sql_social_volume = model_mysql_query.sql_social_volume
+
+        elif category == 'electric' or category == 'electric_car':
+            category_both = 'electric_electric_car'
+            query_tuple = (source, duration, category, category_both)
+            sql_social_volume = model_mysql_query.sql_social_volume_duration_electric
+
+        else:
+            query_tuple = (source, duration, category)
+            sql_social_volume = model_mysql_query.sql_social_volume_duration_another_category
+
+        db_mysql = model_mysql.DbWrapperMysqlDict('sentimentrader')
+        result = db_mysql.query_tb_all(sql_social_volume, query_tuple)
+        stock_name_code = [f"{word_count['stock_name']}, {word_count['stock_code']}" for word_count in result]
+        stock_count = [int(word_count['count']) for word_count in result]
+        article_count = [int(word_count['article_count']) for word_count in result]
+
+        return stock_name_code, stock_count, article_count
 
 
 class StockSentimentFetch:
@@ -225,3 +251,101 @@ def delete_file(bucket_name, object_path, uid, file_name):
         print('delete fail')
         return False
 
+
+class GetName:
+    def __init__(self):
+        pass
+
+    def category(self, code):
+        category_name = {
+            "electric_electric_car": "電動車",
+            "electric_car": "電動車",
+            "electric": "電子資訊",
+            "sail": "航運",
+            "biotech": "生技",
+            "finance": "金融",
+            "stock_market": "台積電",
+        }
+
+        try:
+            return category_name[code]
+
+        except:
+            return None
+
+    def source(self, code):
+        source_name = {
+            "ptt": "PTT 論壇",
+            "cnyes": "鉅亨網",
+        }
+
+        try:
+            return source_name[code]
+
+        except:
+            return None
+
+    def duration(self, code):
+        duration_name = {
+            "daily": "當日",
+            "weekly": "當周",
+            "monthly": "當月",
+            "yearly": "一年內",
+            "three_yearly": "三年內"
+        }
+        try:
+            return duration_name[code]
+
+        except:
+            return None
+
+    def strategy_line(self, code):
+        strategy_line_name = {
+            "none": "--",
+            "undefined": "--",
+            "kdj_line": "ＫＤ線交叉",
+            "macd_line": "ＭＡＣＤ線交叉",
+            "none_line": "自訂",
+        }
+        try:
+            return strategy_line_name[code]
+
+        except:
+            return None
+
+    def strategy_in(self, code):
+        strategy_in_name = {
+            "none": "--",
+            "increase_in": "股價連續上漲(3日)",
+            "decrease_in": "股價連續下跌(3日)"
+        }
+        try:
+            return strategy_in_name[code]
+
+        except:
+            return None
+
+    def strategy_out(self, code):
+        strategy_out_name = {
+            "none": "--",
+            "increase_out": "股價連續上漲(3日)",
+            "decrease_out": "股價連續下跌(3日)"
+        }
+        try:
+            return strategy_out_name[code]
+
+        except:
+            return None
+
+    def strategy_sentiment(self, code):
+        strategy_sentiment_name = {
+            "none_pass": "--",
+            "daily_sentiment_pass": "當日情緒分數",
+            "to_negative_pass": "正轉負",
+            "to_positive_pass": "負轉正",
+        }
+        try:
+            return strategy_sentiment_name[code]
+
+        except:
+            return None

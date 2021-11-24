@@ -11,15 +11,15 @@ from datetime import datetime, timedelta
 import json
 
 import config
-import model_mysql
-from utils import get_cookie_check, get_today_yesterday, get_day_before, upload_file
+from model import model_mysql
+from model import model_mysql_query
+from utils import get_cookie_check, get_today_yesterday, get_day_before, upload_file, GetName
 
 # db var
 DBHOST = config.DBHOST
 DBUSER = config.DBUSER
 DBPASSWORD = config.DBPASSWORD
 DBNAME = config.DBNAME
-
 
 BUCKET_NAME = config.BUCKET_NAME
 OBJECT_PATH = config.OBJECT_PATH
@@ -29,7 +29,6 @@ S3_PHOTO_PATH = config.S3_PHOTO_PATH
 
 # basedir
 BASEDIR = config.BASEDIR
-
 
 # Blueprint
 strategy = Blueprint('strategy', __name__, static_folder='static', template_folder='templates')
@@ -44,96 +43,23 @@ def strategy_page():
         return render_template('login.html')
 
     else:
-        sql_sample_strategy = "SELECT * \
-                            FROM `strategy_backtest` \
-                            JOIN `stocks` \
-                            ON `strategy_backtest`.`stock_code` = `stocks`.`stock_code` \
-                            WHERE `user_id` = '20' \
-                            ORDER BY `create_date` DESC, `id` DESC \
-                            limit 15;"
-        db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
-        result = db_mysql.query_tb_all(sql_sample_strategy)
-        # pprint(result[0])
-        sample_strategy_form = [{
-                'strategy_id': strategy_backtest[0],
-                'user_id': strategy_backtest[1],
-                'stock_code': strategy_backtest[2],
-                'start_date': strategy_backtest[3],
-                'end_date': strategy_backtest[4],
-                'strategy_line': strategy_backtest[5],
-                'strategy_in': strategy_backtest[6],
-                'strategy_in_para': strategy_backtest[7],
-                'strategy_out': strategy_backtest[8],
-                'strategy_out_para': strategy_backtest[9],
-                'strategy_sentiment': strategy_backtest[10],
-                'source': strategy_backtest[11],
-                'sentiment_para_more': strategy_backtest[12],
-                'sentiment_para_less': strategy_backtest[13],
-                'seed_money': strategy_backtest[14],
-                'discount': strategy_backtest[15],
-                'total_buy_count': strategy_backtest[16],
-                'total_sell_count': strategy_backtest[17],
-                'total_return_rate': strategy_backtest[18],
-                'highest_return': strategy_backtest[19],
-                'lowest_return': strategy_backtest[20],
-                'total_win': strategy_backtest[21],
-                'total_lose': strategy_backtest[22],
-                'total_trade': strategy_backtest[23],
-                'win_rate': strategy_backtest[24],
-                'avg_return_rate': strategy_backtest[25],
-                'irr': strategy_backtest[26],
-                'file_path': strategy_backtest[27],
-                'create_date': strategy_backtest[28],
-                'stock_name': strategy_backtest[30],
-                'category': strategy_backtest[31]
-            } for strategy_backtest in result]
+        sql_sample_strategy = model_mysql_query.sql_sample_strategy
+        db_mysql = model_mysql.DbWrapperMysqlDict('sentimentrader')
+        sample_strategy_form = db_mysql.query_tb_all(sql_sample_strategy)
         sample_strategy_form_length = int(len(sample_strategy_form))
-        # pprint(strategy_backtest_dict_list[0])
-        print(sample_strategy_form)
-        category_name = {
-            "electric_electric_car": "電動車",
-            "electric_car": "電動車",
-            "electric": "電子資訊",
-            "sail": "航運",
-            "biotech": "生技",
-            "finance": "金融",
-            "stock_market": "台積電",
-        }
-        strategy_line_name = {
-            "none": "--",
-            "undefined": "--",
-            "kdj_line": "ＫＤ線交叉",
-            "macd_line": "ＭＡＣＤ線交叉",
-            "none_line": "自訂",
-        }
-        strategy_in_name = {
-            "none": "--",
-            "increase_in": "股價連續上漲(3日)",
-            "decrease_in": "股價連續下跌(3日)"
-        }
-        strategy_out_name = {
-            "none": "--",
-            "increase_out": "股價連續上漲(3日)",
-            "decrease_out": "股價連續下跌(3日)"
-        }
-        strategy_sentiment_name = {
-            "none_pass": "--",
-            "daily_sentiment_pass": "當日情緒分數",
-            "to_negative_pass": "正轉負",
-            "to_positive_pass": "負轉正",
-        }
-        source_name = {
-            "ptt": "PTT 論壇",
-            "cnyes": "鉅亨網新聞",
-        }
+        # print(sample_strategy_form)
+        get_name = GetName()
 
-        for sample_strategy in sample_strategy_form:
-            sample_strategy['category_name'] = category_name[sample_strategy['category']]
-            sample_strategy['strategy_line_name'] = strategy_line_name[sample_strategy['strategy_line']]
-            sample_strategy['strategy_in_name'] = strategy_in_name[sample_strategy['strategy_in']]
-            sample_strategy['strategy_out_name'] = strategy_out_name[sample_strategy['strategy_out']]
-            sample_strategy['strategy_sentiment_name'] = strategy_sentiment_name[sample_strategy['strategy_sentiment']]
-            sample_strategy['source_name'] = source_name[sample_strategy['source']]
+        def add_key(sample_strategy):
+            sample_strategy['category_name'] = get_name.category(sample_strategy['category'])
+            sample_strategy['strategy_line_name'] = get_name.strategy_line(sample_strategy['strategy_line'])
+            sample_strategy['strategy_in_name'] = get_name.strategy_in(sample_strategy['strategy_in'])
+            sample_strategy['strategy_out_name'] = get_name.strategy_out(sample_strategy['strategy_out'])
+            sample_strategy['strategy_sentiment_name'] = get_name.strategy_sentiment(sample_strategy['strategy_sentiment'])
+            sample_strategy['source_name'] = get_name.source(sample_strategy['source'])
+            return sample_strategy
+
+        sample_strategy_form = [add_key(sample_strategy) for sample_strategy in sample_strategy_form]
 
         return render_template('strategy.html', sample_strategy_form=sample_strategy_form, sample_strategy_form_length=sample_strategy_form_length)
 
@@ -142,7 +68,6 @@ def strategy_page():
 @strategy.route('/api/1.0/send_strategy', methods=['POST'])
 def send_strategy():
     uid = get_cookie_check()
-    print(uid)
     if isinstance(uid, int) is False:
         flash('需要登入', 'danger')
         return render_template('login.html')
@@ -152,75 +77,60 @@ def send_strategy():
             # category and stock_code
             category = form['category']
             stock_code = form['stock_code']
-            print('category:', category)
-            print('stock_code:', stock_code)
+
             # duration
             start_date = form['start_date']
             end_date = form['end_date']
-            print('start_date:', start_date)
-            print('end_date:', end_date)
-
             start_date_datetime = datetime.fromisoformat(start_date)
             end_date_datetime = datetime.fromisoformat(end_date)
-            print(start_date_datetime)
-            print(end_date_datetime)
 
             if end_date_datetime <= start_date_datetime:
                 flash("開始日期須小於結束日期", 'error')
                 return redirect(url_for('strategy.strategy_page'))
-            else:
-                pass
 
             # KD, MACD, or custom
             strategy_line = form['strategy_line']
-            print('strategy_line:', strategy_line)
+
             # market in: custom para
             strategy_in = form['strategy_in']
             try:
                 strategy_in_para = float(form['strategy_in_para'])
             except:
                 strategy_in_para = 1
-            print('strategy_in:', strategy_in)
-            print('strategy_in_para:', strategy_in_para)
+
             # market out: custom para
             strategy_out = form['strategy_out']
             try:
                 strategy_out_para = float(form['strategy_out_para'])
             except:
-                strategy_out_para = 1
-            print('strategy_out:', strategy_out)
-            print('strategy_out_para:', strategy_out_para)
+                default_strategy_out_para = 1
+                strategy_out_para = default_strategy_out_para
+
             # transition stop
             strategy_sentiment = form['strategy_sentiment']
             try:
                 sentiment_para_less = float(form['sentiment_para_less'])
                 sentiment_para_more = float(form['sentiment_para_more'])
             except:
-                sentiment_para_more = 60
-                sentiment_para_less = 40
-            print('strategy_sentiment:', strategy_sentiment)
-            print('sentiment_para_less:', sentiment_para_less)
-            print('sentiment_para_more:', sentiment_para_more)
-            # print((float(sentiment_para_more) / 100 * 10 - 5))
-            # print((float(sentiment_para_less) / 100 * 10 - 5))
+                default_sentiment_para_more = 60
+                default_sentiment_para_less = 40
+                sentiment_para_more = default_sentiment_para_more
+                sentiment_para_less = default_sentiment_para_less
+
             # your fee discount
             source = form['source']
-            print('source:', source)
             # your fund
             set_money = int(form['money'])
-            print('set_money:', set_money)
             # your fee discount
             discount = float(form['discount'])
-            print('discount:', discount)
-
             duration_day = (datetime.fromisoformat(end_date) - datetime.fromisoformat(start_date))
-            print('duration_day: ', duration_day)
-            duration_year = round(duration_day.days / 365, 2)
-            print('duration_year: ', duration_year)
-            print(type(duration_year))
+            year_days = 365
+            duration_year = round(duration_day.days / year_days, 2)
+
         except:
             flash("數值錯誤", 'error')
             return redirect(url_for('strategy.strategy_page'))
+
         else:
             engine = create_engine("mysql+pymysql://{user}:{pw}@{host}/{db}"
                                    .format(user=DBUSER,
@@ -231,15 +141,7 @@ def send_strategy():
             connection = engine.connect()
 
             # set date
-
-
-            resoverall_stock_price = connection.execute("SELECT DATE_FORMAT(date,'%%Y-%%m-%%d') AS Date, open AS Open, high AS High, \
-                                                         low AS Low, close AS Close, volume AS Volume \
-                                                         FROM sentimentrader.daily_stock_price \
-                                                         WHERE stock_code = '{}' \
-                                                         AND `date` BETWEEN '{}' and '{}' \
-                                                         ORDER BY `Date`".format(stock_code, start_date_datetime,
-                                                                                 end_date_datetime))
+            resoverall_stock_price = connection.execute(model_mysql_query.sql_strategy_stock_price(stock_code, start_date_datetime, end_date_datetime))
 
             # fetch stock price
             df1 = pd.DataFrame(resoverall_stock_price.fetchall())
@@ -249,7 +151,6 @@ def send_strategy():
             df1 = df1.drop_duplicates(subset='Date')
             df1.index = df1['Date']
             df1_date_index = df1.drop(['Date'], axis=1)
-            print(df1_date_index)
 
             # create df2 and concat
             if strategy_sentiment == 'none_pass':
@@ -257,13 +158,8 @@ def send_strategy():
                 df = df1_date_index
 
             else:
-                # 和 sentiment concate
-                resoverall_sentiment = connection.execute("SELECT DATE_FORMAT(date,'%%Y-%%m-%%d') AS Date, (avg_valence - 5) as avg_valence, (avg_arousal - 5) as avg_arousal, sum_sentiment \
-                                            FROM sentimentrader.daily_sentiment \
-                                            WHERE source = '{}' \
-                                            AND stock_code = '{}' \
-                                            AND `date` BETWEEN '{}' and '{}' \
-                                            ORDER BY `Date`".format(source, stock_code, start_date_datetime, end_date_datetime))
+                # concate sentiment
+                resoverall_sentiment = connection.execute(model_mysql_query.sql_strategy_sentiment(source, stock_code, start_date_datetime, end_date_datetime))
 
                 df2 = pd.DataFrame(resoverall_sentiment.fetchall())
                 df2.columns = resoverall_sentiment.keys()

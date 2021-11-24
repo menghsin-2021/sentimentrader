@@ -1,6 +1,6 @@
 from flask import Flask, render_template, flash
 import config
-import model_mysql
+from model import model_mysql
 from utils import get_cookie_check
 
 from controller.social_volume import social_volume
