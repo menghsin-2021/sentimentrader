@@ -379,10 +379,10 @@ class DbWrapperMysql:
         self.create_tb(create_sql_format_user_strategy['strategy_backtest'], tb_name_strategy_backtest)
 
     def create_tb_all(self):
-        # self.create_tb_stocks()
-        # self.create_tb_stock_price()
-        # self.create_tb_sentiment()
-        # self.create_tb_social_volume()
+        self.create_tb_stocks()
+        self.create_tb_stock_price()
+        self.create_tb_sentiment()
+        self.create_tb_social_volume()
         self.create_tb_user_strategy()
 
     def insert_tb(self, sql_insert, insert_tuple):
@@ -427,6 +427,34 @@ class DbWrapperMysql:
         self.connect_db.close()
 
 
+class DbWrapperMysqlDict:
+    def __init__(self, db_name):
+        self.connect_db = pymysql.connect(host=DBHOST,
+                                    port=3306,
+                                    user=DBUSER,
+                                    password=DBPASSWORD,
+                                    database=db_name,
+                                    cursorclass=pymysql.cursors.DictCursor)
+
+        self.cursor = self.connect_db.cursor()
+
+    def query_tb_all(self, sql_query, query_tuple=None):
+        if query_tuple:
+            self.cursor.execute(sql_query, query_tuple)
+            result = self.cursor.fetchall()
+        else:
+            self.cursor.execute(sql_query)
+            result = self.cursor.fetchall()
+        return result
+
+    def query_tb_one(self, sql_query, query_tuple=None):
+        if query_tuple:
+            self.cursor.execute(sql_query, query_tuple)
+            result = self.cursor.fetchone()
+        else:
+            self.cursor.execute(sql_query)
+            result = self.cursor.fetchone()
+        return result
 
 
 

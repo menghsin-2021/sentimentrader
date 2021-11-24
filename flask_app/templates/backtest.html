@@ -209,7 +209,7 @@
                         </div>
 
                         <div>
-                            <form id="send-backtest-form" action="/send_backtest" method="POST">
+                            <form id="send-backtest-form" action="/api/1.0/send_backtest" method="POST">
                             <input type="text" value="{{ strategy_backtest_dict_list[0]['strategy_id'] | safe }}" style="display: none;" name="send_backtest">
                             <input type="submit" class="btn btn-primary mr-3" id="send-backtest" value="重新回測">
                             </form>
@@ -367,7 +367,7 @@ cardDeck.addEventListener("click", (event) => {
   }).then((value) => {
     if (value === true) {
     console.log(body)
-    const response = fetch('/remove_strategy', {
+    const response = fetch('/api/1.0/remove_strategy', {
 	method: 'post',
 	body: JSON.stringify(body),
 	headers: {
@@ -403,7 +403,7 @@ removeStrategy.addEventListener("click", function(){
   }).then((value) => {
     if (value === true) {
     console.log(body)
-    const response = fetch('/remove_strategy', {
+    const response = fetch('/api/1.0/remove_strategy', {
 	method: 'post',
 	body: JSON.stringify(body),
 	headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}
