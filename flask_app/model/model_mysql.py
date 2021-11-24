@@ -411,7 +411,16 @@ class DbWrapperMysqlDict:
             result = self.cursor.fetchone()
         return result
 
+    def update_tb(self, sql_update, query_tuple=None):
+        if query_tuple:
+            self.cursor.execute(sql_update, query_tuple)
+            self.connect_db.commit()
+        else:
+            self.cursor.execute(sql_update)
+            self.connect_db.commit()
 
+    def close_db(self):
+        self.connect_db.close()
 
 
 

@@ -379,58 +379,62 @@ def delete_file(bucket_name, object_path, uid, file_name):
 
 
 # user api
-def generate_salt():
-    salt = os.urandom(16)
-    return salt.hex()  # 轉換16進制
+class Checkjwt:
+    def __init__(self):
+        pass
+
+    def generate_salt(self):
+        salt = os.urandom(16)
+        return salt.hex()  # 轉換16進制
 
 
-def generate_hash(plain_password, password_salt):
-    # 基於密碼的金鑰派生函式2以HMAC為偽隨機函式。
-    password_hash = pbkdf2_hmac(
-        "sha256",  # hash name  返回一個sha256物件；把字串轉換為位元組形式；
-        b"%b" % bytes(plain_password, "utf-8"),  # password 二進制數據  原本: b"%b" % bytes(plain_password, "utf-8")
-        b"%b" % bytes(password_salt, "utf-8"),  # salt 二進制數據  原本: b"%b" % bytes(password_salt, "utf-8")
-        10000,  # iterations
-    )
-    return password_hash.hex()  # 轉換16進制
+    def generate_hash(self, plain_password, password_salt):
+        # 基於密碼的金鑰派生函式2以HMAC為偽隨機函式。
+        password_hash = pbkdf2_hmac(
+            "sha256",  # hash name  返回一個sha256物件；把字串轉換為位元組形式；
+            b"%b" % bytes(plain_password, "utf-8"),  # password 二進制數據  原本: b"%b" % bytes(plain_password, "utf-8")
+            b"%b" % bytes(password_salt, "utf-8"),  # salt 二進制數據  原本: b"%b" % bytes(password_salt, "utf-8")
+            10000,  # iterations
+        )
+        return password_hash.hex()  # 轉換16進制
 
 
-def b_type_to_str(b_type):
-    if type(b_type) is bytes:
-        b_type = str(b_type)[2:-1]
-    else:
-        b_type = str(b_type)
-    return b_type
+    def b_type_to_str(self, b_type):
+        if type(b_type) is bytes:
+            b_type = str(b_type)[2:-1]
+        else:
+            b_type = str(b_type)
+        return b_type
 
 
-def check_basic_auth_signup(name, email, pwd, con_pwd):
-    if name and email and pwd:
-        return len(name) <= 255 and len(email) <= 255 and len(pwd) <= 255 and pwd == con_pwd
+    def check_basic_auth_signup(self, name, email, pwd, con_pwd):
+        if name and email and pwd:
+            return len(name) <= 255 and len(email) <= 255 and len(pwd) <= 255 and pwd == con_pwd
 
-    else:
-        return False
-
-
-def check_basic_auth_signin(email, pwd):
-    if email and pwd:
-        return len(email) <= 255 and len(pwd) <= 255
-
-    else:
-        return False
+        else:
+            return False
 
 
-def set_token(iss, sub, aud, iat, nbf, exp, jti):
-    payload = {
-        'iss': iss,  # (Issuer) Token 的發行者
-        'sub': sub,  # (Subject) 也就是使用該 Token 的使用者
-        'aud': aud,  # Token 的接收者，也就是後端伺服器
-        'exp': exp,  # (Expiration Time) Token 的過期時間 (must use UTC time) 應該 iat + 秒數
-        'nbf': nbf,  # (Not Before) Token 的生效時間
-        'iat': iat,  # (Issued At) Token 的發行時間
-        'jti': jti,  # (JWT ID) Token 的 ID
-    }
-    access_token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
-    return access_token
+    def check_basic_auth_signin(self, email, pwd):
+        if email and pwd:
+            return len(email) <= 255 and len(pwd) <= 255
+
+        else:
+            return False
+
+
+    def set_token(self, iss, sub, aud, iat, nbf, exp, jti):
+        payload = {
+            'iss': iss,  # (Issuer) Token 的發行者
+            'sub': sub,  # (Subject) 也就是使用該 Token 的使用者
+            'aud': aud,  # Token 的接收者，也就是後端伺服器
+            'exp': exp,  # (Expiration Time) Token 的過期時間 (must use UTC time) 應該 iat + 秒數
+            'nbf': nbf,  # (Not Before) Token 的生效時間
+            'iat': iat,  # (Issued At) Token 的發行時間
+            'jti': jti,  # (JWT ID) Token 的 ID
+        }
+        access_token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+        return access_token
 
 
 

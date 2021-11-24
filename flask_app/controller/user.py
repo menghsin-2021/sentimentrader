@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from model import model_mysql
 import config
-from utils import generate_salt, generate_hash, b_type_to_str, check_basic_auth_signup, check_basic_auth_signin, set_token
+from utils import Checkjwt
 
 
 # Blueprint
@@ -12,6 +12,7 @@ user = Blueprint('user', __name__, static_folder='static', template_folder='temp
 # secret key
 SECRET_KEY = config.SECRET_KEY
 
+check_jwt = Checkjwt()
 
 @user.route('/', methods=['GET'])
 @user.route('/login.html', methods=['GET'])
@@ -32,7 +33,7 @@ def signup():
     db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
 
     # check Basic Auth
-    basic_auth = check_basic_auth_signup(name, email, pwd, con_pwd)
+    basic_auth = check_jwt.check_basic_auth_signup(name, email, pwd, con_pwd)
     if not basic_auth:
         flash('兩次密碼輸入不同', 'error')
         return redirect(url_for('user.login'))
@@ -49,8 +50,8 @@ def signup():
 
         else:
             # salt password
-            password_salt = generate_salt()
-            password_hash = generate_hash(pwd, password_salt)
+            password_salt = check_jwt.generate_salt()
+            password_hash = check_jwt.generate_hash(pwd, password_salt)
 
             # set token
             iss = 'stock-sentimentrader.com'
@@ -61,8 +62,8 @@ def signup():
             exp = iat + timedelta(seconds=3600)
             jti = email
 
-            access_token = set_token(iss, sub, aud, iat, nbf, exp, jti)
-            access_token_str = b_type_to_str(access_token)
+            access_token = check_jwt.set_token(iss, sub, aud, iat, nbf, exp, jti)
+            access_token_str = check_jwt.b_type_to_str(access_token)
             access_expired = int(exp.timestamp()-iat.timestamp())
 
             # insert db
@@ -77,11 +78,8 @@ def signup():
                                                   'email': email,
                                               }}}
 
-            # 對重新導向的 myName.html 做回應
             resp = make_response(redirect(url_for('home')))
-            # 回應為set cookie
             resp.set_cookie(key='token', value=signup_user_info['data']['access_token'])
-            # 重新導向到 myName.html
             flash('註冊成功', 'success')
             return resp
 
@@ -94,27 +92,27 @@ def signin():
     email = user_signin_request['email']
     pwd = user_signin_request['pwd']
 
-    basic_auth = check_basic_auth_signin(email, pwd)
+    basic_auth = check_jwt.check_basic_auth_signin(email, pwd)
 
     if not basic_auth:
         flash('輸入長度過長', 'error')
         return redirect(url_for('user.login'))
     else:
-        db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
+        db_mysql = model_mysql.DbWrapperMysqlDict('sentimentrader')
         sql_email = "SELECT `id`, `name`, `email`, `password`, `password_salt` FROM `user` WHERE `email`= %s"
         result = db_mysql.query_tb_one(sql_email, (email,))
         if not result:
             flash('此信箱未被註冊，請重新輸入', 'error')
             return redirect(url_for('user.login'))
         else:
-            db_id = result[0]
-            db_name = result[1]
-            db_email = result[2]
-            db_password = result[3]
-            db_password_salt = result[4]
-            # 處理 password
+            db_id = result['id']
+            db_name = result['name']
+            db_email = result['email']
+            db_password = result['password']
+            db_password_salt = result['password_salt']
+            # password salt
             password_salt = db_password_salt
-            password_hash = generate_hash(pwd, password_salt)
+            password_hash = check_jwt.generate_hash(pwd, password_salt)
             if db_password != password_hash:
                 return Response('error: wrong password', status=403)
             else:
@@ -126,8 +124,8 @@ def signin():
                 nbf = datetime.utcnow()
                 exp = iat + timedelta(seconds=3600)
                 jti = email
-                access_token = set_token(iss, sub, aud, iat, nbf, exp, jti)
-                access_token_str = b_type_to_str(access_token)
+                access_token = check_jwt.set_token(iss, sub, aud, iat, nbf, exp, jti)
+                access_token_str = check_jwt.b_type_to_str(access_token)
                 access_expired = int(exp.timestamp() - iat.timestamp())
 
                 sql_update = "UPDATE `user` SET `access_token`=%s, `access_expired`=%s WHERE `email`=%s"
@@ -135,7 +133,7 @@ def signin():
                 db_mysql.close_db()
 
                 # 回傳token
-                signin_user_info = {'data': {'access_token': access_token_str,  # 不能傳 byte 格式
+                signin_user_info = {'data': {'access_token': access_token_str,  # can't send b type
                                              'access_expired': access_expired,
                                              'user': {
                                                  'id': db_id,

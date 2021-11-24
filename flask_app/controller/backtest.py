@@ -15,6 +15,16 @@ OBJECT_PATH = config.OBJECT_PATH
 
 get_name = GetName()
 
+
+def add_key(form):
+    form['category_name'] = get_name.category(form['category'])
+    form['strategy_line_name'] = get_name.strategy_line(form['strategy_line'])
+    form['strategy_in_name'] = get_name.strategy_in(form['strategy_in'])
+    form['strategy_out_name'] = get_name.strategy_out(form['strategy_out'])
+    form['strategy_sentiment_name'] = get_name.strategy_sentiment(form['strategy_sentiment'])
+    form['source_name'] = get_name.source(form['source'])
+    return form
+
 @backtest.route('/backtest.html', methods=['GET'])
 def backtest_page():
     uid = get_cookie_check()
@@ -38,39 +48,21 @@ def backtest_page():
 @backtest.route('/api/1.0/send_backtest', methods=['POST'])
 def send_backtest():
     uid = get_cookie_check()
-    print(uid)
     if isinstance(uid, int) is False:
         flash('需要登入', 'danger')
         return render_template('login.html')
     else:
+        # send parameter
         send_backtest_strategy_id = request.form.to_dict()['send_backtest']
-        print(send_backtest_strategy_id)
         db_mysql = model_mysql.DbWrapperMysqlDict('sentimentrader')
         sql_fetch_strategy_backtest = model_mysql_query.sql_fetch_strategy_backtest
         send_backtest = db_mysql.query_tb_one(sql_fetch_strategy_backtest, (send_backtest_strategy_id,))
-        print(send_backtest)
+        send_backtest = add_key(send_backtest)
 
-        send_backtest['category_name'] = get_name.category(send_backtest['category'])
-        send_backtest['strategy_line_name'] = get_name.strategy_line(send_backtest['strategy_line'])
-        send_backtest['strategy_in_name'] = get_name.strategy_in(send_backtest['strategy_in'])
-        send_backtest['strategy_out_name'] = get_name.strategy_out(send_backtest['strategy_out'])
-        send_backtest['strategy_sentiment_name'] = get_name.strategy_sentiment(send_backtest['strategy_sentiment'])
-        send_backtest['source_name'] = get_name.source(send_backtest['source'])
-
-        db_mysql = model_mysql.DbWrapperMysqlDict('sentimentrader')
+        # fetch sample strategy
         sql_sample_strategy = model_mysql_query.sql_sample_strategy
         sample_strategy_form = db_mysql.query_tb_all(sql_sample_strategy)
         sample_strategy_form_length = int(len(sample_strategy_form))
-
-        def add_key(sample_strategy):
-            sample_strategy['category_name'] = get_name.category(sample_strategy['category'])
-            sample_strategy['strategy_line_name'] = get_name.strategy_line(sample_strategy['strategy_line'])
-            sample_strategy['strategy_in_name'] = get_name.strategy_in(sample_strategy['strategy_in'])
-            sample_strategy['strategy_out_name'] = get_name.strategy_out(sample_strategy['strategy_out'])
-            sample_strategy['strategy_sentiment_name'] = get_name.strategy_sentiment(sample_strategy['strategy_sentiment'])
-            sample_strategy['source_name'] = get_name.source(sample_strategy['source'])
-            return sample_strategy
-
         sample_strategy_form = [add_key(sample_strategy) for sample_strategy in sample_strategy_form]
 
         return render_template('strategy.html', send_backtest=send_backtest, sample_strategy_form=sample_strategy_form, sample_strategy_form_length=sample_strategy_form_length)
