@@ -26,6 +26,7 @@ sql_social_volume_duration_another_category = "SELECT `stock_name`, `stock_code`
                                                 ORDER BY `total` DESC \
                                                 limit 10;"
 
+
 # sentiment
 sql_stock_price = "SELECT `days`, `open`, `low`, `high`, `close`, `volume` \
                    FROM `stock_price_view` \
@@ -37,6 +38,7 @@ sql_sentiment = "SELECT `days`, `stock_name`, `sum_valence`, `avg_valence`, `sum
                  WHERE `source` = %s \
                  AND `stock_code` = %s \
                  ORDER BY `days` desc;"
+
 
 
 # strategy
@@ -64,3 +66,28 @@ def sql_strategy_sentiment(source, stock_code, start_date_datetime, end_date_dat
             AND stock_code = '{}' \
             AND `date` BETWEEN '{}' and '{}' \
             ORDER BY `Date`".format(source, stock_code, start_date_datetime, end_date_datetime)
+
+
+sql_insert_strategy_backtest = "INSERT INTO `strategy_backtest` (`user_id`, `stock_code`, `start_date`, `end_date`, \
+                                `strategy_line`, `strategy_in`, `strategy_in_para`, `strategy_out`, `strategy_out_para`, \
+                                `strategy_sentiment`, `source`, `sentiment_para_more`, `sentiment_para_less`, `seed_money`, \
+                                `discount`, `total_buy_count`, `total_sell_count`, `total_return_rate`, `highest_return`, \
+                                `lowest_return`, `total_win`, `total_lose`, `total_trade`, `win_rate`, `avg_return_rate`, \
+                                `irr`, `file_path`, `create_date`) \
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+
+
+# backtest
+sql_backtest = "SELECT * \
+                        FROM `strategy_backtest` \
+                        JOIN `stocks` \
+                        ON `strategy_backtest`.`stock_code` = `stocks`.`stock_code` \
+                        WHERE `user_id` = '%s' \
+                        ORDER BY `create_date` DESC, `id` DESC \
+                        limit 15;"
+
+sql_fetch_strategy_backtest = "SELECT * \
+                               FROM `strategy_backtest` \
+                               JOIN `stocks` \
+                               ON `strategy_backtest`.`stock_code` = `stocks`.`stock_code` \
+                               WHERE `id` = %s;"

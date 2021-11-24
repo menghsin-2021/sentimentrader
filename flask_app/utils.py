@@ -12,11 +12,25 @@ import jwt
 # s3
 import boto3
 
+# strategy
+import mplfinance as mpf
+import pandas as pd
+from PIL import Image
+import io
+
+
 SECRET_KEY = config.SECRET_KEY
+BUCKET_NAME = config.BUCKET_NAME
+OBJECT_PATH = config.OBJECT_PATH
+
+# S3 photo path
+S3_PHOTO_PATH = config.S3_PHOTO_PATH
+
+# basedir
+BASEDIR = config.BASEDIR
+
 
 # for all page check token
-
-
 def get_cookie_check():
     token = request.cookies.get('token')
     expire_time = 3600
@@ -154,18 +168,214 @@ class StockSentimentFetch:
 
 
 # strategy api
-def get_today_yesterday():
-    today_strftime = datetime.today().strftime('%Y-%m-%d')
-    yesterday_strftime = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d')
+class GetDayStr:
+    def __init__(self):
+        pass
 
-    return today_strftime, yesterday_strftime
+    def today_yesterday(self):
+        today_strftime = datetime.today().strftime('%Y-%m-%d')
+        yesterday_strftime = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d')
+
+        return today_strftime, yesterday_strftime
 
 
-def get_day_before(days):
-    days_ago_strftime = (datetime.today() - timedelta(days=days)).strftime('%Y-%m-%d') + ' 00:00:00'
-    # 2021-11-05 00:00:00 (mysql date)
+    def get_day_before(self, days):
+        days_ago_strftime = (datetime.today() - timedelta(days=days)).strftime('%Y-%m-%d') + ' 00:00:00'
 
-    return days_ago_strftime
+        return days_ago_strftime
+
+class MarketInTime:
+    def __init__(self):
+        pass
+
+    def buy_by_macd(self, money, df, i, buy_count):
+        if money >= df["Close"][i] and df["B_MACD"][i] < df["B_MACDsignal"][i] and df["MACD"][i] > df["MACDsignal"][i]:
+            buy_point = 1
+            buy_count += 1
+            buy_price = df["Close"][i]
+
+        elif buy_count > 0 and df["B_MACD"][i] > df["B_MACDsignal"][i] and df["MACD"][i] < df["MACDsignal"][i]:
+            buy_point = -1
+            buy_count -= 1
+            buy_price = -df["Close"][i]
+
+        else:
+            buy_point = 0
+            buy_price = 0
+
+        return buy_point, buy_count, buy_price
+
+    def buy_by_kd(self, money, df, i, buy_count):
+        if money >= df["Close"][i] and df["B_K"][i] < df["B_D"][i] and df["K"][i] > df["D"][i]:
+            buy_point = 1
+            buy_count += 1
+            buy_price = df["Close"][i]
+        elif buy_count > 0 and df["B_K"][i] > df["B_D"][i] and df["K"][i] < df["D"][i]:
+            buy_point = -1
+            buy_count -= 1
+            buy_price = -df["Close"][i]
+        else:
+            buy_point = 0
+            buy_price = 0
+
+        return buy_point, buy_count, buy_price
+
+    def buy_by_increase_in(self, money, df, i, buy_count, strategy_in_para, strategy_out_para):
+        if i > 1:
+            if money >= df["Close"][i] and df["Close"][i] / (1 + strategy_in_para / 100) > \
+                    df["Close"][i - 1] and df["Close"][i - 1] / (1 + strategy_in_para / 100) > \
+                    df["Close"][i - 2]:
+                buy_point = 1
+                buy_count += 1
+                buy_price = df["Close"][i]
+            elif buy_count > 0 and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][
+                i - 1] and df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
+                buy_point = -1
+                buy_count -= 1
+                buy_price = -df["Close"][i]
+            else:
+                buy_point = 0
+                buy_price = 0
+
+        else:
+            buy_point = 0
+            buy_price = 0
+
+        return buy_point, buy_count, buy_price
+
+    def buy_by_increase_out(self, money, df, i, buy_count, strategy_in_para, strategy_out_para):
+        if i > 1:
+            if money >= df["Close"][i] and df["Close"][i] / (1 - strategy_out_para / 100) < df["Close"][
+                i - 1] and \
+                    df["Close"][i - 1] / (1 - strategy_out_para / 100) < df["Close"][i - 2]:
+                buy_point = 1
+                buy_count += 1
+                buy_price = df["Close"][i]
+            elif buy_count > 0 and df["Close"][i] / (1 + strategy_in_para / 100) > df["Close"][i - 1] and \
+                    df["Close"][i - 1] / (1 + strategy_in_para / 100) > df["Close"][i - 2]:
+                buy_point = -1
+                buy_count -= 1
+                buy_price = -df["Close"][i]
+            else:
+                buy_point = 0
+                buy_price = 0
+        else:
+            buy_point = 0
+            buy_price = 0
+
+        return buy_point, buy_count, buy_price
+
+class DrawMpf:
+    def __init__(self):
+        pass
+
+    def add_plot_parameter(self, length_of_buy_mark, length_of_sell_mark, strategy_line, strategy_sentiment, df):
+        if length_of_buy_mark > 0 and length_of_sell_mark > 0:
+            if strategy_line == 'kdj_line' and strategy_sentiment != 'none_pass':
+                add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                            mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
+                            mpf.make_addplot(df["K"], panel=2, color="r"),
+                            mpf.make_addplot(df["D"], panel=2, color="g"),
+                            mpf.make_addplot(df["avg_valence"], panel=2, color="b")
+                            ]
+
+            elif strategy_line == 'kdj_line' and strategy_sentiment == 'none_pass':
+                add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                            mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
+                            mpf.make_addplot(df["K"], panel=2, color="r"),
+                            mpf.make_addplot(df["D"], panel=2, color="g")
+                            ]
+
+            elif strategy_line == 'macd_line' and strategy_sentiment != 'none_pass':
+                add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                            mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
+                            mpf.make_addplot(df["MACD"], panel=2, color="b"),
+                            mpf.make_addplot(df["MACDsignal"], panel=2, color="r"),
+                            mpf.make_addplot(df["MACDhist"], panel=2, color="g", type='bar'),
+                            mpf.make_addplot(df["avg_valence"], panel=3, color="b")
+                            ]
+
+            elif strategy_line == 'macd_line' and strategy_sentiment == 'none_pass':
+                add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                            mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
+                            mpf.make_addplot(df["MACD"], panel=2, color="b"),
+                            mpf.make_addplot(df["MACDsignal"], panel=2, color="r"),
+                            mpf.make_addplot(df["MACDhist"], panel=2, color="g", type='bar'),
+                            ]
+
+            elif strategy_sentiment != 'none_pass':
+                add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                            mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'),
+                            mpf.make_addplot(df["avg_valence"], panel=2, color="b")
+                            ]
+
+            else:
+                add_plot = [mpf.make_addplot(df["buy_mark"], scatter=True, markersize=100, marker='v', color='r'),
+                            mpf.make_addplot(df["sell_mark"], scatter=True, markersize=100, marker='^', color='g'), ]
+        else:
+            add_plot = None
+
+        return add_plot
+
+    def get_mpf_plot(self, df, stock_code, add_plot):
+        df.index = pd.DatetimeIndex(df.index)
+        stock_id = "{}.TW".format(stock_code)
+        mc = mpf.make_marketcolors(up='r', down='g', inherit=True)
+        s = mpf.make_mpf_style(base_mpf_style='yahoo', marketcolors=mc, rc={'font.size': 14})
+        kwargs = dict(type='candle', volume=True, figsize=(20, 10), title=stock_id, style=s, addplot=add_plot)
+        timestamp = int(datetime.today().timestamp())
+        timestamp_str = str(timestamp)
+        filename = f"{stock_code}_{timestamp_str}"
+        path = os.path.join(BASEDIR, "static/img/report", filename)
+        mpf.plot(df, **kwargs, savefig=path)
+
+        return filename
+
+    # S3 upload
+    def upload_file(self, uid, file, file_name, bucket_name, object_path=None):
+        s3_client = boto3.client('s3')
+        object = object_path + '/' + str(uid) + '/' + file_name
+
+        try:
+            s3_client.put_object(Body=file, Bucket=bucket_name, Key=object, ContentType='image/png')
+            print('upload success')
+        except:
+            print('fail')
+            return False
+
+        else:
+            return file_name
+
+    def upload_figure_s3(self, filename, uid):
+        s3_save_filename = filename + '.png'
+        s3_save_path = os.path.join(BASEDIR, "static/img/report", s3_save_filename)
+        # open file
+        pil_image = Image.open(s3_save_path)
+        # Save the image to an in-memory file
+        in_mem_file = io.BytesIO()
+        pil_image.save(in_mem_file, format=pil_image.format)
+        in_mem_file.seek(0)
+        self.upload_file(uid, in_mem_file, s3_save_filename, BUCKET_NAME, OBJECT_PATH)
+        file_path = f"{S3_PHOTO_PATH}/{uid}/{s3_save_filename}"
+
+        return file_path
+
+
+
+# backtest api
+# S3 delete
+def delete_file(bucket_name, object_path, uid, file_name):
+    try:
+        client = boto3.client('s3')
+        object = object_path + '/' + str(uid) + '/' + file_name
+        client.delete_object(Bucket=bucket_name, Key=object)
+        print('delete success')
+        return True
+
+    except:
+        print('delete fail')
+        return False
+
 
 
 # user api
@@ -223,35 +433,9 @@ def set_token(iss, sub, aud, iat, nbf, exp, jti):
     return access_token
 
 
-# S3 upload
-def upload_file(uid, file, file_name, bucket_name, object_path=None):
-    s3_client = boto3.client('s3')
-    object = object_path + '/' + str(uid) + '/' + file_name
-
-    try:
-        s3_client.put_object(Body=file, Bucket=bucket_name, Key=object, ContentType='image/png')
-        print('upload success')
-    except:
-        print('fail')
-        return False
-
-    else:
-        return file_name
-
-# S3 delete
-def delete_file(bucket_name, object_path, uid, file_name):
-    try:
-        client = boto3.client('s3')
-        object = object_path + '/' + str(uid) + '/' + file_name
-        client.delete_object(Bucket=bucket_name, Key=object)
-        print('delete success')
-        return True
-
-    except:
-        print('delete fail')
-        return False
 
 
+# change code to name
 class GetName:
     def __init__(self):
         pass
