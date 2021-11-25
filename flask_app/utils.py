@@ -29,6 +29,7 @@ S3_PHOTO_PATH = config.S3_PHOTO_PATH
 # basedir
 BASEDIR = config.BASEDIR
 
+DBNAME = config.DBNAME
 
 # for all page check token
 def get_cookie_check():
@@ -57,7 +58,7 @@ def get_cookie_check():
             sql_uid = "SELECT `id` as `uid` \
                       FROM `user` \
                       WHERE `email` = '{}'".format(user_email)
-            db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
+            db_mysql = model_mysql.DbWrapperMysql(DBNAME)
             uid = db_mysql.query_tb_one(sql_uid)[0]
 
             return uid
@@ -81,7 +82,7 @@ class SocialVolumeFetch:
             query_tuple = (source, duration, category)
             sql_social_volume = model_mysql_query.sql_social_volume_duration_another_category
 
-        db_mysql = model_mysql.DbWrapperMysqlDict('sentimentrader')
+        db_mysql = model_mysql.DbWrapperMysqlDict(DBNAME)
         result = db_mysql.query_tb_all(sql_social_volume, query_tuple)
         stock_name_code = [f"{word_count['stock_name']}, {word_count['stock_code']}" for word_count in result]
         stock_count = [int(word_count['count']) for word_count in result]
@@ -95,7 +96,7 @@ class StockSentimentFetch:
         pass
 
     def fetch_stock_price(self, stock_code):
-        db_mysql = model_mysql.DbWrapperMysqlDict('sentimentrader')
+        db_mysql = model_mysql.DbWrapperMysqlDict(DBNAME)
         sql_stock_price = model_mysql_query.sql_stock_price
         result = db_mysql.query_tb_all(sql_stock_price, (stock_code,))
         daily_stock_price = self.create_stock_price_json(result)
@@ -120,7 +121,7 @@ class StockSentimentFetch:
         return stock_price
 
     def fetch_sentiment(self, source, stock_code):
-        db_mysql = model_mysql.DbWrapperMysqlDict('sentimentrader')
+        db_mysql = model_mysql.DbWrapperMysqlDict(DBNAME)
         sql_sentiment = model_mysql_query.sql_sentiment
         result = db_mysql.query_tb_all(sql_sentiment, (source, stock_code))
         daily_sentiment = self.create_sentiment_json(result)

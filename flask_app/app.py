@@ -15,6 +15,7 @@ DEBUG = config.DEBUG
 PORT = config.PORT
 HOST = config.HOST
 SECRET_KEY = config.SECRET_KEY
+DBNAME = config.DBNAME
 
 
 # create flask instance
@@ -51,8 +52,8 @@ def home():
 
 if __name__ == "__main__":
     # initial db
-    db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
-    # db_mysql.create_tb_all()
+    db_mysql = model_mysql.DbWrapperMysql(DBNAME)
+    db_mysql.create_tb_all()
 
 
     # run sever

@@ -5,6 +5,8 @@ from model import model_mysql
 import config
 from utils import Checkjwt
 
+from model import model_mysql_query
+
 
 # Blueprint
 user = Blueprint('user', __name__, static_folder='static', template_folder='templates')
@@ -13,6 +15,8 @@ user = Blueprint('user', __name__, static_folder='static', template_folder='temp
 SECRET_KEY = config.SECRET_KEY
 
 check_jwt = Checkjwt()
+
+DBNAME = config.DBNAME
 
 @user.route('/', methods=['GET'])
 @user.route('/login.html', methods=['GET'])
@@ -30,7 +34,7 @@ def signup():
     con_pwd = user_signup_request['con-pwd']
 
     # db initialize
-    db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
+    db_mysql = model_mysql.DbWrapperMysql(DBNAME)
 
     # check Basic Auth
     basic_auth = check_jwt.check_basic_auth_signup(name, email, pwd, con_pwd)
@@ -67,8 +71,8 @@ def signup():
             access_expired = int(exp.timestamp()-iat.timestamp())
 
             # insert db
-            sql = "INSERT INTO `user` (`name`, `email`, `password`, `password_salt`, `access_token`, `access_expired`) VALUES (%s, %s, %s, %s, %s, %s)"
-            db_mysql.insert_tb(sql, (name, email, password_hash, password_salt, access_token, access_expired))
+            sql_insert_user = model_mysql_query.sql_insert_user
+            db_mysql.insert_tb(sql_insert_user, (name, email, password_hash, password_salt, access_token, access_expired))
 
             # send token back
             signup_user_info = {'data': {'access_token': access_token_str,  # 不能傳 byte 格式
@@ -98,7 +102,7 @@ def signin():
         flash('輸入長度過長', 'error')
         return redirect(url_for('user.login'))
     else:
-        db_mysql = model_mysql.DbWrapperMysqlDict('sentimentrader')
+        db_mysql = model_mysql.DbWrapperMysqlDict(DBNAME)
         sql_email = "SELECT `id`, `name`, `email`, `password`, `password_salt` FROM `user` WHERE `email`= %s"
         result = db_mysql.query_tb_one(sql_email, (email,))
         if not result:

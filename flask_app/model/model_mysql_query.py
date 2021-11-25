@@ -91,3 +91,7 @@ sql_fetch_strategy_backtest = "SELECT * \
                                JOIN `stocks` \
                                ON `strategy_backtest`.`stock_code` = `stocks`.`stock_code` \
                                WHERE `id` = %s;"
+
+
+# user
+sql_insert_user = "INSERT INTO `user` (`name`, `email`, `password`, `password_salt`, `access_token`, `access_expired`) VALUES (%s, %s, %s, %s, %s, %s)"

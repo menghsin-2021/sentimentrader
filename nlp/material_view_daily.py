@@ -144,7 +144,7 @@ sql_stock_price_view_set_index_day_source_stock_code = "ALTER TABLE sentimentrad
 
 
 
-db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
+db_mysql = model_mysql.DbWrapperMysql('sentimentrader_test')
 
 try:
     db_mysql.cursor.execute(sql_drop_social_volume_view)

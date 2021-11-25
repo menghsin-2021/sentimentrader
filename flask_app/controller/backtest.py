@@ -15,6 +15,7 @@ OBJECT_PATH = config.OBJECT_PATH
 
 get_name = GetName()
 
+DBNAME = config.DBNAME
 
 def add_key(form):
     form['category_name'] = get_name.category(form['category'])
@@ -34,7 +35,7 @@ def backtest_page():
         return render_template('login.html')
 
     try:
-        db_mysql = model_mysql.DbWrapperMysqlDict('sentimentrader')
+        db_mysql = model_mysql.DbWrapperMysqlDict(DBNAME)
         sql_backtest = model_mysql_query.sql_backtest
         strategy_backtest_dict_list = db_mysql.query_tb_all(sql_backtest, (uid,))
         strategy_backtest_dict_list_length = int(len(strategy_backtest_dict_list))
@@ -54,7 +55,7 @@ def send_backtest():
     else:
         # send parameter
         send_backtest_strategy_id = request.form.to_dict()['send_backtest']
-        db_mysql = model_mysql.DbWrapperMysqlDict('sentimentrader')
+        db_mysql = model_mysql.DbWrapperMysqlDict(DBNAME)
         sql_fetch_strategy_backtest = model_mysql_query.sql_fetch_strategy_backtest
         send_backtest = db_mysql.query_tb_one(sql_fetch_strategy_backtest, (send_backtest_strategy_id,))
         send_backtest = add_key(send_backtest)
@@ -76,7 +77,7 @@ def remove_strategy():
     user_id = form['user_id']
 
     sql_delete_strategy = "DELETE FROM `strategy_backtest` WHERE `id` = '{}'".format(strategy_id)
-    db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
+    db_mysql = model_mysql.DbWrapperMysql(DBNAME)
     db_mysql.delete_row(sql_delete_strategy)
     print(f"strategy {strategy_id} is deleted")
 

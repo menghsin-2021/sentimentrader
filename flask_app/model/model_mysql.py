@@ -11,25 +11,14 @@ DBNAME = config.DBNAME
 # table format
 # stock price
 tb_name_daily_stock_price = 'daily_stock_price'
-tb_name_weekly_stock_price = 'weekly_stock_price'
-tb_name_monthly_stock_price = 'monthly_stock_price'
-tb_name_yearly_stock_price = 'yearly_stock_price'
 # sentiment
 tb_name_daily_sentiment = 'daily_sentiment'
-tb_name_weekly_sentiment = 'weekly_sentiment'
-tb_name_monthly_sentiment = 'monthly_sentiment'
-tb_name_yearly_sentiment = 'yearly_sentiment'
 # social_volume
 tb_name_daily_social_volume = 'daily_social_volume'
-tb_name_weekly_social_volume = 'weekly_social_volume'
-tb_name_monthly_social_volume = 'monthly_social_volume'
-tb_name_yearly_social_volume = 'yearly_social_volume'
 # stock name and code
 tb_name_stocks = 'stocks'
-# user, strategy and reward
+# user, strategy
 tb_name_user = 'user'
-tb_name_strategy = 'strategy'
-tb_name_backtest = 'backtest'
 tb_name_strategy_backtest = 'strategy_backtest'
 
 # create table list
@@ -56,44 +45,6 @@ create_sql_format_stock_price = {
                 FOREIGN KEY (`stock_code`) REFERENCES stocks(stock_code) \
                 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_daily_stock_price),
 
-    "weekly_stock_price": "CREATE TABLE IF NOT EXISTS {}( \
-                    `start_date` DATETIME COLLATE utf8mb4_bin NOT NULL , \
-                    `open` float COLLATE utf8mb4_bin NOT NULL , \
-                    `close` float COLLATE utf8mb4_bin NOT NULL , \
-                    `low` float COLLATE utf8mb4_bin NOT NULL, \
-                    `high` float COLLATE utf8mb4_bin NOT NULL, \
-                    `volume` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-                    `stock_code` varchar(255) COLLATE utf8mb4_bin NOT NULL, \
-                    INDEX (`start_date`), INDEX (`stock_code`), \
-                    FOREIGN KEY (`stock_code`) REFERENCES stocks(stock_code), \
-                    FOREIGN KEY (`start_date`) REFERENCES daily_stock_price(date) \
-                    )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_weekly_stock_price),
-
-    "monthly_stock_price": "CREATE TABLE IF NOT EXISTS {}( \
-                    `start_date` DATETIME COLLATE utf8mb4_bin NOT NULL , \
-                    `open` float COLLATE utf8mb4_bin NOT NULL , \
-                    `close` float COLLATE utf8mb4_bin NOT NULL , \
-                    `low` float COLLATE utf8mb4_bin NOT NULL, \
-                    `high` float COLLATE utf8mb4_bin NOT NULL, \
-                    `volume` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-                    `stock_code` varchar(255) COLLATE utf8mb4_bin NOT NULL, \
-                    INDEX (`start_date`), INDEX (`stock_code`), \
-                    FOREIGN KEY (`stock_code`) REFERENCES stocks(stock_code), \
-                    FOREIGN KEY (`start_date`) REFERENCES daily_stock_price(date) \
-                    )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_monthly_stock_price),
-
-    "yearly_stock_price": "CREATE TABLE IF NOT EXISTS {}( \
-                    `start_date` DATETIME COLLATE utf8mb4_bin NOT NULL , \
-                    `open` float COLLATE utf8mb4_bin NOT NULL , \
-                    `close` float COLLATE utf8mb4_bin NOT NULL , \
-                    `low` float COLLATE utf8mb4_bin NOT NULL, \
-                    `high` float COLLATE utf8mb4_bin NOT NULL, \
-                    `volume` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-                    `stock_code` varchar(255) COLLATE utf8mb4_bin NOT NULL, \
-                    INDEX (`start_date`), INDEX (`stock_code`), \
-                    FOREIGN KEY (`stock_code`) REFERENCES stocks(stock_code), \
-                    FOREIGN KEY (`start_date`) REFERENCES daily_stock_price(date) \
-                    )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_yearly_stock_price),
     }
 
 create_sql_format_sentiment = {
@@ -112,53 +63,6 @@ create_sql_format_sentiment = {
                          FOREIGN KEY (`stock_code`) REFERENCES stocks(stock_code) \
                          )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_daily_sentiment),
 
-    "weekly_sentiment": "CREATE TABLE IF NOT EXISTS {}( \
-                         `id` BIGINT COLLATE utf8mb4_bin NOT NULL AUTO_INCREMENT, \
-                         `start_date` DATETIME COLLATE utf8mb4_bin NOT NULL, \
-                         `source` varchar(255) COLLATE utf8mb4_bin NOT NULL , \
-                         `stock_code` varchar(255) COLLATE utf8mb4_bin NOT NULL , \
-                         `sum_valence` float COLLATE utf8mb4_bin, \
-                         `avg_valence` float COLLATE utf8mb4_bin, \
-                         `sum_arousal` float COLLATE utf8mb4_bin, \
-                         `avg_arousal` float COLLATE utf8mb4_bin, \
-                         `sum_sentiment` float COLLATE utf8mb4_bin, \
-                         PRIMARY KEY (`id`), \
-                         INDEX (`start_date`), INDEX (`source`), \
-                         FOREIGN KEY (`stock_code`) REFERENCES stocks(stock_code), \
-                         FOREIGN KEY (`start_date`) REFERENCES daily_sentiment(date) \
-                         )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_weekly_sentiment),
-
-    "monthly_sentiment": "CREATE TABLE IF NOT EXISTS {}( \
-                         `id` BIGINT COLLATE utf8mb4_bin NOT NULL AUTO_INCREMENT, \
-                         `start_date` DATETIME COLLATE utf8mb4_bin NOT NULL, \
-                         `source` varchar(255) COLLATE utf8mb4_bin NOT NULL , \
-                         `stock_code` varchar(255) COLLATE utf8mb4_bin NOT NULL , \
-                         `sum_valence` float COLLATE utf8mb4_bin, \
-                         `avg_valence` float COLLATE utf8mb4_bin, \
-                         `sum_arousal` float COLLATE utf8mb4_bin, \
-                         `avg_arousal` float COLLATE utf8mb4_bin, \
-                         `sum_sentiment` float COLLATE utf8mb4_bin, \
-                         PRIMARY KEY (`id`), \
-                         INDEX (`start_date`), INDEX (`source`), \
-                         FOREIGN KEY (`stock_code`) REFERENCES stocks(stock_code), \
-                         FOREIGN KEY (`start_date`) REFERENCES daily_sentiment(date) \
-                         )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_monthly_sentiment),
-
-    "yearly_sentiment": "CREATE TABLE IF NOT EXISTS {}( \
-                         `id` BIGINT COLLATE utf8mb4_bin NOT NULL AUTO_INCREMENT, \
-                         `start_date` DATETIME COLLATE utf8mb4_bin NOT NULL, \
-                         `source` varchar(255) COLLATE utf8mb4_bin NOT NULL , \
-                         `stock_code` varchar(255) COLLATE utf8mb4_bin NOT NULL , \
-                         `sum_valence` float COLLATE utf8mb4_bin, \
-                         `avg_valence` float COLLATE utf8mb4_bin, \
-                         `sum_arousal` float COLLATE utf8mb4_bin, \
-                         `avg_arousal` float COLLATE utf8mb4_bin, \
-                         `sum_sentiment` float COLLATE utf8mb4_bin, \
-                         PRIMARY KEY (`id`), \
-                         INDEX (`start_date`), INDEX (`source`), \
-                         FOREIGN KEY (`stock_code`) REFERENCES stocks(stock_code), \
-                         FOREIGN KEY (`start_date`) REFERENCES daily_sentiment(date) \
-                         )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_yearly_sentiment),
     }
 
 create_sql_format_social_volume = {
@@ -173,47 +77,6 @@ create_sql_format_social_volume = {
                             INDEX (`date`), INDEX (`source`), INDEX (`stock_code`), \
                             FOREIGN KEY (`stock_code`) REFERENCES stocks(stock_code) \
                             )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_daily_social_volume),
-
-
-    "weekly_social_volume": "CREATE TABLE IF NOT EXISTS {}( \
-                            `id` BIGINT COLLATE utf8mb4_bin NOT NULL AUTO_INCREMENT, \
-                            `start_date` DATETIME COLLATE utf8mb4_bin NOT NULL , \
-                            `source` varchar(255) COLLATE utf8mb4_bin NOT NULL , \
-                            `stock_code` varchar(255) COLLATE utf8mb4_bin NOT NULL , \
-                            `count` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-                            `article_count` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-                            PRIMARY KEY (`id`), \
-                            INDEX (`start_date`), INDEX (`source`), INDEX (`stock_code`), \
-                            FOREIGN KEY (`stock_code`) REFERENCES stocks(stock_code), \
-                            FOREIGN KEY (`start_date`) REFERENCES daily_social_volume(date) \
-                            )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_weekly_social_volume),
-
-    "monthly_social_volume": "CREATE TABLE IF NOT EXISTS {}( \
-                            `id` BIGINT COLLATE utf8mb4_bin NOT NULL AUTO_INCREMENT, \
-                            `start_date` DATETIME COLLATE utf8mb4_bin NOT NULL , \
-                            `source` varchar(255) COLLATE utf8mb4_bin NOT NULL , \
-                            `stock_code` varchar(255) COLLATE utf8mb4_bin NOT NULL , \
-                            `count` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-                            `article_count` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-                            PRIMARY KEY (`id`), \
-                            INDEX (`start_date`), INDEX (`source`), INDEX (`stock_code`), \
-                            FOREIGN KEY (`stock_code`) REFERENCES stocks(stock_code), \
-                            FOREIGN KEY (`start_date`) REFERENCES daily_social_volume(date) \
-                            )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_monthly_social_volume),
-
-    "yearly_social_volume": "CREATE TABLE IF NOT EXISTS {}( \
-                            `id` BIGINT COLLATE utf8mb4_bin NOT NULL AUTO_INCREMENT, \
-                            `start_date` DATETIME COLLATE utf8mb4_bin NOT NULL , \
-                            `source` varchar(255) COLLATE utf8mb4_bin NOT NULL , \
-                            `stock_code` varchar(255) COLLATE utf8mb4_bin NOT NULL , \
-                            `count` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-                            `article_count` BIGINT COLLATE utf8mb4_bin NOT NULL, \
-                            PRIMARY KEY (`id`), \
-                            INDEX (`start_date`), INDEX (`source`), INDEX (`stock_code`), \
-                            FOREIGN KEY (`stock_code`) REFERENCES stocks(stock_code), \
-                            FOREIGN KEY (`start_date`) REFERENCES daily_social_volume(date) \
-                            )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;".format(tb_name_yearly_social_volume),
-
     }
 
 create_sql_format_user_strategy = {
@@ -310,27 +173,16 @@ class DbWrapperMysql:
 
     def create_tb_stock_price(self):
         self.create_tb(create_sql_format_stock_price['daily_stock_price'], tb_name_daily_stock_price)
-        self.create_tb(create_sql_format_stock_price['weekly_stock_price'], tb_name_weekly_stock_price)
-        self.create_tb(create_sql_format_stock_price['monthly_stock_price'], tb_name_monthly_stock_price)
-        self.create_tb(create_sql_format_stock_price['yearly_stock_price'], tb_name_yearly_stock_price)
 
     def create_tb_sentiment(self):
         self.create_tb(create_sql_format_sentiment['daily_sentiment'], tb_name_daily_sentiment)
-        self.create_tb(create_sql_format_sentiment['weekly_sentiment'], tb_name_weekly_sentiment)
-        self.create_tb(create_sql_format_sentiment['monthly_sentiment'], tb_name_monthly_sentiment)
-        self.create_tb(create_sql_format_sentiment['yearly_sentiment'], tb_name_yearly_sentiment)
 
 
     def create_tb_social_volume(self):
         self.create_tb(create_sql_format_social_volume['daily_social_volume'], tb_name_daily_social_volume)
-        self.create_tb(create_sql_format_social_volume['weekly_social_volume'], tb_name_weekly_social_volume)
-        self.create_tb(create_sql_format_social_volume['monthly_social_volume'], tb_name_monthly_social_volume)
-        self.create_tb(create_sql_format_social_volume['yearly_social_volume'], tb_name_yearly_social_volume)
 
     def create_tb_user_strategy(self):
         self.create_tb(create_sql_format_user_strategy['user'], tb_name_user)
-        # self.create_tb(create_sql_format_user_strategy['strategy'], tb_name_strategy)
-        # self.create_tb(create_sql_format_user_strategy['backtest'], tb_name_backtest)
         self.create_tb(create_sql_format_user_strategy['strategy_backtest'], tb_name_strategy_backtest)
 
     def create_tb_all(self):
@@ -380,6 +232,10 @@ class DbWrapperMysql:
 
     def close_db(self):
         self.connect_db.close()
+
+    def drop_tb(self, tb_name):
+        sql_drop_tb = "DROP TABLE IF EXISTS {};".format(tb_name)
+        self.cursor.execute(sql_drop_tb)
 
 
 class DbWrapperMysqlDict:

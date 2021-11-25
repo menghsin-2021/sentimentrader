@@ -32,6 +32,8 @@ def social_volume_page():
         'source_name': 'PTT 論壇',
     }, indent=2, ensure_ascii=False)
 
+    print(social_volume_rank)
+
     return render_template('social_volume.html', social_volume_rank=social_volume_rank)
 
 
@@ -71,6 +73,8 @@ def social_volume_rank():
         'source': source,
         'source_name': source_name,
     }, indent=2, ensure_ascii=False)
+
+    print(social_volume_rank)
 
     if len(stock_name_code) == 0:
         flash('本日於該媒體還未有此類股相關提及', 'info')

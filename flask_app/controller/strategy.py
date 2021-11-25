@@ -44,7 +44,7 @@ def strategy_page():
 
     else:
         sql_sample_strategy = model_mysql_query.sql_sample_strategy
-        db_mysql = model_mysql.DbWrapperMysqlDict('sentimentrader')
+        db_mysql = model_mysql.DbWrapperMysqlDict(DBNAME)
         sample_strategy_form = db_mysql.query_tb_all(sql_sample_strategy)
         sample_strategy_form_length = int(len(sample_strategy_form))
         get_name = GetName()
@@ -600,7 +600,7 @@ def send_strategy():
                                            set_money, discount, total_buy_count, total_sell_count, total_return_rate, highest_return, lowest_return,
                                            total_win, total_lose, total_trade, win_rate, avg_return_rate, irr, file_path, today_strftime)
 
-                db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
+                db_mysql = model_mysql.DbWrapperMysql(DBNAME)
                 sql_insert_strategy_backtest = model_mysql_query.sql_insert_strategy_backtest
                 db_mysql.insert_tb(sql_insert_strategy_backtest, strategy_backtest_tuple)
 
