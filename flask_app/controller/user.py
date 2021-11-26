@@ -16,8 +16,6 @@ SECRET_KEY = config.SECRET_KEY
 
 check_jwt = Checkjwt()
 
-DBNAME = config.DBNAME
-
 @user.route('/', methods=['GET'])
 @user.route('/login.html', methods=['GET'])
 def login():
@@ -34,7 +32,7 @@ def signup():
     con_pwd = user_signup_request['con-pwd']
 
     # db initialize
-    db_mysql = model_mysql.DbWrapperMysql(DBNAME)
+    db_mysql = model_mysql.DbWrapperMysql()
 
     # check Basic Auth
     basic_auth = check_jwt.check_basic_auth_signup(name, email, pwd, con_pwd)
@@ -102,7 +100,7 @@ def signin():
         flash('輸入長度過長', 'error')
         return redirect(url_for('user.login'))
     else:
-        db_mysql = model_mysql.DbWrapperMysqlDict(DBNAME)
+        db_mysql = model_mysql.DbWrapperMysqlDict()
         sql_email = "SELECT `id`, `name`, `email`, `password`, `password_salt` FROM `user` WHERE `email`= %s"
         result = db_mysql.query_tb_one(sql_email, (email,))
         if not result:
@@ -146,7 +144,8 @@ def signin():
                                              }}}
 
 
-                resp = make_response(redirect(url_for('home')))
+                # resp = make_response(redirect(url_for('home')))
+                resp = Response(render_template('home.html'))
                 resp.set_cookie(key='token', value=signin_user_info['data']['access_token'])
 
                 return resp

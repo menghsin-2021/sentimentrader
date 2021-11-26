@@ -16,7 +16,7 @@ def social_volume_page():
 
     # fetch social volume all
     social_volume_fetch = SocialVolumeFetch()
-    stock_name_code, stock_count, article_count = social_volume_fetch.fetch_social_volume()
+    stock_name_code, stock_count, article_count = social_volume_fetch.social_volume()
 
     # create json
     social_volume_rank = json.dumps({
@@ -46,13 +46,17 @@ def social_volume_rank():
 
     # get form
     form = request.form.to_dict()
+    if len(form) == 0:
+        form = request.get_json()
+    else:
+        pass
     category = form['category']
     duration = form['duration']
     source = form['source']
 
     # fetch social volume category
     social_volume_fetch = SocialVolumeFetch()
-    stock_name_code, stock_count, article_count = social_volume_fetch.fetch_social_volume(category, source, duration)
+    stock_name_code, stock_count, article_count = social_volume_fetch.social_volume(category, source, duration)
 
     # change code to name
     get_name = GetName()
@@ -78,5 +82,11 @@ def social_volume_rank():
 
     if len(stock_name_code) == 0:
         flash('本日於該媒體還未有此類股相關提及', 'info')
+
+    if request.headers['Content-Type'] == 'application/json':
+        resp = Response(response=social_volume_rank,
+                        status=200,
+                        mimetype="application/json")
+        return resp
 
     return render_template('social_volume.html', social_volume_rank=social_volume_rank)

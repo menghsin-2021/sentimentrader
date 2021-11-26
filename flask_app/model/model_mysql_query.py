@@ -26,6 +26,9 @@ sql_social_volume_duration_another_category = "SELECT `stock_name`, `stock_code`
                                                 ORDER BY `total` DESC \
                                                 limit 10;"
 
+sql_insert_social_volume_view = "INSERT INTO `social_volume_view` (`date`,`source`,`category`,`stock_code`,`stock_name`,`count`,`article_count`,`duration`) \
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+
 
 # sentiment
 sql_stock_price = "SELECT `days`, `open`, `low`, `high`, `close`, `volume` \

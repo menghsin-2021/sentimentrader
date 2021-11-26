@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 import pandas as pd
-from sqlalchemy import create_engine
 import talib
 import numpy as np
 from datetime import datetime
@@ -10,11 +9,6 @@ from model import model_mysql
 from model import model_mysql_query
 from utils import get_cookie_check, GetDayStr, MarketInTime, DrawMpf, GetName
 
-# db var
-DBHOST = config.DBHOST
-DBUSER = config.DBUSER
-DBPASSWORD = config.DBPASSWORD
-DBNAME = config.DBNAME
 
 BUCKET_NAME = config.BUCKET_NAME
 OBJECT_PATH = config.OBJECT_PATH
@@ -44,7 +38,7 @@ def strategy_page():
 
     else:
         sql_sample_strategy = model_mysql_query.sql_sample_strategy
-        db_mysql = model_mysql.DbWrapperMysqlDict(DBNAME)
+        db_mysql = model_mysql.DbWrapperMysqlDict()
         sample_strategy_form = db_mysql.query_tb_all(sql_sample_strategy)
         sample_strategy_form_length = int(len(sample_strategy_form))
         get_name = GetName()
@@ -126,16 +120,10 @@ def send_strategy():
             return redirect(url_for('strategy.strategy_page'))
 
         else:
-            engine = create_engine("mysql+pymysql://{user}:{pw}@{host}/{db}"
-                                   .format(user=DBUSER,
-                                           pw=DBPASSWORD,
-                                           db=DBNAME,
-                                           host=DBHOST))
-
-            connection = engine.connect()
+            db_mysql_sqlalchemy = model_mysql.DbWrapperMysqlSqlalchemy()
 
             # set date
-            resoverall_stock_price = connection.execute(model_mysql_query.sql_strategy_stock_price(stock_code, start_date_datetime, end_date_datetime))
+            resoverall_stock_price = db_mysql_sqlalchemy.execute(model_mysql_query.sql_strategy_stock_price(stock_code, start_date_datetime, end_date_datetime))
             # fetch stock price
             df1 = pd.DataFrame(resoverall_stock_price.fetchall())
 
@@ -600,7 +588,7 @@ def send_strategy():
                                            set_money, discount, total_buy_count, total_sell_count, total_return_rate, highest_return, lowest_return,
                                            total_win, total_lose, total_trade, win_rate, avg_return_rate, irr, file_path, today_strftime)
 
-                db_mysql = model_mysql.DbWrapperMysql(DBNAME)
+                db_mysql = model_mysql.DbWrapperMysql()
                 sql_insert_strategy_backtest = model_mysql_query.sql_insert_strategy_backtest
                 db_mysql.insert_tb(sql_insert_strategy_backtest, strategy_backtest_tuple)
 

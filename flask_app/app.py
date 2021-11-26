@@ -1,6 +1,5 @@
 from flask import Flask, render_template, flash
 import config
-from model import model_mysql
 from utils import get_cookie_check
 
 from controller.social_volume import social_volume
@@ -10,12 +9,13 @@ from controller.backtest import backtest
 from controller.user import user
 
 
+
+
 # sever var
 DEBUG = config.DEBUG
 PORT = config.PORT
 HOST = config.HOST
 SECRET_KEY = config.SECRET_KEY
-DBNAME = config.DBNAME
 
 
 # create flask instance
@@ -51,10 +51,5 @@ def home():
 
 
 if __name__ == "__main__":
-    # initial db
-    db_mysql = model_mysql.DbWrapperMysql(DBNAME)
-    db_mysql.create_tb_all()
-
-
     # run sever
     app.run(debug=DEBUG, host=HOST, port=PORT)
