@@ -11,8 +11,7 @@ sql_social_volume_duration_electric = "SELECT `stock_name`, `stock_code`, SUM(`c
                                        FROM `social_volume_view` \
                                        WHERE `source` = %s \
                                        AND `duration` = %s \
-                                       AND `category` = %s \
-                                       OR `category` = %s \
+                                       AND `category` in (%s, %s) \
                                        GROUP BY `stock_code` \
                                        ORDER BY `total` DESC \
                                        limit 10;"
@@ -42,7 +41,11 @@ sql_sentiment = "SELECT `days`, `stock_name`, `sum_valence`, `avg_valence`, `sum
                  AND `stock_code` = %s \
                  ORDER BY `days` desc;"
 
+sql_insert_sentiment_view = "INSERT INTO `sentiment_view` (`days`, `source`, `stock_code`, `stock_name`, `category`, `sum_valence`, `avg_valence`, `sum_arousal`, `avg_arousal`, `sum_sentiment`) \
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
+sql_insert_stock_price_view = "INSERT INTO `stock_price_view` (`days`, `stock_code`, `stock_name`, `category`, `open`, `low`, `high`, `close`, `volume`) \
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
 # strategy
 sql_sample_strategy = "SELECT * \

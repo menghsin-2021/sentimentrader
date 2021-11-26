@@ -4,7 +4,7 @@ import csv
 from utils import SocialVolumeFetch
 from model import model_mysql, model_mysql_query
 
-class TestFetchSocialVolume(object):
+class TestSocialVolumeFetch(object):
     def test_argument(self, db_env):
         print(model_mysql.DBNAME)
         assert db_env == 'test'
@@ -24,18 +24,20 @@ class TestFetchSocialVolume(object):
         db_mysql.insert_many_tb(sql_insert_social_volume_view, mock_social_volume)
 
     def test_fetch_social_volume(self):
-        category = None
-        source = None
-        duration = None
+        category = 'electric'
+        source = 'ptt'
+        duration = 'daily'
 
         params = {
-            'stock_name_code': ['華航, 2610', '長榮, 2603', '長榮航, 2618', '台積電, 2330', '宏達電, 2498', '萬海, 2615', '陽明, 2609', '南電, 8046', '友達, 2409', '欣興, 3037'],
-            'stock_count': [203, 101, 95, 32, 36, 35, 28, 20, 17, 16],
-            'article_count': [24, 20, 17, 16, 10, 8, 11, 7, 8, 8],
+            'stock_name_code': ['宏達電, 2498', '南電, 8046', '友達, 2409', '欣興, 3037', '鴻海, 2317', '光磊, 2340', '全新, 2455', '奇鋐, 3017', '譁裕, 3419', '凱美, 2375'],
+            'stock_count': [36, 20, 17, 16, 16, 14, 13, 12, 12, 9],
+            'article_count': [10, 7, 8, 8, 7, 6, 7, 7, 2, 4],
         }
 
         social_volume_fetch = SocialVolumeFetch()
         stock_name_code, stock_count, article_count = social_volume_fetch.social_volume(category, source, duration)
+
+        print(stock_name_code, stock_count, article_count)
 
         assert stock_name_code == params['stock_name_code']
         assert stock_count == params['stock_count']
