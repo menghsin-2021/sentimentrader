@@ -46,8 +46,7 @@ def home():
     if isinstance(uid, int) is False:
         flash('需要登入', 'danger')
         return render_template('login.html')
-    else:
-        return render_template('home.html')
+    return render_template('home.html')
 
 
 if __name__ == "__main__":

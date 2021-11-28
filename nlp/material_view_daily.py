@@ -4,15 +4,11 @@ from datetime import datetime, timedelta
 def get_today():
     today_strftime= datetime.today().strftime('%Y%m%d')
     yesterday_strftime = (datetime.today() - timedelta(days=1)).strftime('%Y%m%d')
-    # week_strftime = datetime.today().strftime('%Y%u')
-    # month_strftime = datetime.today().strftime('%Y%m')
-    # year_strftime = datetime.today().strftime('%Y')
 
     return today_strftime, yesterday_strftime
 
 def get_day_before(i):
     days_ago_strftime = (datetime.today() - timedelta(days=i)).strftime('%Y-%m-%d') + ' 00:00:00'
-    # 2021-11-05 00:00:00 (mysql date)
     return days_ago_strftime
 
 today_strftime, yesterday_strftime = get_today()
@@ -22,8 +18,6 @@ weeks_ago_strftime = get_day_before(7)
 month_ago_strftime = get_day_before(30)
 year_ago_strftime = get_day_before(365)
 three_year_ago_strftime = get_day_before(1095)
-five_year_ago_strftime = get_day_before(1825)
-
 
 sql_drop_social_volume_view = "DROP TABLE IF EXISTS `social_volume_view`;"
 
@@ -92,7 +86,6 @@ sql_social_volume_union = "CREATE TABLE `social_volume_view` AS \
                            UNION \
                            SELECT `years` as  `date`, `source`, `category`, `stock_code`, `stock_name`, `count`, `article_count`, 'three_yearly' as `duration` FROM `social_volume_three_yearly`;"
 
-
 sql_social_volume_union_set_index_category = "ALTER TABLE sentimentrader.social_volume_view ADD INDEX (`category`);"
 sql_social_volume_union_set_index_duration = "ALTER TABLE sentimentrader.social_volume_view ADD INDEX (`duration`);"
 
@@ -101,7 +94,6 @@ sql_drop_social_volume_weekly = "DROP TABLE IF EXISTS social_volume_weekly;"
 sql_drop_social_volume_monthly = "DROP TABLE IF EXISTS social_volume_monthly;"
 sql_drop_social_volume_yearly = "DROP TABLE IF EXISTS social_volume_yearly;"
 sql_drop_social_volume_three_yearly = "DROP TABLE IF EXISTS social_volume_three_yearly;"
-
 
 # sentiment
 sql_drop_sentiment_view = "DROP TABLE IF EXISTS sentiment_view;"
@@ -122,12 +114,10 @@ sql_sentiment_view_set_index_category = "ALTER TABLE sentimentrader.sentiment_vi
 sql_sentiment_view_set_index_source_stock_code = "ALTER TABLE sentimentrader.sentiment_view ADD INDEX (`source`, `stock_code`);"
 sql_sentiment_view_set_index_day_source_stock_code = "ALTER TABLE sentimentrader.sentiment_view ADD INDEX (`days`, `source`, `stock_code`);"
 
-
 # stock price
 sql_drop_stock_price_view = "DROP TABLE IF EXISTS `stock_price_view`;"
 
-
-sql_stock_price_daily = "CREATE TABLE `stock_price_view` AS \
+sql_stock_price_view = "CREATE TABLE `stock_price_view` AS \
                         SELECT DATE_FORMAT(date, '%Y-%m-%d') as `days`, daily_stock_price.stock_code, `stock_name`, `category`, `open`, `low`, `high`, `close`, `volume` \
                         FROM `sentimentrader`.`daily_stock_price` \
                         JOIN `stocks` \
@@ -141,11 +131,9 @@ sql_stock_price_view_set_index_category = "ALTER TABLE sentimentrader.stock_pric
 sql_stock_price_view_set_index_source_stock_code = "ALTER TABLE sentimentrader.stock_price_view ADD INDEX (`category`, `stock_code`);"
 sql_stock_price_view_set_index_day_source_stock_code = "ALTER TABLE sentimentrader.stock_price_view ADD INDEX (`days`, `category`, `stock_code`);"
 
-
-
-
 db_mysql = model_mysql.DbWrapperMysql('sentimentrader_test')
 
+# drop old view
 try:
     db_mysql.cursor.execute(sql_drop_social_volume_view)
 except:
@@ -159,6 +147,7 @@ try:
 except:
     pass
 
+# create social volume view
 db_mysql.cursor.execute(sql_social_volume_daily)
 db_mysql.cursor.execute(sql_social_volume_weekly)
 db_mysql.cursor.execute(sql_social_volume_monthly)
@@ -166,16 +155,21 @@ db_mysql.cursor.execute(sql_social_volume_yearly)
 db_mysql.cursor.execute(sql_social_volume_three_yearly)
 db_mysql.cursor.execute(sql_social_volume_union)
 
+# add social volume view index
 db_mysql.cursor.execute(sql_social_volume_union_set_index_category)
 db_mysql.cursor.execute(sql_social_volume_union_set_index_duration)
 
+# drop intermediate
 db_mysql.cursor.execute(sql_drop_social_volume_daily)
 db_mysql.cursor.execute(sql_drop_social_volume_weekly)
 db_mysql.cursor.execute(sql_drop_social_volume_monthly)
 db_mysql.cursor.execute(sql_drop_social_volume_yearly)
 db_mysql.cursor.execute(sql_drop_social_volume_three_yearly)
 
+# create sentiment view
 db_mysql.cursor.execute(sql_sentiment_view)
+
+# add sentiment view index
 db_mysql.cursor.execute(sql_sentiment_view_set_index)
 db_mysql.cursor.execute(sql_sentiment_view_set_index_source)
 db_mysql.cursor.execute(sql_sentiment_view_set_index_stock_code)
@@ -184,7 +178,10 @@ db_mysql.cursor.execute(sql_sentiment_view_set_index_category)
 db_mysql.cursor.execute(sql_sentiment_view_set_index_source_stock_code)
 db_mysql.cursor.execute(sql_sentiment_view_set_index_day_source_stock_code)
 
-db_mysql.cursor.execute(sql_stock_price_daily)
+# create stock price view
+db_mysql.cursor.execute(sql_stock_price_view)
+
+# add stock price view index
 db_mysql.cursor.execute(sql_stock_price_view_set_index)
 db_mysql.cursor.execute(sql_stock_price_view_set_index_stock_code)
 db_mysql.cursor.execute(sql_stock_price_view_set_index_stock_name)
@@ -192,4 +189,5 @@ db_mysql.cursor.execute(sql_stock_price_view_set_index_category)
 db_mysql.cursor.execute(sql_stock_price_view_set_index_source_stock_code)
 db_mysql.cursor.execute(sql_stock_price_view_set_index_day_source_stock_code)
 
+# close db
 db_mysql.close_db()

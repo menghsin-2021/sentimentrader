@@ -346,8 +346,9 @@ class DbWrapperMysqlSqlalchemy:
 
         self.connection = engine.connect()
 
-    def execute(self, sql):
-        self.connection.execute(sql)
+    def fetch_execute(self, sql):
+        cursor = self.connection.execute(sql)
+        return cursor
 
 
 

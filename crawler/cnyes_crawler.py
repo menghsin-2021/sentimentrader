@@ -12,12 +12,22 @@ headers = {
 }
 
 
-# 將資料儲存成CSV檔案
+def get_today_tomorrow():
+    today = datetime.today()
+    tomorrow = today + timedelta(days=1)
+    today_strftime = today.strftime('%Y-%m-%d')
+    tomorrow_strftime = tomorrow.strftime('%Y-%m-%d')
+
+    return today_strftime, tomorrow_strftime
+
+
+# save data as CSV file
 def savefile(beginday, stopday, news):
     filename = 'cnyes-' + beginday + '~' + stopday + '.csv'
     with open(filename, 'a', newline='', encoding='utf8') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
         writer.writerow(news)
+
 
 def savemongo(news):
     db_mongo = model_mongo.DbWrapperMongo()
@@ -27,11 +37,10 @@ def savemongo(news):
                     'tag': news[3],
                     'content': news[4],
                     'url': news[5]}
-    # db_mongo.insert_one("cnyes", cnyes_post)
-    db_mongo.insert_one("test", cnyes_post)
+    db_mongo.insert_one("cnyes", cnyes_post)
+    # db_mongo.insert_one("test", cnyes_post)
 
 
-# 分析網頁資訊
 def parse(headers, newsID, k, total, beginday, stopday):
     fnews_url = 'https://news.cnyes.com/news/id/{}?exp=a'.format(newsID)  # 原始新聞網址
     response = requests.get(fnews_url, headers)
@@ -51,8 +60,7 @@ def parse(headers, newsID, k, total, beginday, stopday):
         tag = ','.join(tag).strip()  # Tag
         news = [date, time, title, tag, content, url]
         print("news:",news)
-
-        # 將資訊儲存成檔案(或寫入資料庫)
+        # save data to mongodb
         savemongo(news)
 
     except IndexError as IE:
@@ -68,59 +76,58 @@ def parse(headers, newsID, k, total, beginday, stopday):
     return news
 
 
-# 分析文章數量
+# get the number of news
 def crawler(beginday, stopday):
-    # 搜尋新聞開始日,格式為 'Y-M-D'
+    # search start date 'Y-M-D'
     be_day = beginday
-    print(f"be_day", be_day)
-    # 搜尋新聞結束日
+    # search end date
     st_day = stopday
-    print(f"st_day", st_day)
-    # 日期格式轉換成時間戳型式
+    # change time format
     startday = int(datetime.timestamp(datetime.strptime(be_day, "%Y-%m-%d")))
     endday = int(datetime.timestamp(datetime.strptime(st_day, "%Y-%m-%d")) - 1)
     url = 'https://news.cnyes.com/api/v3/news/category/tw_stock?startAt={}&endAt={}&limit=30'.format(startday, endday)
+    print(url)
     res = requests.get(url, headers)
 
     newsID_lt = []
-    # 獲取搜尋總頁數
+    # total page
     last_page = json.loads(res.text)['items']['last_page']
     print('總共 {} 頁'.format(last_page))
-    # 篩選 newsId 值
+    # select newsId
     newsIDlist = json.loads(res.text)['items']['data']
 
-    # 獲取第一頁各個新聞的 newsId
+    # get the first newsId
     for i in newsIDlist:
         newsID = i['newsId']
         newsID_lt.append(newsID)
     print('正在獲取第 1 頁 newsId')
     time.sleep(1)
 
-    # 進行翻頁並獲取各頁面的 newsId
+    # find the newsId in every page
     for p in range(2, last_page + 1):
         oth_url = 'https://news.cnyes.com/api/v3/news/category/tw_stock?startAt={}&endAt={}&limit=30&page={}'.format(
             startday, endday, p)
         res = requests.get(oth_url, headers)
         print('正在獲取第 {} 頁 newsId'.format(p))
-        # 獲取新聞的newsId
+        # get newsId
         newsIDlist = json.loads(res.text)['items']['data']
         for j in newsIDlist:
             newsID = j['newsId']
             newsID_lt.append(newsID)
-        # 抓取每頁newsId的延遲時間
+        # time sleep
         time.sleep(1)
 
-    # 由 newsId 獲取詳細新聞內容
+    # get news from newId
     for k, n in enumerate(newsID_lt):
         data = parse(headers, n, k + 1, len(newsID_lt), beginday, stopday)
-        # 抓取每篇完整新聞的延遲時間
+        # time sleep
         time.sleep(0.5)
 
 
 def main(beginyear, beginmonth, crawlrange, stopmonth=12):
-    # 確認抓上半月或下半月
+    # get news before 15th and after 16th
     if crawlrange == 1:
-        # 抓上半個月
+        # before 15th
         for m in range(beginmonth, stopmonth + 1):
             if m < 10:
                 beginday = '{}-0{}-01'.format(beginyear, m)
@@ -137,7 +144,7 @@ def main(beginyear, beginmonth, crawlrange, stopmonth=12):
             time.sleep(5)
 
     elif crawlrange == 2:
-        # 抓下半個月
+        # after 16th
         for m in range(beginmonth, stopmonth + 1):
             beginday = '{}-0{}-16'.format(beginyear, m)
             if m == 9:
@@ -156,7 +163,7 @@ def main(beginyear, beginmonth, crawlrange, stopmonth=12):
                 print('程式執行完成')
                 break
             # else:
-            # print('切換到 {} 月份等待5秒'.format(m+1))
+            # print('change to {} and wait 5 secs'.format(m+1))
             time.sleep(5)
     else:
         print('爬取區間設定錯誤!')
@@ -174,8 +181,6 @@ if __name__ == '__main__':
             main(i, beginmonth, j, stopmonth)
 
     # main(beginyear, 10, 2, 10)
-
-
 
 
 # fetch {date: {$gt: "2017/01/16", $lt:"2017/01/32"}}
