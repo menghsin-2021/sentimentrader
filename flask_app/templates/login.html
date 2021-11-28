@@ -1,79 +1,81 @@
 <!DOCTYPE html>
-<html lang="en" >
-  <meta charset="UTF-8">
-  <title>Login</title>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Login</title>
 <link rel="icon" type="image/png" href="/static/img/logo/s_word_logo.png">
 
 <head>
-  <!-- Required meta tags -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-  <!-- form CSS -->
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <!-- form CSS -->
     <link rel="stylesheet" href="/static/css/login.css">
     <link rel="stylesheet" href="/static/css/bootstrap.css">
-
-  <!-- Sweet alert Js -->
+    <!-- Sweet alert Js -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
-  <title>Sign page</title>
+    <title>Sign page</title>
 </head>
 <body>
 
 <div class="container d-flex flex-row d-flex justify-content-center d-flex align-items-center mt-5">
-    <div class=" shadow p-3 mb-5 rounded form col-10 text-primary d-flex flex-row bg-light justify-content-center align-items-center" style="height: 650px; width: 400px; margin-top: 50px;">
+    <div class=" shadow p-3 mb-5 rounded form col-10 text-primary d-flex flex-row bg-light justify-content-center align-items-center"
+         style="height: 650px; width: 400px; margin-top: 50px;">
 
 
-          <div class="image col-7 d-flex flex-row justify-content-center align-items-center" style="height: 500px; width: 400px; border-right: solid black 3px;">
-        <img src="/static/img/logo/sentimentrager_bull.png" alt="" style="height: 220px;">
-    </div>
+        <div class="image col-7 d-flex flex-row justify-content-center align-items-center"
+             style="height: 500px; width: 400px; border-right: solid black 3px;">
+            <img src="/static/img/logo/sentimentrager_bull.png" alt="" style="height: 220px;">
+        </div>
 
 
         <div class="form-all mt-3 col-5">
-          <div class="d-flex flex-column align-items-center col-12" id="singUpTable">
-            <h2>SignUp</h2>
-            <form action="/api/1.0/signup" method="POST">
-              <div class="form-group mt-2">
-                <label for="name">Name</label>
-                <input type="text" class="form-control" name="name" id="name" required maxlength="100">
-              </div>
-              <div class="form-group mt-2">
-                <label for="email">Email</label>
-                <input type="email" class="form-control" name="email" id="email" required maxlength="100">
-              </div>
-              <div class="form-group mt-2">
-                <label for="pwd">Password</label>
-                <input type="password" class="form-control" name="pwd" id="pwd" required maxlength="20">
-              </div>
-              <div class="form-group mt-2">
-                <label for="confirm_pwd">Confirm Password</label>
-                <input type="password" class="form-control" name="con-pwd" id="confirm_pwd" required maxlength="20">
-              </div>
-                <br>
-              <button class="btn btn-primary" id="signup-btn" type="submit" value="signup">signup</button>
+            <div class="d-flex flex-column align-items-center col-12" id="singUpTable">
+                <h2>SignUp</h2>
+                <form action="/api/1.0/signup" method="POST">
+                    <div class="form-group mt-2">
+                        <label for="name">Name</label>
+                        <input type="text" class="form-control" name="name" id="name" required maxlength="100">
+                    </div>
+                    <div class="form-group mt-2">
+                        <label for="email">Email</label>
+                        <input type="email" class="form-control" name="email" id="email" required maxlength="100">
+                    </div>
+                    <div class="form-group mt-2">
+                        <label for="pwd">Password</label>
+                        <input type="password" class="form-control" name="pwd" id="pwd" required maxlength="20">
+                    </div>
+                    <div class="form-group mt-2">
+                        <label for="confirm_pwd">Confirm Password</label>
+                        <input type="password" class="form-control" name="con-pwd" id="confirm_pwd" required
+                               maxlength="20">
+                    </div>
+                    <br>
+                    <button class="btn btn-primary" id="signup-btn" type="submit" value="signup">signup</button>
 
-            </form>
-            <p class="show-page" id="loginF" onclick="switchToSignIn()">Already have an Account? SignIn</p>
-          </div>
+                </form>
+                <p class="show-page" id="loginF" onclick="switchToSignIn()">Already have an Account? SignIn</p>
+            </div>
 
-          <div class="d-none flex-column align-items-center col-12" id="signInTable">
-            <h2>SignIn</h2>
-            <form action="/api/1.0/signin" method="POST">
-              <div class="form-group mt-2">
-                <label for="email">Email</label>
-                <input type="email" class="form-control" name="email" required maxlength="100">
-              </div>
-              <div class="form-group mt-2">
-                <label for="pwd">Password</label>
-                <input type="password" class="form-control" name="pwd" required maxlength="20">
-              </div>
-                <br>
-              <button class="btn btn-primary" id="signin-btn" type="submit" value="signup">signin</button>
-            </form>
-            <p class="show-page" id="signupF" onclick="switchToSignUp()">Don't have an account yet? Signup</p>
-          </div>
+            <div class="d-none flex-column align-items-center col-12" id="signInTable">
+                <h2>SignIn</h2>
+                <form action="/api/1.0/signin" method="POST">
+                    <div class="form-group mt-2">
+                        <label for="email">Email</label>
+                        <input type="email" class="form-control" name="email" required maxlength="100">
+                    </div>
+                    <div class="form-group mt-2">
+                        <label for="pwd">Password</label>
+                        <input type="password" class="form-control" name="pwd" required maxlength="20">
+                    </div>
+                    <br>
+                    <button class="btn btn-primary" id="signin-btn" type="submit" value="signup">signin</button>
+                </form>
+                <p class="show-page" id="signupF" onclick="switchToSignUp()">Don't have an account yet? Signup</p>
+            </div>
         </div>
 
     </div>

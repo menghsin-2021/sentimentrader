@@ -1,24 +1,25 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Home</title>
-<link rel="icon" type="image/png" href="/static/img/logo/s_word_logo.png">
-  <meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/static/css/home.css">
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <link rel="icon" type="image/png" href="/static/img/logo/s_word_logo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/css/home.css">
 
-	<!--    jquery-->
+    <!--    jquery-->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"
             integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
-	<!-- partial:index.partial.html -->
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    <!-- partial:index.partial.html -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
-<!--	css-->
+    <!--	css-->
     <link href="/static/css/loader.css" rel="stylesheet">
-	<link rel="stylesheet" href="/static/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
 
-<!-- Sweet alert Js -->
+    <!-- Sweet alert Js -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
@@ -26,71 +27,72 @@
 <body>
 
 
-
-
 <header>
     <nav class="navbar navbar-dark bg-primary flex-md-nowapr fixed-top p-0 shadow">
-  <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/home.html">Sentimentrader</a>
-  <ul class="navbar-nav px-3">
-    <li class="nav-item text-nowarp">
-      <a class="nav-link" href="/logout">Logout</a>
-    </li>
-  </ul>
-</nav>
-  </header>
+        <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/home.html">Sentimentrader</a>
+        <ul class="navbar-nav px-3">
+            <li class="nav-item text-nowarp">
+                <a class="nav-link" href="/logout">Logout</a>
+            </li>
+        </ul>
+    </nav>
+</header>
 
 <div class="d-flex justify-content-center mt-5">
-<ul class="card-list list-group list-group-horizontal">
+    <ul class="card-list list-group list-group-horizontal">
 
-	<li class="card">
-		<a class="card-image" href="/social_volume.html" target="_blank" style="background-image: url(https://cdn.pixabay.com/photo/2015/03/18/20/25/word-cloud-679938_1280.png);" data-image-full="https://cdn.pixabay.com/photo/2015/03/18/20/25/word-cloud-679938_1280.png">
-			<img src="https://cdn.pixabay.com/photo/2015/03/18/20/25/word-cloud-679938_1280.png" alt="Psychopomp" />
-		</a>
-		<a class="card-description" href="/social_volume.html" target="_blank">
-			<h2>Social Volume</h2>
-			<p>透過論壇或新聞找出當前熱門選股</p>
-		</a>
-	</li>
+        <li class="card">
+            <a class="card-image" href="/social_volume.html" target="_blank"
+               style="background-image: url(https://cdn.pixabay.com/photo/2015/03/18/20/25/word-cloud-679938_1280.png);"
+               data-image-full="https://cdn.pixabay.com/photo/2015/03/18/20/25/word-cloud-679938_1280.png">
+                <img src="https://cdn.pixabay.com/photo/2015/03/18/20/25/word-cloud-679938_1280.png" alt="Psychopomp"/>
+            </a>
+            <a class="card-description" href="/social_volume.html" target="_blank">
+                <h2>Social Volume</h2>
+                <p>透過論壇或新聞找出當前熱門選股</p>
+            </a>
+        </li>
 
-	<li class="card">
-		<a id="sentiment" class="card-image" href="/sentiment.html" target="_blank" style="background-image: url(https://cdn.pixabay.com/photo/2017/11/26/15/16/smiley-2979107_1280.jpg);" data-image-full="https://cdn.pixabay.com/photo/2017/11/26/15/16/smiley-2979107_1280.jpg">
-			<img src="https://cdn.pixabay.com/photo/2017/11/26/15/16/smiley-2979107_1280.jpg" alt="let's go" />
-		</a>
-		<a class="card-description" href="/sentiment.html" target="_blank">
-			<h2>Sentiment Trend</h2>
-			<p>可視化股市情緒和歷年股價趨勢</p>
-		</a>
-	</li>
+        <li class="card">
+            <a id="sentiment" class="card-image" href="/sentiment.html" target="_blank"
+               style="background-image: url(https://cdn.pixabay.com/photo/2017/11/26/15/16/smiley-2979107_1280.jpg);"
+               data-image-full="https://cdn.pixabay.com/photo/2017/11/26/15/16/smiley-2979107_1280.jpg">
+                <img src="https://cdn.pixabay.com/photo/2017/11/26/15/16/smiley-2979107_1280.jpg" alt="let's go"/>
+            </a>
+            <a class="card-description" href="/sentiment.html" target="_blank">
+                <h2>Sentiment Trend</h2>
+                <p>可視化股市情緒和歷年股價趨勢</p>
+            </a>
+        </li>
 
-	<li class="card">
-		<a class="card-image" href="/strategy.html" target="_blank" style="background-image: url(https://cdn.pixabay.com/photo/2014/11/25/08/13/dollar-544956_1280.jpg);" data-image-full="https://cdn.pixabay.com/photo/2014/11/25/08/13/dollar-544956_1280.jpg">
-			<img src="https://cdn.pixabay.com/photo/2014/11/25/08/13/dollar-544956_1280.jpg" alt="The Beautiful Game" />
-		</a>
-		<a class="card-description" href="/strategy.html" target="_blank">
-			<h2>Strategy & Backtest</h2>
-			<p>利用情緒分數及技術線制定交易策略回測</p>
-		</a>
-	</li>
+        <li class="card">
+            <a class="card-image" href="/strategy.html" target="_blank"
+               style="background-image: url(https://cdn.pixabay.com/photo/2014/11/25/08/13/dollar-544956_1280.jpg);"
+               data-image-full="https://cdn.pixabay.com/photo/2014/11/25/08/13/dollar-544956_1280.jpg">
+                <img src="https://cdn.pixabay.com/photo/2014/11/25/08/13/dollar-544956_1280.jpg"
+                     alt="The Beautiful Game"/>
+            </a>
+            <a class="card-description" href="/strategy.html" target="_blank">
+                <h2>Strategy & Backtest</h2>
+                <p>利用情緒分數及技術線制定交易策略回測</p>
+            </a>
+        </li>
 
-	<li class="card">
-		<a class="card-image" href="/backtest.html" target="_blank" style="background-image: url(https://cdn.pixabay.com/photo/2016/11/19/21/01/analysis-1841158_1280.jpg);" data-image-full="https://cdn.pixabay.com/photo/2016/11/19/21/01/analysis-1841158_1280.jpg">
-			<img src="https://cdn.pixabay.com/photo/2016/11/19/21/01/analysis-1841158_1280.jpg" alt="Jane Doe" />
-		</a>
-		<a class="card-description" href="/backtest.html" target="_blank">
-			<h2>Report</h2>
-			<p>策略回測勝率及報酬率報表</p>
-		</a>
-	</li>
+        <li class="card">
+            <a class="card-image" href="/backtest.html" target="_blank"
+               style="background-image: url(https://cdn.pixabay.com/photo/2016/11/19/21/01/analysis-1841158_1280.jpg);"
+               data-image-full="https://cdn.pixabay.com/photo/2016/11/19/21/01/analysis-1841158_1280.jpg">
+                <img src="https://cdn.pixabay.com/photo/2016/11/19/21/01/analysis-1841158_1280.jpg" alt="Jane Doe"/>
+            </a>
+            <a class="card-description" href="/backtest.html" target="_blank">
+                <h2>Report</h2>
+                <p>策略回測勝率及報酬率報表</p>
+            </a>
+        </li>
 
-</ul>
+    </ul>
 
-	</div>
-
-<!-- <div class="loader-wrapper">-->
-<!--        <span class="loader"><span class="loader-inner"></span></span>-->
-<!--         <br>-->
-<!--         <h4 style="color: #ADB5BD; margin-left: 15px;">Loading...</h4>-->
-<!--    </div>-->
+</div>
 
 
 <!-- partial -->

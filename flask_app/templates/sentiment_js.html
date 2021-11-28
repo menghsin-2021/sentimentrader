@@ -1,0 +1,395 @@
+<script>
+
+       // var start = performance.now();
+
+       const daily_stock_price = {{ daily_stock_price | safe }}
+       const daily_sentiment = {{ daily_sentiment | safe }}
+
+       var trace1 = {
+          x: daily_stock_price['date'].slice(0,1825),
+          close: daily_stock_price['close'].slice(0,1825),
+            decreasing: { line: { color: "#7F7F7F" } },
+          high: daily_stock_price['high'].slice(0,1825),
+            increasing: { line: { color: "#17BECF" } },
+            line: { color: "rgba(31,119,180,1)" },
+          low: daily_stock_price['low'].slice(0,1825),
+          open: daily_stock_price['open'].slice(0,1825),
+          name: '歷年股價',
+
+       // customise colors
+       increasing: {line: {color: 'red'}},
+       decreasing: {line: {color: 'green'}},
+       type: "candlestick",
+       xaxis: {x: "x",
+               rangebreaks: [
+                {bounds: ["sat", "mon"]},
+            ]},
+       yaxis: "y"
+       };
+
+        var trace2 = {
+          x: daily_stock_price['date'].slice(0,1825),
+          y: daily_sentiment['avg_valence'].slice(0,1825),
+          type: 'scatter',
+          yaxis: 'y2',
+          name: '平均正向分數',
+          line: {
+              color: 'rgb(55, 128, 191)',
+              width: 1
+             }
+        };
+
+        var trace3 = {
+          x: daily_sentiment['date'].slice(0,1825),
+          y: daily_sentiment['avg_arousal'].slice(0,1825),
+          type: 'scatter',
+          yaxis: 'y2',
+          name: '平均強烈分數',
+          line: {
+              color: 'rgb(128, 0, 128)',
+              width: 1
+             },
+          visible: false,
+        };
+
+        var trace4 = {
+          x: daily_stock_price['date'].slice(0,1825),
+          y: daily_sentiment['sum_sentiment'].slice(0,1825),
+          type: 'bar',
+          yaxis: 'y3',
+          name: '股市關鍵字情感分數',
+          line: {
+              color: 'rgb(128, 0, 128)',
+              width: 1
+             },
+          visible: false,
+        };
+
+        var data = [trace1, trace2, trace3, trace4];
+
+        var layout = {
+          updatemenus: [{
+            type: 'buttons',
+            direction: 'right',
+            yanchor: 'bottom',
+            xanchor: 'left',
+            y: -0.5,
+            x: 0.8,
+            buttons: [{
+                  label: '週',
+                  method: 'restyle',
+                  args: [{
+                           x: [daily_stock_price['date'].slice(0,7)],
+                       close: [daily_stock_price['close'].slice(0,7)],
+                  decreasing: [{ line: { color: "green" }}],
+                        high: [daily_stock_price['high'].slice(0,7)],
+                  increasing: [{line: { color: "red" }}],
+                        line: [{ color: "rgba(31,119,180,1)", width: 1  }],
+                         low: [daily_stock_price['low'].slice(0,7)],
+                        open: [daily_stock_price['open'].slice(0,7)],
+                          y1: [daily_sentiment['avg_valence'].slice(0,7)],
+                          y2: [daily_sentiment['avg_arousal'].slice(0,7)],
+                          y3: [daily_sentiment['sum_sentiment'].slice(0,7)]
+                          }]
+                    }, {
+                  label: '月',
+                  method: 'restyle',
+                  args: [{
+                           x: [daily_stock_price['date'].slice(0,30)],
+                       close: [daily_stock_price['close'].slice(0,30)],
+                  decreasing: [{ line: { color: "green" }}],
+                        high: [daily_stock_price['high'].slice(0,30)],
+                  increasing: [{line: { color: "red" }}],
+                        line: [{ color: "rgba(31,119,180,1)", width: 1  }],
+                         low: [daily_stock_price['low'].slice(0,30)],
+                        open: [daily_stock_price['open'].slice(0,30)],
+                          y1: [daily_sentiment['avg_valence'].slice(0,30)],
+                          y2: [daily_sentiment['avg_arousal'].slice(0,30)],
+                          y3: [daily_sentiment['sum_sentiment'].slice(0,30)]
+                        }]
+                    }, {
+                  label: '年',
+                  method: 'restyle',
+                  args: [{
+                           x: [daily_stock_price['date'].slice(0,365)],
+                       close: [daily_stock_price['close'].slice(0,365)],
+                  decreasing: [{ line: { color: "green" }}],
+                        high: [daily_stock_price['high'].slice(0,365)],
+                  increasing: [{line: { color: "red" }}],
+                        line: [{ color: "rgba(31,119,180,1)", width: 1  }],
+                         low: [daily_stock_price['low'].slice(0,365)],
+                        open: [daily_stock_price['open'].slice(0,365)],
+                          y1: [daily_sentiment['avg_valence'].slice(0,365)],
+                          y2: [daily_sentiment['avg_arousal'].slice(0,365)],
+                          y3: [daily_sentiment['sum_sentiment'].slice(0,365)]
+                        }]
+                  }, {
+                  label: '三年',
+                  method: 'restyle',
+                  args: [{
+                           x: [daily_stock_price['date'].slice(0,1095)],
+                       close: [daily_stock_price['close'].slice(0,1095)],
+                  decreasing: [{ line: { color: "green" }}],
+                        high: [daily_stock_price['high'].slice(0,1095)],
+                  increasing: [{line: { color: "red" }}],
+                        line: [{ color: "rgba(31,119,180,1)", width: 1  }],
+                         low: [daily_stock_price['low'].slice(0,1095)],
+                        open: [daily_stock_price['open'].slice(0,1095)],
+                          y1: [daily_sentiment['avg_valence'].slice(0,1095)],
+                          y2: [daily_sentiment['avg_arousal'].slice(0,1095)],
+                          y3: [daily_sentiment['sum_sentiment'].slice(0,1095)]
+                        }]
+                  },{
+                  label: '五年',
+                  method: 'restyle',
+                  args: [{
+                           x: [daily_stock_price['date'].slice(0,1825)],
+                       close: [daily_stock_price['close'].slice(0,1825)],
+                  decreasing: [{ line: { color: "green" }}],
+                        high: [daily_stock_price['high'].slice(0,1825)],
+                  increasing: [{line: { color: "red" }}],
+                        line: [{ color: "rgba(31,119,180,1)", width: 1 }],
+                         low: [daily_stock_price['low'].slice(0,1825)],
+                        open: [daily_stock_price['open'].slice(0,1825)],
+                          y1: [daily_sentiment['avg_valence'].slice(0,1825)],
+                          y2: [daily_sentiment['avg_arousal'].slice(0,1825)],
+                          y3: [daily_sentiment['sum_sentiment'].slice(0,1825)]
+                        }]
+                  }, {
+              label: '全部',
+              method: 'restyle',
+              args: [{
+                           x: [daily_stock_price['date']],
+                       close: [daily_stock_price['close']],
+                  decreasing: [{ line: { color: "green" }}],
+                        high: [daily_stock_price['high']],
+                  increasing: [{line: { color: "red" }}],
+                        line: [{ color: "rgba(31,119,180,1)", width: 1  }],
+                         low: [daily_stock_price['low']],
+                        open: [daily_stock_price['open']],
+                          y1: [daily_sentiment['avg_valence']],
+                          y2: [daily_sentiment['avg_arousal']],
+                          y3: [daily_sentiment['sum_sentiment']]
+                        }]
+                    },
+
+                  ]},
+            {
+        y: 0.8,
+        x: -0.2,
+        yanchor: 'top',
+        buttons: [{
+            method: 'restyle',
+            args: ['line.color', 'red'],
+            label: 'red'
+        }, {
+            method: 'restyle',
+            args: ['line.color', 'blue'],
+            label: 'blue'
+        }, {
+            method: 'restyle',
+            args: ['line.color', 'green'],
+            label: 'green'
+        }, {
+            method: 'restyle',
+            args: ['line.color', 'black'],
+            label: 'black'
+        }]
+            }, {
+        y: 0.6,
+        x: -0.2,
+        yanchor: 'top',
+        buttons: [{
+            method: 'restyle',
+            args: ['line.width', '0.3'],
+            label: '0.3'
+        }, {
+            method: 'restyle',
+            args: ['line.width', '1'],
+            label: '1'
+        },{
+            method: 'restyle',
+            args: ['line.width', '1.5'],
+            label: '1.5'
+        },]
+            },{
+        y: 1,
+        x: -0.2,
+        yanchor: 'top',
+        buttons: [{
+            method: 'restyle',
+            args: ['visible', [true, false, false, false]],
+            label: '歷年Ｋ線圖'
+        }, {
+            method: 'restyle',
+            args: ['visible', [true, true, false, false]],
+            label: '情感分數(貪婪 vs 恐懼、50分以上為正)'
+        }, {
+            method: 'restyle',
+            args: ['visible', [true, false, true, false]],
+            label: '情感分數(強烈 vs 柔弱、50分以上為正)'
+        }, {
+            method: 'restyle',
+            args: ['visible', [true, false, false, true]],
+            label: '以股市漲跌關鍵字計算情感分數'
+        }]
+            }],
+
+        title: {
+                text:'個股  {{daily_sentiment['chosen_stock_name']}}  情緒分數 ｖｓ 歷年股價',
+                font: {
+                  family: 'Courier New, monospace',
+                  size: 18
+                },
+                xref: 'paper',
+                x: 0.06,
+                y: 0.97
+              },
+        dragmode: "zoom",
+        margin: {
+            r: 10,
+            t: 30,
+            b: 40,
+            l: 60
+          },
+        showlegend: true,
+        xaxis: {
+          title: {
+                  text: '日期',
+                  font: {
+                    family: 'Courier New, monospace',
+                    size: 14,
+                    color: '#7f7f7f'
+                  }
+                },
+          autorange: true,
+          domain: [0, 1],
+<!--          range: {{ daily_stock_price['range'] | safe }},-->
+<!--          rangeslider: { range: {{ daily_stock_price['range'] | safe }} },-->
+          title: "Date",
+          type: "date",
+          rangebreaks: [
+                {bounds: ["sat", "mon"]},
+            ]
+        },
+        yaxis: {
+          title: {
+                  text: '價格（元）',
+                  font: {
+                    family: 'Courier New, monospace',
+                    size: 14,
+                    color: '#7f7f7f'
+                  }
+                },
+          autorange: true,
+          domain: [0, 1],
+          range: [0, 800],
+          type: "linear"
+          },
+        yaxis2: {
+          title: {
+                  text: '情感分數',
+                  font: {
+                    family: 'Courier New, monospace',
+                    size: 14,
+                    color: '#7f7f7f'
+                  }
+                },
+          autorange: false,
+          domain: [0, 1],
+          range: [-2, 2],
+          type: "linear",
+          overlaying: 'y',
+          side: 'right',
+          position: 0.95
+          },
+          yaxis3: {
+          title: {
+                  text: '股市關鍵字分數',
+                  font: {
+                    family: 'Courier New, monospace',
+                    size: 14,
+                    color: '#7f7f7f'
+                  }
+                },
+          autorange: false,
+          domain: [0, 2],
+          range: [0, 1000],
+          type: "linear",
+          overlaying: 'y',
+          side: 'right',
+          position: 1.1
+          }
+        };
+
+Plotly.newPlot("myDiv", data, layout);
+
+// var end = performance.now();
+// alert('total took ' + (end - start) + ' ms.');
+
+</script>
+
+<script>
+  // Enter a speed between 0 and 180
+var level = {{daily_sentiment['avg_valence_angular']}};
+
+// Trig to calc meter point
+var degrees = 180 - level,
+	 radius = .5;
+var radians = degrees * Math.PI / 180;
+var x = radius * Math.cos(radians);
+var y = radius * Math.sin(radians);
+
+// Path: may have to change to create a better triangle
+var mainPath = 'M -.0 -0.025 L .0 0.025 L ',
+	 pathX = String(x),
+	 space = ' ',
+	 pathY = String(y),
+	 pathEnd = ' Z';
+var path = mainPath.concat(pathX,space,pathY,pathEnd);
+
+var data = [{ type: 'scatter',
+   x: [0], y:[0],
+	marker: {size: 28, color:'850000'},
+	showlegend: false,
+	name: 'speed',
+	text: level,
+	hoverinfo: 'text+name'},
+  { values: [36, 36, 36, 36, 36, 60, 60, 60],
+  rotation: 210,
+  text: ['', '', 'Average', '', '','Extreme Greed', '', 'Extreme Fear'],
+  font_size: 13,
+  textinfo: 'text',
+  textposition:'inside',
+  marker: {colors:['rgba(235, 107, 0, 1)', 'rgba(207, 156, 0, 1)','rgba(204,255,51,1)','rgba(158,240,26,1)' ,
+						 'rgba(112,224,0,1)', 'rgba(49, 235, 49, 1)', 'rgba(255, 255, 255, 0)', 'rgba(240, 44, 44, 1)']},
+  labels: ['70-100', '60-70', '40-60', '30-40', '0-30','Extreme Greed' , 'q', 'Extreme Fear'],
+  hoverinfo: 'label',
+  hole: .5,
+  type: 'pie',
+  showlegend: false
+}];
+
+<!--background-image: linear-gradient(to right, #f02c2c, #eb6b00, #cf9c00, #9ec700, #31eb31);-->
+
+var layout = {
+  shapes:[{
+      type: 'path',
+      path: path,
+      fillcolor: '850000',
+      line: {
+        color: '850000'
+      }
+    }],
+  title: '<b>今日情緒分數({{daily_sentiment['chosen_stock_name']}}): {{daily_sentiment['avg_valence_now']}} </b> <br> 恐懼(0) vs 貪婪(100)',
+  height: 420,
+  width: 420,
+  xaxis: {zeroline:false, showticklabels: false,
+			 showgrid: false, range: [-1, 1]},
+  yaxis: {zeroline:false, showticklabels: false,
+			 showgrid: false, range: [-1, 1]}
+};
+
+Plotly.newPlot('myDivNow', data, layout, {showSendToCloud:true});
+
+</script>

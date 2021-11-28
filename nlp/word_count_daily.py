@@ -14,6 +14,7 @@ stock_list_sail = stock_list.stock_list_sail
 stock_list_biotech = stock_list.stock_list_biotech
 stock_list_finance = stock_list.stock_list_finance
 stock_list_tsmc = stock_list.stock_list_tsmc
+stock_list_total = stock_list.all_list
 
 # stock market key words
 keyword_list_stockmart_word_positive = stock_list.keyword_list_stockmart_word_positive
@@ -21,6 +22,7 @@ keyword_list_stockmart_word_negative = stock_list.keyword_list_stockmart_word_ne
 
 # read sentiment word base
 cvaw4 = pd.read_csv('cvaw4.csv', index_col='Word')
+
 
 def get_today():
     today_strftime = datetime.today().strftime('%Y-%m-%d')
@@ -45,7 +47,6 @@ def iso_date(year, month, day):
 
 def fetch_article_tag(year, month, day, col_name):
     db_mongo = model_mongo.DbWrapperMongo()
-
     create_time = iso_date(year, month, day)
     query_dict = {"create_time": create_time}
     rows = db_mongo.find(col_name, query_dict)
@@ -151,7 +152,7 @@ def sentiment_grade_cvaw(seg_words_list):
 def sentiment_grade_cashtag(seg_words_list):
     sentiment_result = []
     sum_sentiment = 0
-    for w in seg_words_list:  # 用文章＋推文的內容去算情感分數
+    for w in seg_words_list:
         if w in keyword_list_stockmart_word_positive:
             sentiment_result.append(w)
             sum_sentiment += 1
@@ -163,22 +164,28 @@ def sentiment_grade_cashtag(seg_words_list):
 
 
 def word_count_total_make_tuple(rows, stock_list_total):
-    article_count_total, daily_word_cut_total, stock_code_count_total, stock_code_count_total_dict = word_count_daily(rows, stock_list_total)
-    sentiment_result_cvaw_total, sum_V_total, avg_V_total, sum_A_total, avg_A_total, count_total = sentiment_grade_cvaw(daily_word_cut_total)
+    article_count_total, daily_word_cut_total, stock_code_count_total, stock_code_count_total_dict = word_count_daily(
+        rows, stock_list_total)
+    sentiment_result_cvaw_total, sum_V_total, avg_V_total, sum_A_total, avg_A_total, count_total = sentiment_grade_cvaw(
+        daily_word_cut_total)
     sentiment_result_cashtag_total, sum_sentiment_total = sentiment_grade_cashtag(daily_word_cut_total)
     stock_count_tuple_total = (date, SOURCE, '0', stock_code_count_total, article_count_total)
-    stock_code_sentiment_tuple = (date, SOURCE, '0', sum_V_total, avg_V_total, sum_A_total, avg_A_total, sum_sentiment_total)
+    stock_code_sentiment_tuple = (
+    date, SOURCE, '0', sum_V_total, avg_V_total, sum_A_total, avg_A_total, sum_sentiment_total)
     return stock_count_tuple_total, stock_code_sentiment_tuple
 
 
 def word_count_category_make_tuple(rows, category, stock_list_category):
     category_stock_code = {"electric_car": '1', 'electric': '2', 'sail': '3', 'biotech': '4', 'finance': '5'}
     stock_code = category_stock_code[category]
-    article_count_category, daily_word_cut_category, stock_code_count_category, stock_code_count_dict_category = word_count_category(rows, category, stock_list_category)
-    sentiment_result_cvaw_category, sum_V_category, avg_V_category, sum_A_category, avg_A_category, count_category = sentiment_grade_cvaw(daily_word_cut_category)
+    article_count_category, daily_word_cut_category, stock_code_count_category, stock_code_count_dict_category = word_count_category(
+        rows, category, stock_list_category)
+    sentiment_result_cvaw_category, sum_V_category, avg_V_category, sum_A_category, avg_A_category, count_category = sentiment_grade_cvaw(
+        daily_word_cut_category)
     sentiment_result_cashtag_category, sum_sentiment_category = sentiment_grade_cashtag(daily_word_cut_category)
     stock_count_tuple = (date, SOURCE, stock_code, stock_code_count_category, article_count_category)
-    stock_code_sentiment_tuple = (date, SOURCE, stock_code, sum_V_category, avg_V_category, sum_A_category, avg_A_category, sum_sentiment_category)
+    stock_code_sentiment_tuple = (
+    date, SOURCE, stock_code, sum_V_category, avg_V_category, sum_A_category, avg_A_category, sum_sentiment_category)
     return stock_count_tuple, stock_code_sentiment_tuple
 
 
@@ -188,13 +195,13 @@ def word_count_tag_make_tuple(rows, stock_tuple):
         daily_word_cut_stock)
     sentiment_result_cashtag_stock, sum_sentiment_stock = sentiment_grade_cashtag(daily_word_cut_stock)
     stock_count_tuple = (date, SOURCE, stock_code, stock_count, article_count_stock)
-    stock_code_sentiment_tuple = (date, SOURCE, stock_code, sum_V_stock, avg_V_stock, sum_A_stock, avg_A_stock, sum_sentiment_stock)
+    stock_code_sentiment_tuple = (
+    date, SOURCE, stock_code, sum_V_stock, avg_V_stock, sum_A_stock, avg_A_stock, sum_sentiment_stock)
     return stock_count_tuple, stock_code_sentiment_tuple
 
 
 if __name__ == '__main__':
     db_mysql = model_mysql.DbWrapperMysql('sentimentrader')
-
     year, month, day = get_today()
     for SOURCE in SOURCES:
         social_volume_tuple_list = []
@@ -215,74 +222,78 @@ if __name__ == '__main__':
                             continue
                         else:
                             # words in day total
-                            stock_count_tuple_total, stock_code_sentiment_tuple_total = word_count_total_make_tuple(rows, stock_list_total)
+                            stock_count_tuple_total, stock_code_sentiment_tuple_total = word_count_total_make_tuple(
+                                rows, stock_list_total)
                             social_volume_tuple_list.append(stock_count_tuple_total)
                             sentiment_tuple_list.append(stock_code_sentiment_tuple_total)
 
-
                             # words in day by category
-                            # elctric car
-                            stock_count_tuple_electric_car, stock_code_sentiment_tuple_electric_car = word_count_category_make_tuple(rows, 'electric_car', stock_list_electric_car)
-                            # print(stock_code_sentiment_tuple_electric_car)
+                            # electric car
+                            stock_count_tuple_electric_car, stock_code_sentiment_tuple_electric_car = word_count_category_make_tuple(
+                                rows, 'electric_car', stock_list_electric_car)
                             social_volume_tuple_list.append(stock_count_tuple_electric_car)
                             sentiment_tuple_list.append(stock_code_sentiment_tuple_electric_car)
 
-                            # elctric
-                            stock_count_tuple_electric, stock_code_sentiment_tuple_electric = word_count_category_make_tuple(rows, 'electric', stock_list_electric)
+                            # electric
+                            stock_count_tuple_electric, stock_code_sentiment_tuple_electric = word_count_category_make_tuple(
+                                rows, 'electric', stock_list_electric)
                             social_volume_tuple_list.append(stock_count_tuple_electric)
-                            # print(stock_code_sentiment_tuple_electric)
                             sentiment_tuple_list.append(stock_code_sentiment_tuple_electric)
 
                             # sail
-                            stock_count_tuple_sail, stock_code_sentiment_tuple_sail = word_count_category_make_tuple(rows, 'sail', stock_list_sail)
+                            stock_count_tuple_sail, stock_code_sentiment_tuple_sail = word_count_category_make_tuple(
+                                rows, 'sail', stock_list_sail)
                             social_volume_tuple_list.append(stock_count_tuple_sail)
-                            # print(stock_code_sentiment_tuple_sail)
                             sentiment_tuple_list.append(stock_code_sentiment_tuple_sail)
 
                             # biotech
-                            stock_count_tuple_biotech, stock_code_sentiment_tuple_biotech = word_count_category_make_tuple(rows, 'biotech', stock_list_biotech)
-                            # print(stock_code_sentiment_tuple_biotech)
+                            stock_count_tuple_biotech, stock_code_sentiment_tuple_biotech = word_count_category_make_tuple(
+                                rows, 'biotech', stock_list_biotech)
                             social_volume_tuple_list.append(stock_count_tuple_biotech)
                             sentiment_tuple_list.append(stock_code_sentiment_tuple_biotech)
 
                             # finance
-                            stock_count_tuple_finance, stock_code_sentiment_tuple_finance = word_count_category_make_tuple(rows, 'finance', stock_list_finance)
-                            # print(stock_code_sentiment_tuple_finance)
+                            stock_count_tuple_finance, stock_code_sentiment_tuple_finance = word_count_category_make_tuple(
+                                rows, 'finance', stock_list_finance)
                             social_volume_tuple_list.append(stock_count_tuple_finance)
                             sentiment_tuple_list.append(stock_code_sentiment_tuple_finance)
 
-
                             # words in day by stock
                             for stock_tuple in stock_list_electric_car:
-                                stock_count_tuple_electric_car, stock_code_sentiment_tuple_electric_car = word_count_tag_make_tuple(rows, stock_tuple)
+                                stock_count_tuple_electric_car, stock_code_sentiment_tuple_electric_car = word_count_tag_make_tuple(
+                                    rows, stock_tuple)
                                 social_volume_tuple_list.append(stock_count_tuple_electric_car)
                                 sentiment_tuple_list.append(stock_code_sentiment_tuple_electric_car)
 
                             for stock_tuple in stock_list_electric:
-                                stock_count_tuple_electric, stock_code_sentiment_tuple_electric = word_count_tag_make_tuple(rows, stock_tuple)
+                                stock_count_tuple_electric, stock_code_sentiment_tuple_electric = word_count_tag_make_tuple(
+                                    rows, stock_tuple)
                                 social_volume_tuple_list.append(stock_count_tuple_electric)
                                 sentiment_tuple_list.append(stock_code_sentiment_tuple_electric)
 
                             for stock_tuple in stock_list_sail:
-                                stock_count_tuple_sail, stock_code_sentiment_tuple_sail = word_count_tag_make_tuple(rows, stock_tuple)
+                                stock_count_tuple_sail, stock_code_sentiment_tuple_sail = word_count_tag_make_tuple(
+                                    rows, stock_tuple)
                                 social_volume_tuple_list.append(stock_count_tuple_sail)
                                 sentiment_tuple_list.append(stock_code_sentiment_tuple_sail)
 
                             for stock_tuple in stock_list_biotech:
-                                stock_count_tuple_biotech, stock_code_sentiment_tuple_biotech = word_count_tag_make_tuple(rows, stock_tuple)
+                                stock_count_tuple_biotech, stock_code_sentiment_tuple_biotech = word_count_tag_make_tuple(
+                                    rows, stock_tuple)
                                 social_volume_tuple_list.append(stock_count_tuple_biotech)
                                 sentiment_tuple_list.append(stock_code_sentiment_tuple_biotech)
 
                             for stock_tuple in stock_list_finance:
-                                stock_count_tuple_finance, stock_code_sentiment_tuple_finance = word_count_tag_make_tuple(rows, stock_tuple)
+                                stock_count_tuple_finance, stock_code_sentiment_tuple_finance = word_count_tag_make_tuple(
+                                    rows, stock_tuple)
                                 social_volume_tuple_list.append(stock_count_tuple_finance)
                                 sentiment_tuple_list.append(stock_code_sentiment_tuple_finance)
 
                             for stock_tuple in stock_list_tsmc:
-                                stock_count_tuple_tsmc, stock_code_sentiment_tuple_tsmc = word_count_tag_make_tuple(rows, stock_tuple)
+                                stock_count_tuple_tsmc, stock_code_sentiment_tuple_tsmc = word_count_tag_make_tuple(
+                                    rows, stock_tuple)
                                 social_volume_tuple_list.append(stock_count_tuple_tsmc)
                                 sentiment_tuple_list.append(stock_code_sentiment_tuple_tsmc)
-
 
         stock_list = [s[2] for s in social_volume_tuple_list]
         sql_insert_social_volume = "INSERT INTO `daily_social_volume` (`date`, `source`, `stock_code`, `count`, `article_count`) VALUES (%s, %s, %s, %s, %s)"

@@ -4,7 +4,7 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <title>report</title>
-<link rel="icon" type="image/png" href="/static/img/logo/s_word_logo.png">
+    <link rel="icon" type="image/png" href="/static/img/logo/s_word_logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
@@ -16,17 +16,16 @@
     <link href="/static/css/loader.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/bootstrap.css">
 
-    <!--      plotly-->
+    <!-- plotly-->
     <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>
 
-    	<!--    jquery-->
+    <!-- jquery-->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"
             integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
-<!-- Sweet alert Js -->
+    <!-- Sweet alert Js -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-
 
 
 </head>
@@ -91,337 +90,155 @@
             </div>
             <!-- figure       -->
         </div>
-<!--Main element-->
-<main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4 bg-light">
-    <div class="content d-flex flex-column mr-2 col-12 " style="height: 1300px;">
-        <h2>策略卡牌</h2>
+        <!--Main element-->
+        <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4 bg-light">
+            <div class="content d-flex flex-column mr-2 col-12 " style="height: 1300px;">
+                <h2>策略卡牌</h2>
                 <br>
-        <div class="strategy_card">
+                <div class="strategy_card">
 
-                <div id="card-deck" class="d-flex flex-row flex-nowrap overflow-auto" style="height: 300px;">
-                    {% for i in range(strategy_backtest_dict_list_length) %}
-                    <div id="card" class="card col-3 p-2 bg-active border-dark">
-                        <div id="card-{{ i }}" class="card-body">
-                            <h4 class="card-title">{{ strategy_backtest_dict_list[i]['stock_code'] | safe }} / {{ strategy_backtest_dict_list[i]['stock_name'] | safe }}</h4>
-                            <ul style="font-size:16px; list-style-type: none;">
-                                <li>勝率： {{ strategy_backtest_dict_list[i]['win_rate'] | safe }}%</li>
-                                <li>年化報酬率： {{ strategy_backtest_dict_list[i]['irr'] | safe }}%</li>
-                                <li>總報酬率： {{ strategy_backtest_dict_list[i]['total_return_rate'] | safe }}%</li>
-                                <li>創建日期： {{ strategy_backtest_dict_list[i]['create_date'] | safe }}</li>
-                            </ul>
-                            <div class="d-flex justify-content-end"><button id="change-card-{{ i }}" class="btn-sm btn-primary">選擇卡片</button></div>
+                    <div id="card-deck" class="d-flex flex-row flex-nowrap overflow-auto" style="height: 300px;">
+                        {% for i in range(strategy_backtest_dict_list_length) %}
+                        <div id="card" class="card col-3 p-2 bg-active border-dark">
+                            <div id="card-{{ i }}" class="card-body">
+                                <h4 class="card-title">{{ strategy_backtest_dict_list[i]['stock_code'] | safe }} / {{
+                                    strategy_backtest_dict_list[i]['stock_name'] | safe }}</h4>
+                                <ul style="font-size:16px; list-style-type: none;">
+                                    <li>勝率： {{ strategy_backtest_dict_list[i]['win_rate'] | safe }}%</li>
+                                    <li>年化報酬率： {{ strategy_backtest_dict_list[i]['irr'] | safe }}%</li>
+                                    <li>總報酬率： {{ strategy_backtest_dict_list[i]['total_return_rate'] | safe }}%</li>
+                                    <li>創建日期： {{ strategy_backtest_dict_list[i]['create_date'] | safe }}</li>
+                                </ul>
+                                <div class="d-flex justify-content-end">
+                                    <button id="change-card-{{ i }}" class="btn-sm btn-primary">選擇卡片</button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <br>
+                    <br>
+                </div>
+
+                <h2>策略進出場點 ＆ 報酬率計算結果報表</h2>
+                <br>
+
+                <div class="content d-flex flex-row mr-2 shadow p-3 mb-5 rounded" style="background-color: white;">
+
+
+                    <div class="report figure col-8">
+                        <div class="figure">
+                            <img src="{{ strategy_backtest_dict_list[0]['file_path'] | safe }}" alt="back test result"
+                                 width="920" height="500" style="object-position: -150px 0px;">
                         </div>
                     </div>
-                    {% endfor %}
-                </div>
-                <br>
-                <br>
-        </div>
-
-            <h2>策略進出場點 ＆ 報酬率計算結果報表</h2>
-            <br>
-
-        <div class="content d-flex flex-row mr-2 shadow p-3 mb-5 rounded" style="background-color: white;">
 
 
+                    <div class="report_content d-flex flex-column col-4">
+                        <div class="report_information d-flex flex-row justify-content-between">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">項目</th>
+                                    <th scope="col">結果</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <th scope="row">1</th>
+                                    <td>買進次數</td>
+                                    <td>{{ strategy_backtest_dict_list[0]['total_buy_count'] | safe}}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">2</th>
+                                    <td>賣出次數</td>
+                                    <td>{{ strategy_backtest_dict_list[0]['total_sell_count'] | safe}}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">3</th>
+                                    <td>總報酬率(淨收益)</td>
+                                    <td>{{ strategy_backtest_dict_list[0]['total_return_rate'] | safe}}%</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">4</th>
+                                    <td>該策略最高報酬為</td>
+                                    <td>{{ strategy_backtest_dict_list[0]['highest_return'] | safe}}%</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">5</th>
+                                    <td>該策略最低報酬為</td>
+                                    <td>{{ strategy_backtest_dict_list[0]['lowest_return'] | safe}}%</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">6</th>
+                                    <td>總獲利次數</td>
+                                    <td>{{ strategy_backtest_dict_list[0]['total_win'] | safe}}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">7</th>
+                                    <td>總虧損次數</td>
+                                    <td>{{ strategy_backtest_dict_list[0]['total_lose'] | safe}}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">8</th>
+                                    <td>總交易次數</td>
+                                    <td>{{ strategy_backtest_dict_list[0]['total_trade'] | safe}}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">9</th>
+                                    <td>勝率</td>
+                                    <td>{{ strategy_backtest_dict_list[0]['win_rate'] | safe}}%</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">10</th>
+                                    <td>該策略平均每次報酬為</td>
+                                    <td>{{ strategy_backtest_dict_list[0]['avg_return_rate'] | safe}}%</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">11</th>
+                                    <td>年化報酬率</td>
+                                    <td>{{ strategy_backtest_dict_list[0]['irr'] | safe}}%</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
 
-            <div class="report figure col-8">
-                <div class="figure">
-                    <img src="{{ strategy_backtest_dict_list[0]['file_path'] | safe }}" alt="back test result" width="920" height="500" style="object-position: -150px 0px;">
+
+                        <div class="d-flex flex-row justify-content-end">
+                            <div id="remove-strategy-form">
+                                <button type="submit" class="btn btn-primary mr-3" id="remove-strategy" value="捨棄策略">
+                                    捨棄策略
+                                </button>
+                            </div>
+
+                            <div>
+                                <form id="send-backtest-form" action="/api/1.0/send_backtest" method="POST">
+                                    <input type="text" value="{{ strategy_backtest_dict_list[0]['id'] | safe }}"
+                                           style="display: none;" name="send_backtest">
+                                    <input type="submit" class="btn btn-primary mr-3" id="send-backtest" value="重新回測">
+                                </form>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
 
 
-            <div class="report_content d-flex flex-column col-4">
-                <div class="report_information d-flex flex-row justify-content-between">
-                    <table class="table table-hover">
-                      <thead>
-                        <tr>
-                          <th scope="col">#</th>
-                          <th scope="col">項目</th>
-                          <th scope="col">結果</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <th scope="row">1</th>
-                          <td>買進次數</td>
-                            <td>{{ strategy_backtest_dict_list[0]['total_buy_count'] | safe}}</td>
-                        </tr>
-                        <tr>
-                          <th scope="row">2</th>
-                          <td>賣出次數</td>
-                          <td>{{ strategy_backtest_dict_list[0]['total_sell_count'] | safe}}</td>
-                        </tr>
-                        <tr>
-                          <th scope="row">3</th>
-                          <td>總報酬率(淨收益)</td>
-                           <td>{{ strategy_backtest_dict_list[0]['total_return_rate'] | safe}}%</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">4</th>
-                          <td>該策略最高報酬為</td>
-                           <td>{{ strategy_backtest_dict_list[0]['highest_return'] | safe}}%</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">5</th>
-                          <td>該策略最低報酬為</td>
-                           <td>{{ strategy_backtest_dict_list[0]['lowest_return'] | safe}}%</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">6</th>
-                          <td>總獲利次數</td>
-                           <td>{{ strategy_backtest_dict_list[0]['total_win'] | safe}}</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">7</th>
-                          <td>總虧損次數</td>
-                           <td>{{ strategy_backtest_dict_list[0]['total_lose'] | safe}}</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">8</th>
-                          <td>總交易次數</td>
-                           <td>{{ strategy_backtest_dict_list[0]['total_trade'] | safe}}</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">9</th>
-                          <td>勝率</td>
-                           <td>{{ strategy_backtest_dict_list[0]['win_rate'] | safe}}%</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">10</th>
-                          <td>該策略平均每次報酬為</td>
-                           <td>{{ strategy_backtest_dict_list[0]['avg_return_rate'] | safe}}%</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">11</th>
-                          <td>年化報酬率</td>
-                           <td>{{ strategy_backtest_dict_list[0]['irr'] | safe}}%</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                </div>
-
-
-                    <div class="d-flex flex-row justify-content-end">
-                        <div id="remove-strategy-form">
-                                <button type="submit" class="btn btn-primary mr-3" id="remove-strategy" value="捨棄策略">捨棄策略</button>
-                        </div>
-
-                        <div>
-                            <form id="send-backtest-form" action="/api/1.0/send_backtest" method="POST">
-                            <input type="text" value="{{ strategy_backtest_dict_list[0]['id'] | safe }}" style="display: none;" name="send_backtest">
-                            <input type="submit" class="btn btn-primary mr-3" id="send-backtest" value="重新回測">
-                            </form>
-                        </div>
-                    </div>
-
-            </div>
-        </div>
-    </div>
-
-
-</main>
+        </main>
 
 
     </div>
 </div>
 
 
- <div class="loader-wrapper">
-        <span class="loader"><span class="loader-inner"></span></span>
- </div>
+<div class="loader-wrapper">
+    <span class="loader"><span class="loader-inner"></span></span>
+</div>
 
 {% include "sweetalerts.html" %}
-
-<script>
-
-    $(window).on("load",function(){
-        $(".loader-wrapper").show().delay(1000).queue(function (next) {
-                $(this).hide();
-                next();
-            });
-          $(".loader-wrapper").fadeOut("slow");
-        });
-    </script>
-
-
-<script>
-
-const cardDeck = document.querySelector("#card-deck");
-const figure = document.querySelector(".figure");
-const table = document.querySelector(".table");
-let removeStrategyForm = document.querySelector("#remove-strategy-form");
-const sentBacktestForm = document.querySelector("#send-backtest-form");
-
-let removeStrategy = document.querySelector("#remove_strategy");
-
-let strategy_backtest_dict_list = {{ strategy_backtest_dict_list | safe }}
-let strategy_backtest_dict_list_length = {{ strategy_backtest_dict_list_length | safe }}
-let body = {
-    "strategy_id": strategy_backtest_dict_list[0]["id"],
-    "user_id": strategy_backtest_dict_list[0]["user_id"],
-    "file_path": strategy_backtest_dict_list[0]["file_path"]
-    }
-cardDeck.addEventListener("click", (event) => {
-    console.log(cardDeck)
-    for (let i = 0; i < strategy_backtest_dict_list_length; i++){
-        if (event.target.id == `change-card-${i}`) {
-            removeStrategyForm.innerHTML = `<button type="submit" class="btn btn-primary mr-3" id="remove-strategy" value="捨棄策略">捨棄策略</button>`
-
-            sentBacktestForm.innerHTML = `<input type="text" value="${strategy_backtest_dict_list[i]['id']}" style="display: none;" name="send_backtest">
-                                          <input type="submit" class="btn btn-primary mr-3" id="send-backtest" value="重新回測">`
-
-            // for sweet alert
-            body = {
-    "strategy_id": strategy_backtest_dict_list[i]["id"],
-    "user_id": strategy_backtest_dict_list[i]["user_id"],
-    "file_path": strategy_backtest_dict_list[i]["file_path"]};
-
-            console.log(body)
-            figure.innerHTML = `<img src="${strategy_backtest_dict_list[i]['file_path']}" alt="back test result" width="920" height="500" style="object-position: -150px 0px;">`
-
-            table.innerHTML = `<thead>
-                        <tr>
-                          <th scope="col">#</th>
-                          <th scope="col">項目</th>
-                          <th scope="col">結果</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <th scope="row">1</th>
-                          <td>買進次數</td>
-                            <td>${strategy_backtest_dict_list[i]['total_buy_count']}</td>
-                        </tr>
-                        <tr>
-                          <th scope="row">2</th>
-                          <td>賣出次數</td>
-                          <td>${strategy_backtest_dict_list[i]['total_sell_count']}</td>
-                        </tr>
-                        <tr>
-                          <th scope="row">3</th>
-                          <td>總報酬率(淨收益)</td>
-                           <td>${strategy_backtest_dict_list[i]['total_return_rate']}%</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">4</th>
-                          <td>該策略最高報酬為</td>
-                           <td>${strategy_backtest_dict_list[i]['highest_return']}%</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">5</th>
-                          <td>該策略最低報酬為</td>
-                           <td>${strategy_backtest_dict_list[i]['lowest_return']}%</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">6</th>
-                          <td>總獲利次數</td>
-                           <td>${strategy_backtest_dict_list[i]['total_win']}</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">7</th>
-                          <td>總虧損次數</td>
-                           <td>${strategy_backtest_dict_list[i]['total_lose']}</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">8</th>
-                          <td>總交易次數</td>
-                           <td>${strategy_backtest_dict_list[i]['total_trade']}</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">9</th>
-                          <td>勝率</td>
-                           <td>${strategy_backtest_dict_list[i]['win_rate']}%</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">10</th>
-                          <td>該策略平均每次報酬為</td>
-                           <td>${strategy_backtest_dict_list[i]['avg_return_rate']}%</td>
-                        </tr>
-                      <tr>
-                          <th scope="row">11</th>
-                          <td>年化報酬率</td>
-                           <td>${strategy_backtest_dict_list[i]['irr']}%</td>
-                        </tr>
-                      </tbody>`
-        }else {
-            // do nothing
-        }
-    }
-    removeStrategy = document.querySelector("#remove-strategy")
-    removeStrategy.addEventListener("click", function(){
-  swal({
-    icon: "warning",
-    text: "確認要刪除嗎？",
-    buttons:{
-      A: {
-        text: "確認刪除",
-        value: true
-      },
-      B: {
-        text: "取消",
-        value: false
-      }
-    }
-  }).then((value) => {
-    if (value === true) {
-    console.log(body)
-    const response = fetch('/api/1.0/remove_strategy', {
-	method: 'post',
-	body: JSON.stringify(body),
-	headers: {
-    'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
-  }
-});
-const data = response
-console.log(data);
-location.reload()
-} else {
-// do nothing
-      }
-  });
-});
-
-})
-
-removeStrategy = document.querySelector("#remove-strategy")
-removeStrategy.addEventListener("click", function(){
-  swal({
-    icon: "warning",
-    text: "確認要刪除嗎？",
-    buttons:{
-      A: {
-        text: "確認刪除",
-        value: true
-      },
-      B: {
-        text: "取消",
-        value: false
-      }
-    }
-  }).then((value) => {
-    if (value === true) {
-    console.log(body)
-    const response = fetch('/api/1.0/remove_strategy', {
-	method: 'post',
-	body: JSON.stringify(body),
-	headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}
-});
-const data = response
-console.log(data);
-location.reload()
-} else {
-// do nothing
-      }
-  });
-});
-
-
-
-
-
-</script>
+{% include "backtest_js.html" %}
 
 </body>
 

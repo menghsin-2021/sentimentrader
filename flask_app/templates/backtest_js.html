@@ -1,0 +1,184 @@
+<script>
+
+    $(window).on("load",function(){
+        $(".loader-wrapper").show().delay(1000).queue(function (next) {
+                $(this).hide();
+                next();
+            });
+          $(".loader-wrapper").fadeOut("slow");
+        });
+
+</script>
+
+<script>
+
+const cardDeck = document.querySelector("#card-deck");
+const figure = document.querySelector(".figure");
+const table = document.querySelector(".table");
+let removeStrategyForm = document.querySelector("#remove-strategy-form");
+const sentBacktestForm = document.querySelector("#send-backtest-form");
+
+let removeStrategy = document.querySelector("#remove_strategy");
+
+let strategy_backtest_dict_list = {{ strategy_backtest_dict_list | safe }}
+let strategy_backtest_dict_list_length = {{ strategy_backtest_dict_list_length | safe }}
+let body = {
+    "strategy_id": strategy_backtest_dict_list[0]["id"],
+    "user_id": strategy_backtest_dict_list[0]["user_id"],
+    "file_path": strategy_backtest_dict_list[0]["file_path"]
+    }
+cardDeck.addEventListener("click", (event) => {
+    console.log(cardDeck)
+    for (let i = 0; i < strategy_backtest_dict_list_length; i++){
+        if (event.target.id == `change-card-${i}`) {
+            removeStrategyForm.innerHTML = `<button type="submit" class="btn btn-primary mr-3" id="remove-strategy" value="捨棄策略">捨棄策略</button>`
+
+            sentBacktestForm.innerHTML = `<input type="text" value="${strategy_backtest_dict_list[i]['id']}" style="display: none;" name="send_backtest">
+                                          <input type="submit" class="btn btn-primary mr-3" id="send-backtest" value="重新回測">`
+
+            // for sweet alert
+            body = {
+    "strategy_id": strategy_backtest_dict_list[i]["id"],
+    "user_id": strategy_backtest_dict_list[i]["user_id"],
+    "file_path": strategy_backtest_dict_list[i]["file_path"]};
+
+            console.log(body)
+            figure.innerHTML = `<img src="${strategy_backtest_dict_list[i]['file_path']}" alt="back test result" width="920" height="500" style="object-position: -150px 0px;">`
+
+            table.innerHTML = `<thead>
+                        <tr>
+                          <th scope="col">#</th>
+                          <th scope="col">項目</th>
+                          <th scope="col">結果</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <th scope="row">1</th>
+                          <td>買進次數</td>
+                            <td>${strategy_backtest_dict_list[i]['total_buy_count']}</td>
+                        </tr>
+                        <tr>
+                          <th scope="row">2</th>
+                          <td>賣出次數</td>
+                          <td>${strategy_backtest_dict_list[i]['total_sell_count']}</td>
+                        </tr>
+                        <tr>
+                          <th scope="row">3</th>
+                          <td>總報酬率(淨收益)</td>
+                           <td>${strategy_backtest_dict_list[i]['total_return_rate']}%</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">4</th>
+                          <td>該策略最高報酬為</td>
+                           <td>${strategy_backtest_dict_list[i]['highest_return']}%</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">5</th>
+                          <td>該策略最低報酬為</td>
+                           <td>${strategy_backtest_dict_list[i]['lowest_return']}%</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">6</th>
+                          <td>總獲利次數</td>
+                           <td>${strategy_backtest_dict_list[i]['total_win']}</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">7</th>
+                          <td>總虧損次數</td>
+                           <td>${strategy_backtest_dict_list[i]['total_lose']}</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">8</th>
+                          <td>總交易次數</td>
+                           <td>${strategy_backtest_dict_list[i]['total_trade']}</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">9</th>
+                          <td>勝率</td>
+                           <td>${strategy_backtest_dict_list[i]['win_rate']}%</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">10</th>
+                          <td>該策略平均每次報酬為</td>
+                           <td>${strategy_backtest_dict_list[i]['avg_return_rate']}%</td>
+                        </tr>
+                      <tr>
+                          <th scope="row">11</th>
+                          <td>年化報酬率</td>
+                           <td>${strategy_backtest_dict_list[i]['irr']}%</td>
+                        </tr>
+                      </tbody>`
+        }else {
+            // do nothing
+        }
+    }
+    removeStrategy = document.querySelector("#remove-strategy")
+    removeStrategy.addEventListener("click", function(){
+  swal({
+    icon: "warning",
+    text: "確認要刪除嗎？",
+    buttons:{
+      A: {
+        text: "確認刪除",
+        value: true
+      },
+      B: {
+        text: "取消",
+        value: false
+      }
+    }
+  }).then((value) => {
+    if (value === true) {
+    console.log(body)
+    const response = fetch('/api/1.0/remove_strategy', {
+	method: 'post',
+	body: JSON.stringify(body),
+	headers: {
+    'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+  }
+});
+const data = response
+console.log(data);
+location.reload()
+} else {
+// do nothing
+      }
+  });
+});
+
+})
+
+removeStrategy = document.querySelector("#remove-strategy")
+removeStrategy.addEventListener("click", function(){
+  swal({
+    icon: "warning",
+    text: "確認要刪除嗎？",
+    buttons:{
+      A: {
+        text: "確認刪除",
+        value: true
+      },
+      B: {
+        text: "取消",
+        value: false
+      }
+    }
+  }).then((value) => {
+    if (value === true) {
+    console.log(body)
+    const response = fetch('/api/1.0/remove_strategy', {
+	method: 'post',
+	body: JSON.stringify(body),
+	headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}
+});
+const data = response
+console.log(data);
+location.reload()
+} else {
+// do nothing
+      }
+  });
+});
+
+</script>

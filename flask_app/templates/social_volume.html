@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <title>social volume</title>
-<link rel="icon" type="image/png" href="/static/img/logo/s_word_logo.png">
+    <link rel="icon" type="image/png" href="/static/img/logo/s_word_logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
@@ -15,231 +15,131 @@
     <link href="/static/css/loader.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/bootstrap.css">
 
-<!--      plotly-->
+    <!--      plotly-->
     <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>
 
-<!-- Sweet alert Js -->
+    <!-- Sweet alert Js -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  </head>
-  <body>
+</head>
+<body>
 <nav class="navbar navbar-dark bg-primary flex-md-nowapr fixed-top p-0 shadow">
-  <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/home.html">Sentimentrader</a>
-  <ul class="navbar-nav px-3">
-    <li class="nav-item text-nowarp">
-      <a class="nav-link" href="/logout">Logout</a>
-    </li>
-  </ul>
+    <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/home.html">Sentimentrader</a>
+    <ul class="navbar-nav px-3">
+        <li class="nav-item text-nowarp">
+            <a class="nav-link" href="/logout">Logout</a>
+        </li>
+    </ul>
 </nav>
 
 <div class="container-fluid">
-  <div class="row" style="height: 1300px;">
-    <!--     siderbar -->
-    <div class="col-md-2 bg-active d-md-block sidebar">
-      <div class="left-sidebar">
-        <ul class="nav nav-pills flex-column mb-auto">
-          <li class="nav-item">
-            <a href="/home.html" class="nav-link link-dark" aria-current="page">
-              <svg class="bi me-2" width="16" height="16">
-                <use xlink:href="#home"></use>
-              </svg>
-              Home
-            </a>
-          </li>
-          <li>
-            <a href="/social_volume.html" class="nav-link active">
-              <svg class="bi me-2" width="16" height="16">
-                <use xlink:href="#speedometer2"></use>
-              </svg>
-              Social volume
-            </a>
-          </li>
-          <li>
-            <a href="/sentiment.html" class="nav-link link-dark">
-              <svg class="bi me-2" width="16" height="16">
-                <use xlink:href="#table"></use>
-              </svg>
-              Sentiment
-            </a>
-          </li>
-          <li>
-            <a href="/strategy.html" class="nav-link link-dark">
-              <svg class="bi me-2" width="16" height="16">
-                <use xlink:href="#grid"></use>
-              </svg>
-              Strategy & Backtest
-            </a>
-          </li>
-          <li>
-            <a href="/backtest.html" class="nav-link link-dark">
-              <svg class="bi me-2" width="16" height="16">
-                <use xlink:href="#people-circle"></use>
-              </svg>
-              Report
-            </a>
-          </li>
-        </ul>
+    <div class="row" style="height: 1300px;">
+        <!--     siderbar -->
+        <div class="col-md-2 bg-active d-md-block sidebar">
+            <div class="left-sidebar">
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a href="/home.html" class="nav-link link-dark" aria-current="page">
+                            <svg class="bi me-2" width="16" height="16">
+                                <use xlink:href="#home"></use>
+                            </svg>
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/social_volume.html" class="nav-link active">
+                            <svg class="bi me-2" width="16" height="16">
+                                <use xlink:href="#speedometer2"></use>
+                            </svg>
+                            Social volume
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/sentiment.html" class="nav-link link-dark">
+                            <svg class="bi me-2" width="16" height="16">
+                                <use xlink:href="#table"></use>
+                            </svg>
+                            Sentiment
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/strategy.html" class="nav-link link-dark">
+                            <svg class="bi me-2" width="16" height="16">
+                                <use xlink:href="#grid"></use>
+                            </svg>
+                            Strategy & Backtest
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/backtest.html" class="nav-link link-dark">
+                            <svg class="bi me-2" width="16" height="16">
+                                <use xlink:href="#people-circle"></use>
+                            </svg>
+                            Report
+                        </a>
+                    </li>
+                </ul>
 
-      </div>
-      <!-- figure       -->
-    </div>
-<!--Main element-->
-<main role="main" class="bg-light col-md-10 ml-sm-auto col-lg-10 px-4">
-<div class="col-12 shadow p-3 mb-5 rounded d-flex flex-row " style="background-color: white">
-  <div class="col-3">
-    <form id="socail-volume-form" action="/api/1.0/social_volume_rank" enctype="application/x-www-form-urlencoded" method=POST>
-      <div class="form-group">
-        <label for="category">類股</label>
-        <select class="form-control" id="category" name="category" required>
-          <option value="electric_car">電動車</option>
-          <option value="electric">電子資訊</option>
-          <option value="sail">航運</option>
-          <option value="biotech">生技</option>
-          <option value="finance">金融</option>
-          </select>
-      </div>
-      <div class="form-group">
-         <label for="source">文章來源</label>
-         <select class="form-control" id="source" name="source">
-          <option value="ptt">PTT 貼文</option>
-          <option value="cnyes">鉅亨網</option>
-        </select>
-      </div>
-      <div class="form-group">
-          <label for="duration">時間範圍</label>
-          <select class="form-control" id="duration" name="duration">
-            <option value="daily">當日</option>
-            <option value="weekly">當周</option>
-            <option value="monthly">當月</option>
-            <option value="yearly">一年內</option>
-            <option value="three_yearly">三年內</option>
-          </select>
-      </div>
-      <div>
-    <button type="submit" class="btn btn-primary" id="search_rank" value="search_rank">送出</button>
+            </div>
+            <!-- figure       -->
         </div>
-      </form>
-  </div>
+        <!--Main element-->
+        <main role="main" class="bg-light col-md-10 ml-sm-auto col-lg-10 px-4">
+            <div class="col-12 shadow p-3 mb-5 rounded d-flex flex-row " style="background-color: white">
+                <div class="col-3">
+                    <form id="socail-volume-form" action="/api/1.0/social_volume_rank"
+                          enctype="application/x-www-form-urlencoded" method=POST>
+                        <div class="form-group">
+                            <label for="category">類股</label>
+                            <select class="form-control" id="category" name="category" required>
+                                <option value="electric_car">電動車</option>
+                                <option value="electric">電子資訊</option>
+                                <option value="sail">航運</option>
+                                <option value="biotech">生技</option>
+                                <option value="finance">金融</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="source">文章來源</label>
+                            <select class="form-control" id="source" name="source">
+                                <option value="ptt">PTT 貼文</option>
+                                <option value="cnyes">鉅亨網</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="duration">時間範圍</label>
+                            <select class="form-control" id="duration" name="duration">
+                                <option value="daily">當日</option>
+                                <option value="weekly">當周</option>
+                                <option value="monthly">當月</option>
+                                <option value="yearly">一年內</option>
+                                <option value="three_yearly">三年內</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary" id="search_rank" value="search_rank">送出
+                            </button>
+                        </div>
+                    </form>
+                </div>
 
-  <div class="col-9">
-    <div id="myDiv" style="width: 800px; height: 500px;"></div>
-  </div>
+                <div class="col-9">
+                    <div id="myDiv" style="width: 800px; height: 500px;"></div>
+                </div>
 
-  </div>
+            </div>
 
-</main>
+        </main>
 
 
-  </div>
+    </div>
 </div>
 
 {% include "sweetalerts.html" %}
-
-    <script>
-    var social_volume_rank = {{social_volume_rank | safe}}
-    var trace1 =
-        {
-          x: social_volume_rank['stock_name_code'],
-          y: social_volume_rank['article_count'],
-          name: '被提及文章數',
-          type: "bar",
-          marker:{
-            color: ['#d52929', '#dc173e', '#e00052', '#e10068', '#df007d', '#ED0F8B', '#d70095', '#c200b4', '#9700d8', '#0000ff']
-          },
-        }
-      ;
-
-    var trace2 =
-        {
-          x: social_volume_rank["stock_name_code"],
-          y: social_volume_rank["stock_count"],
-          name: '被提及次數',
-          type: "bar",
-          marker:{
-            color: ['#bb0202', '#b90020', '#b90020', '#b40033', '#9f0051', '#9f0051', '#90005d', '#79006a', '#570079', '#000087']
-          },
-        }
-      ;
+{% include "social_volume_js.html" %}
 
 
-
-    var data = [trace1, trace2];
-    var layout = {
-              barmode: 'stack',
-              title: {
-                text: social_volume_rank["title"],
-                font: {
-                  family: 'Courier New, monospace',
-                  size: 16
-                },
-                xref: 'paper',
-                x: 0.05,
-              },
-              xaxis: {
-                title: {
-                  text: '個股名稱',
-                  font: {
-                    family: 'Courier New, monospace',
-                    size: 14,
-                    color: '#7f7f7f'
-                  }
-                },
-              },
-              yaxis: {
-                title: {
-                  text: '被提及次數(次) / 被提及文章數(篇)',
-                  font: {
-                    family: 'Courier New, monospace',
-                    size: 14,
-                    color: '#7f7f7f'
-                  }
-                }
-              }
-            };
-
-      Plotly.newPlot("myDiv", data, layout);
-<!--     color gradient https://mycolor.space/gradient?ori=to+right&hex=%23F01313&hex2=%230F0FE0&sub=1-->
-
-
-const socailVolumeForm = document.querySelector("#socail-volume-form");
-
-socailVolumeForm.innerHTML = `<div class="form-group">
-        <label for="category">類股</label>
-        <select class="form-control" id="category" name="category" required>
-          <option value="${social_volume_rank['category']}">${social_volume_rank['category_name']}</option>
-          <option value="electric_car">電動車</option>
-          <option value="electric">電子資訊</option>
-          <option value="sail">航運</option>
-          <option value="biotech">生技</option>
-          <option value="finance">金融</option>
-          </select>
-      </div>
-      <div class="form-group">
-         <label for="source">文章來源</label>
-         <select class="form-control" id="source" name="source">
-         <option value="${social_volume_rank['source']}">${social_volume_rank['source_name']}</option>
-          <option value="ptt">PTT 貼文</option>
-          <option value="cnyes">鉅亨網</option>
-        </select>
-      </div>
-      <div class="form-group">
-          <label for="duration">時間範圍</label>
-          <select class="form-control" id="duration" name="duration">
-            <option value="${social_volume_rank['duration']}">${social_volume_rank['duration_name']}</option>
-            <option value="daily">當日</option>
-            <option value="weekly">當周</option>
-            <option value="monthly">當月</option>
-            <option value="yearly">一年內</option>
-            <option value="three_yearly">三年內</option>
-          </select>
-      </div>
-      <div>
-    <button type="submit" class="btn btn-primary" id="search_rank" value="search_rank">送出</button>
-        </div>`
-
-    </script>
-
-  </body>
+</body>
 
 </html>
 

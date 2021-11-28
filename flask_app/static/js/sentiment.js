@@ -5,6 +5,20 @@ const stock_list_biotech = [['1598', '岱宇', 'biotech'], ['1701', '中化', 'b
 const stock_list_finance = [['2801', '彰銀', 'finance'], ['2809', '京城銀', 'finance'], ['2812', '台中銀', 'finance'], ['2816', '旺旺保', 'finance'], ['2820', '華票', 'finance'], ['2823', '中壽', 'finance'], ['2832', '台產', 'finance'], ['2834', '臺企銀', 'finance'], ['2836', '高雄銀', 'finance'], ['2836A', '高雄銀甲特', 'finance'], ['2838', '聯邦銀', 'finance'], ['2838A', '聯邦銀甲特', 'finance'], ['2845', '遠東銀', 'finance'], ['2849', '安泰銀', 'finance'], ['2850', '新產', 'finance'], ['2851', '中再保', 'finance'], ['2852', '第一保', 'finance'], ['2855', '統一證', 'finance'], ['2867', '三商壽', 'finance'], ['2880', '華南金', 'finance'], ['2881', '富邦金', 'finance'], ['2881A', '富邦特', 'finance'], ['2881B', '富邦金乙特', 'finance'], ['2882', '國泰金', 'finance'], ['2882A', '國泰特', 'finance'], ['2882B', '國泰金乙特', 'finance'], ['2883', '開發金', 'finance'], ['2884', '玉山金', 'finance'], ['2885', '元大金', 'finance'], ['2886', '兆豐金', 'finance'], ['2887', '台新金', 'finance'], ['2887E', '台新戊特', 'finance'], ['2887F', '台新戊特二', 'finance'], ['2888', '新光金', 'finance'], ['2888A', '新光金甲特', 'finance'], ['2888B', '新光金乙特', 'finance'], ['2889', '國票金', 'finance'], ['2890', '永豐金', 'finance'], ['2891', '中信金', 'finance'], ['2891B', '中信金乙特', 'finance'], ['2891C', '中信金丙特', 'finance'], ['2892', '第一金', 'finance'], ['2897', '王道銀行', 'finance'], ['2897A', '王道銀甲特', 'finance'], ['5876', '上海商銀', 'finance'], ['5880', '合庫金', 'finance'], ['6005', '群益證', 'finance'], ['6024', '群益期', 'finance']]
 const stock_list_tsmc = [['2330', '台積電', 'tsmc']]
 
+$(window).on("load",function(){
+        $(".loader-wrapper").show().delay(1000).queue(function (next) {
+                $(this).hide();
+                next();
+            });
+          $(".loader-wrapper").fadeOut("slow");
+        });
+
+
+        $("#search-sentiment").on("click", function() {
+        $("main").hide();
+        $(".loader-wrapper").show();
+        });
+
 function removeAll(stock_code) {
   for (let i = stock_code.options.length - 1; i >= 0; i--) {
     stock_code.remove(i);
