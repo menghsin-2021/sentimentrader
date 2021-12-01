@@ -1,5 +1,6 @@
+from config import SYSPATH
 import sys
-sys.path.insert(0, '/Users/menghsin/Desktop/coding/AppWorks-school/sentimentrader/flask_app')
+sys.path.insert(0, SYSPATH)
 import csv
 from utils import StockSentimentFetch
 from model import model_mysql, model_mysql_query
