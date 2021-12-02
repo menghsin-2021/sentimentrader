@@ -2,12 +2,14 @@
 ***
 Website url: https://www.stock-sentimentrader.com  
 
-#### Ａstock backtesting platform that traders can make custom strategies with investor sentiment index to make stable profit. 
-![](https://)
+#### Ａstock backtesting platform which aims to make traders avoid severe short-term stock fluctuations and increase earnings by creating custom trading strategies according to investor sentiment index.
+![image](https://github.com/menghsin-2021/images-in-readme/blob/main/sentimentrader/features/abstract.jpg)
+  
+  
 You will need an account to make your own strategy, here is a test account:  
 >Email: test_sentiment@gmail.com  
 password: test_sentiment
-  
+![image](https://github.com/menghsin-2021/images-in-readme/blob/main/sentimentrader/features/login_figure.jpg)
 
 ### Table of Contents
 ***
@@ -23,26 +25,26 @@ password: test_sentiment
 ![image](https://github.com/menghsin-2021/images-in-readme/blob/main/sentimentrader/features/data_pipeline_sentimentrader.jpg)
 ### Airflow Flowchart
 ***
-![](https://)
+![image](https://github.com/menghsin-2021/images-in-readme/blob/main/sentimentrader/features/airflow_flowchart.png)
 ### MySQL Schema
 ***
-![](https://)
+![image](https://github.com/menghsin-2021/images-in-readme/blob/main/sentimentrader/features/mysql_schema.png)
 ### Server Structure
 ***
-![](https://)
+![image](https://github.com/menghsin-2021/images-in-readme/blob/main/sentimentrader/features/web_development.jpg)
 ### Feature
 ***
 
 #### Social Volume Dashboard 
-![](https://)
+![image](https://github.com/menghsin-2021/images-in-readme/blob/main/sentimentrader/features/social_volume.gif)
 #### Investor Sentiment Index Dashboard  
-![](https://)
+![image](https://github.com/menghsin-2021/images-in-readme/blob/main/sentimentrader/features/sentiment.gif)
 #### Strategy Form  
-![](https://)
+![image](https://github.com/menghsin-2021/images-in-readme/blob/main/sentimentrader/features/strategy.gif)
 #### Backtest Result  
-![](https://)
+![image](https://github.com/menghsin-2021/images-in-readme/blob/main/sentimentrader/features/result.gif)
 #### User SignUp/SignIn  
-![](https://)
+![image](https://github.com/menghsin-2021/images-in-readme/blob/main/sentimentrader/features/login.gif)
   
 ### Technologies
 ***
