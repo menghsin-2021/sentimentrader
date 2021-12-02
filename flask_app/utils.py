@@ -99,6 +99,7 @@ class StockSentimentFetch:
         sql_stock_price = model_mysql_query.sql_stock_price
         result = db_mysql.query_tb_all(sql_stock_price, (stock_code,))
         daily_stock_price = self.create_stock_price_json(result)
+        print(daily_stock_price)
 
         return daily_stock_price
 
@@ -124,6 +125,7 @@ class StockSentimentFetch:
         sql_sentiment = model_mysql_query.sql_sentiment
         result = db_mysql.query_tb_all(sql_sentiment, (source, stock_code))
         daily_sentiment = self.create_sentiment_json(result)
+        print(daily_sentiment)
 
         return daily_sentiment
 

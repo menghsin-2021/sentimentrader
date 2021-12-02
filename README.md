@@ -20,7 +20,7 @@ password: test_sentiment
 
 ### Data Pipeline
 ***
-![](https://)
+![image](https://github.com/menghsin-2021/images-in-readme/blob/main/sentimentrader/features/data_pipeline_sentimentrader.jpg)
 ### Airflow Flowchart
 ***
 ![](https://)
