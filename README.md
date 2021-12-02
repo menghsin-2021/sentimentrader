@@ -44,7 +44,7 @@ password: test_sentiment
 #### Backtest Result  
 ![image](https://github.com/menghsin-2021/images-in-readme/blob/main/sentimentrader/features/result.gif)
 #### User SignUp/SignIn  
-![image](https://github.com/menghsin-2021/images-in-readme/blob/main/sentimentrader/features/login.gif)
+![image](https://github.com/menghsin-2021/images-in-readme/blob/main/sentimentrader/features/login-2.gif)
   
 ### Technologies
 ***
