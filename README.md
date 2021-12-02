@@ -48,11 +48,11 @@ password: test_sentiment
   
 ### Technologies
 ***
-|Data Pipeline|Back End |Database|Front End |Networking     |AWS Cloud Service  |Modules  |
-|---	      |---	    |---	 |---	    |---	        |---	            |---	  |
-|Airflow      |Flask    |MongoDB |HTML      |Nginx          |EC2                |Jieba    |
-|   	      |MVC      |MySQL   |CSS       |SSL Certificate|RDS                |Plotly   |
-|   	      |   	    |Redis   |JavaScript|jwt Auth       |S3 + CloudFront    |pandas   |
-|   	      |   	    |        |Bootstrap |   	        |ElastiCache        |Ta-lib   |
-|   	      |   	    |        |Ajax      |   	        |   	            |         |
+|Data Pipeline|Back End |Database|Front End |Networking           |AWS Cloud Service  |Modules  |
+|---	      |---	    |---	 |---	    |---	              |---	              |---	    |
+|Airflow      |Flask    |MongoDB |HTML      |Nginx                |EC2                |Jieba    |
+|   	      |MVC      |MySQL   |CSS       |SSL Certificate      |RDS                |Plotly   |
+|   	      |   	    |Redis   |JavaScript|JSON Web Tokens (JWT)|S3 + CloudFront    |pandas   |
+|   	      |   	    |        |Bootstrap |   	              |ElastiCache        |Ta-lib   |
+|   	      |   	    |        |Ajax      |   	              |   	              |         |
 
