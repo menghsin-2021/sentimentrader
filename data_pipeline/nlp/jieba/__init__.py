@@ -3,8 +3,6 @@ __version__ = '0.38'
 __license__ = 'MIT'
 
 import re
-import os
-import sys
 import time
 import logging
 import marshal

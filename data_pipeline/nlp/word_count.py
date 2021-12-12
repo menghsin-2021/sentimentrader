@@ -4,7 +4,6 @@ import model_mongo
 from datetime import datetime
 import pandas as pd
 from collections import Counter, defaultdict
-import time
 import stock_list
 
 SOURCE = 'ptt'
