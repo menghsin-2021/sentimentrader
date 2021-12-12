@@ -99,7 +99,7 @@ class StockSentimentFetch:
         sql_stock_price = model_mysql_query.sql_stock_price
         result = db_mysql.query_tb_all(sql_stock_price, (stock_code,))
         daily_stock_price = self.create_stock_price_json(result)
-        print(daily_stock_price)
+        # print(daily_stock_price)
 
         return daily_stock_price
 
@@ -109,14 +109,12 @@ class StockSentimentFetch:
         low = [daily_info['low'] if daily_info['low'] is not None else 0 for daily_info in result]
         high = [daily_info['high'] if daily_info['high'] is not None else 0 for daily_info in result]
         close = [daily_info['close'] if daily_info['close'] is not None else 0 for daily_info in result]
-        volume = [daily_info['volume'] if daily_info['volume'] is not None else 0 for daily_info in result]
         stock_price = {
             'date': date,
             'open': open,
             'low': low,
             'high': high,
             'close': close,
-            'volume': volume
         }
         return stock_price
 
@@ -125,16 +123,14 @@ class StockSentimentFetch:
         sql_sentiment = model_mysql_query.sql_sentiment
         result = db_mysql.query_tb_all(sql_sentiment, (source, stock_code))
         daily_sentiment = self.create_sentiment_json(result)
-        print(daily_sentiment)
+        # print(daily_sentiment)
 
         return daily_sentiment
 
     def create_sentiment_json(self, result):
         date = [daily_info['days'] for daily_info in result]
         chosen_stock_name = result[0]['stock_name']
-        sum_valence = [daily_info['sum_valence'] for daily_info in result]
         avg_valence = [daily_info['avg_valence'] for daily_info in result]
-        sum_arousal = [daily_info['sum_arousal'] for daily_info in result]
         avg_arousal = [daily_info['avg_arousal'] for daily_info in result]
         sum_sentiment = [int(daily_info['sum_sentiment']) for daily_info in result]
 
@@ -149,9 +145,7 @@ class StockSentimentFetch:
 
         sentiment = {
             'date': date,
-            'sum_valence': sum_valence,
             'avg_valence': avg_valence,
-            'sum_arousal': sum_arousal,
             'avg_arousal': avg_arousal,
             'sum_sentiment': sum_sentiment,
             'avg_valence_now': avg_valence_now,

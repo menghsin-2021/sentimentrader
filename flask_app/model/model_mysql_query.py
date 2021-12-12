@@ -33,13 +33,15 @@ sql_insert_social_volume_view = "INSERT INTO `social_volume_view` (`date`,`sourc
 sql_stock_price = "SELECT `days`, `open`, `low`, `high`, `close`, `volume` \
                    FROM `stock_price_view` \
                    WHERE stock_code = %s \
-                   ORDER BY `days` desc;"
+                   ORDER BY `days` desc \
+                   LIMIT 2000;"
 
 sql_sentiment = "SELECT `days`, `stock_name`, `sum_valence`, `avg_valence`, `sum_arousal`, `avg_arousal`, `sum_sentiment` \
                  FROM `sentiment_view` \
                  WHERE `source` = %s \
                  AND `stock_code` = %s \
-                 ORDER BY `days` desc;"
+                 ORDER BY `days` desc \
+                 LIMIT 2000;"
 
 sql_insert_sentiment_view = "INSERT INTO `sentiment_view` (`days`, `source`, `stock_code`, `stock_name`, `category`, `sum_valence`, `avg_valence`, `sum_arousal`, `avg_arousal`, `sum_sentiment`) \
                                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"

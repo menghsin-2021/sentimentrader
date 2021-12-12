@@ -121,12 +121,12 @@ def send_strategy():
 
         else:
             db_mysql_sqlalchemy = model_mysql.DbWrapperMysqlSqlalchemy()
-            print(db_mysql_sqlalchemy)
+            # print(db_mysql_sqlalchemy)
 
             # set date
             # print(db_mysql_sqlalchemy.fetch_execute(model_mysql_query.sql_strategy_stock_price(stock_code, start_date_datetime, end_date_datetime)))
-            print(start_date_datetime)
-            print(end_date_datetime)
+            # print(start_date_datetime)
+            # print(end_date_datetime)
             resoverall_stock_price = db_mysql_sqlalchemy.fetch_execute(model_mysql_query.sql_strategy_stock_price(stock_code, start_date_datetime, end_date_datetime))
 
             # fetch stock price
@@ -469,7 +469,7 @@ def send_strategy():
 
                         df["buy"] = buy
 
-            print(df)
+            # print(df)
 
             # tag buy marker
             buy_mark = []
