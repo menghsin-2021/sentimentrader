@@ -7,7 +7,7 @@ from controller.sentiment import sentiment
 from controller.strategy import strategy
 from controller.backtest import backtest
 from controller.user import user
-
+from controller.monitor import monitor
 
 
 
@@ -29,7 +29,7 @@ app.register_blueprint(sentiment)
 app.register_blueprint(strategy)
 app.register_blueprint(backtest)
 app.register_blueprint(user)
-
+app.register_blueprint(monitor)
 
 @app.errorhandler(404)
 def page_not_found(e):
