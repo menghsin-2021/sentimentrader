@@ -24,9 +24,9 @@ electric_car_stock_list = ['1503', '1519', '1533', '1536', '1537', '1587', '1599
 # 2330
 stock_market_list = ['2330']
 
-# all_list = [computer_stock_list, light_eletric_stock_list, internet_stock_list, component_stock_list, pathway_stock_list,
-#             it_stock_list, other_electric_stock_list, sail_stock_list, bio_stock_list, finance_stock_list, electric_car_stock_list, stock_market_list]
-all_list = [electric_car_stock_list]
+all_list = [computer_stock_list, light_eletric_stock_list, internet_stock_list, component_stock_list, pathway_stock_list,
+            it_stock_list, other_electric_stock_list, sail_stock_list, bio_stock_list, finance_stock_list, electric_car_stock_list, stock_market_list]
+
 
 
 # stock list with name

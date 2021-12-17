@@ -6,6 +6,14 @@ window.addEventListener('load', function() {
 	
 });
 
+$(window).on("load",function(){
+        $(".loader-wrapper").show().delay(1000).queue(function (next) {
+                $(this).hide();
+                next();
+            });
+          $(".loader-wrapper").fadeOut("slow");
+        });
+
 function lazyLoad() {
 	var card_images = document.querySelectorAll('.card-image')
 	

@@ -31,9 +31,15 @@
     <nav class="navbar navbar-dark bg-primary flex-md-nowapr fixed-top p-0 shadow">
         <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/home.html">Sentimentrader</a>
         <ul class="navbar-nav px-3">
-            <li class="nav-item text-nowarp">
-                <a class="nav-link" href="/logout">Logout</a>
-            </li>
+            {% if not token %}
+        <li class="nav-item text-nowarp">
+            <a class="nav-link" href="/login.html">Login</a>
+        </li>
+        {% else %}
+        <li class="nav-item text-nowarp">
+            <a class="nav-link" href="/logout">Logout</a>
+        </li>
+        {% endif %}
         </ul>
     </nav>
 </header>
@@ -55,11 +61,13 @@
 
         <li class="card">
             <a id="sentiment" class="card-image" href="/sentiment.html" target="_blank"
+               onclick="$('.loader-wrapper').show().delay(500).fadeOut(2000);"
                style="background-image: url(https://cdn.pixabay.com/photo/2017/11/26/15/16/smiley-2979107_1280.jpg);"
                data-image-full="https://cdn.pixabay.com/photo/2017/11/26/15/16/smiley-2979107_1280.jpg">
                 <img src="https://cdn.pixabay.com/photo/2017/11/26/15/16/smiley-2979107_1280.jpg" alt="let's go"/>
             </a>
-            <a class="card-description" href="/sentiment.html" target="_blank">
+            <a class="card-description" href="/sentiment.html" target="_blank"
+               onclick="$('.loader-wrapper').show().delay(500).fadeOut(2000);">
                 <h2>Sentiment Trend</h2>
                 <p>可視化股市情緒和歷年股價趨勢</p>
             </a>
@@ -87,6 +95,9 @@
             <a class="card-description" href="/backtest.html" target="_blank">
                 <h2>Report</h2>
                 <p>策略回測勝率及報酬率報表</p>
+                {% if not token %}
+                    <p>(使用前須先登入並建立策略)</p>
+                {% endif %}
             </a>
         </li>
 
@@ -94,6 +105,10 @@
 
 </div>
 
+
+<div class="loader-wrapper" style="top: -400px;">
+    <span class="loader" style="top: -700px;"><span class="loader-inner"></span></span>
+</div>
 
 <!-- partial -->
 {% include "sweetalerts.html" %}

@@ -19,6 +19,16 @@ const strategy_out_para = document.querySelector("#strategy_out_para");
 const sentiment_para_more = document.querySelector("#sentiment_para_more");
 const sentiment_para_less = document.querySelector("#sentiment_para_less");
 
+
+$(window).on("load",function(){
+        $(".loader-wrapper").show().delay(1000).queue(function (next) {
+                $(this).hide();
+                next();
+            });
+          $(".loader-wrapper").fadeOut("slow");
+        });
+
+
 cardDeck.addEventListener("click", (event) => {
     console.log(cardDeck)
     console.log(sample_strategy_form)
@@ -194,7 +204,7 @@ cardDeck.addEventListener("click", (event) => {
             <div class="d-flex flex-row justify-content-end">
 
                 <div>
-                    <button type="submit" class="btn btn-primary mr-3" id="sent-backtest" value="sent-backtest">送出回測
+                    <button type="submit" class="btn btn-primary mr-3" id="sent-backtest" value="sent-backtest" onclick="$('.loader-wrapper').show().delay(5000).fadeOut(2000);">送出回測
                     </button>
                 </div>
             </div>`
@@ -260,8 +270,7 @@ clearSetting.addEventListener("click",function(){
                         <div id="custom_strategy" class="custom_strategy">
                         <div class="form-group" >
                                 <label for="strategy_in">自訂進場策略(股價)</label>
-                                <select class="form-control" id="strategy_in" name="strategy_in" onchange="strategyStock('strategy_in', 'strategy_out')" required>
-                                    <option value="">--</option>
+                                <select class="form-control" id="strategy_in" name="strategy_in" onchange="strategyStock('strategy_in', 'strategy_out')" required>、
                                     <option value="increase_in">股價連續上漲(3日)</option>
                                     <option value="decrease_in">股價連續下跌(3日)</option>
                                 </select>
@@ -271,7 +280,7 @@ clearSetting.addEventListener("click",function(){
                               <div class="input-group-prepend">
                                 <span class="input-group-text">大於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="strategy_in_para" aria-label="Amount (to the nearest dollar)" required min="0" max="10">
+                              <input type="number" class="form-control" name="strategy_in_para" aria-label="Amount (to the nearest dollar)" value="1" required min="0" max="10">
                               <div class="input-group-append">
                                 <span class="input-group-text">％</span>
                               </div>
@@ -280,7 +289,7 @@ clearSetting.addEventListener("click",function(){
                         <div class="form-group">
                                 <label for="strategy_out">自訂出場策略(股價)</label>
                                 <select class="form-control" id="strategy_out" name="strategy_out">
-                                    <option value="none">--</option>
+                                    <option value="decrease_in">股價連續下跌(3日)</option>
                                 </select>
                             </div>
 
@@ -288,7 +297,7 @@ clearSetting.addEventListener("click",function(){
                               <div class="input-group-prepend">
                                 <span class="input-group-text">大於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="strategy_out_para" aria-label="Amount (to the nearest dollar)" required min="0" max="10">
+                              <input type="number" class="form-control" name="strategy_out_para" aria-label="Amount (to the nearest dollar)" value="1" required min="0" max="10">
                               <div class="input-group-append">
                                 <span class="input-group-text">％</span>
                               </div>
@@ -313,7 +322,7 @@ clearSetting.addEventListener("click",function(){
                               <div class="input-group-prepend">
                                 <span class="input-group-text">大於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="sentiment_para_more" aria-label="Amount (to the nearest dollar)" placeholder="多少以上不進場" required min="50" max="99">
+                              <input type="number" class="form-control" name="sentiment_para_more" aria-label="Amount (to the nearest dollar)" placeholder="多少以上不進場" value="60" required min="50" max="99">
                               <div class="input-group-append">
                                 <span class="input-group-text">分</span>
                               </div>
@@ -323,7 +332,7 @@ clearSetting.addEventListener("click",function(){
                               <div class="input-group-prepend">
                                 <span class="input-group-text">小於或等於</span>
                               </div>
-                              <input type="number" class="form-control" name="sentiment_para_less" aria-label="Amount (to the nearest dollar)" placeholder="多少以下不進場" required min="1" max="50">
+                              <input type="number" class="form-control" name="sentiment_para_less" aria-label="Amount (to the nearest dollar)" placeholder="多少以下不進場" value="40" required min="1" max="50">
                               <div class="input-group-append">
                                 <span class="input-group-text">分</span>
                               </div>
@@ -369,7 +378,7 @@ clearSetting.addEventListener("click",function(){
 
             <div class="d-flex flex-row justify-content-end">
                 <div>
-                    <button type="submit" class="btn btn-primary mr-3" id="sent-backtest" value="sent-backtest">送出回測
+                    <button type="submit" class="btn btn-primary mr-3" id="sent-backtest" value="sent-backtest" onclick="$('.loader-wrapper').show().delay(5000).fadeOut(2000);">送出回測
                     </button>
                 </div>
             </div>`
@@ -551,7 +560,7 @@ try {
             <div class="d-flex flex-row justify-content-end">
 
                 <div>
-                    <button type="submit" class="btn btn-primary mr-3" id="sent-backtest" value="sent-backtest">送出回測
+                    <button type="submit" class="btn btn-primary mr-3" id="sent-backtest" value="sent-backtest" onclick="$('.loader-wrapper').show().delay(5000).fadeOut(2000);">送出回測
                     </button>
                 </div>
             </div>`

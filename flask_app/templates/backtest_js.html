@@ -141,8 +141,13 @@ cardDeck.addEventListener("click", (event) => {
 const data = response
 console.log(data);
 location.reload()
+Swal.fire(
+  '已刪除策略',
+);
 } else {
-// do nothing
+Swal.fire(
+  '已取消',
+);
       }
   });
 });
@@ -164,21 +169,20 @@ removeStrategy.addEventListener("click", function(){
         value: false
       }
     }
-  }).then((value) => {
+  }
+  ).then((value) => {
     if (value === true) {
-    console.log(body)
     const response = fetch('/api/1.0/remove_strategy', {
 	method: 'post',
 	body: JSON.stringify(body),
 	headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}
-});
-const data = response
-console.log(data);
-location.reload()
-} else {
-// do nothing
-      }
-  });
+                                                        })
+                        } else {
+                                Swal.fire(
+                                  '已取消',
+                                );
+                                }
+                    });
 });
 
 </script>

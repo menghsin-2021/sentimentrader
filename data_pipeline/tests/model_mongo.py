@@ -16,6 +16,7 @@ class DbWrapperMongo:
         self.db_news = self.client.news
         self.db_word_count = self.client.word_count
         self.db_article_tag = self.client.article_tag
+        self.db_test_pipeline = self.client.test_pipeline
         self.db_test = self.client.test
 
         self.col_ptt = self.db_forum.ptt
@@ -27,6 +28,7 @@ class DbWrapperMongo:
         self.col_test = self.db_test.test
         self.col_ptt_stock_tag = self.db_article_tag.ptt_stock_tag
         self.col_cnyes_stock_tag = self.db_article_tag.cnyes_stock_tag
+        self.col_stabilization = self.db_test_pipeline.stabilization
 
     def insert_one(self, col_name, dict):
         if col_name == 'ptt':
@@ -46,6 +48,12 @@ class DbWrapperMongo:
 
         if col_name == 'cnyes_wc':
             self.col_cnyes_wc.insert_one(dict)
+
+        if col_name == 'stabilization':
+            self.col_stabilization.insert_one(dict)
+
+        if col_name == 'test':
+            self.col_test.insert_one(dict)
 
     def insert_many(self, col_name, dict_list):
         if col_name == "ptt":
@@ -103,4 +111,13 @@ class DbWrapperMongo:
 
         if col_name == 'test':
             rows = self.col_test.find(query_dict)
+            return rows
+
+        if col_name == 'stabilization':
+            rows = self.col_stabilization.find(query_dict)
+            return rows
+
+    def find_sorted(self, col_name, query_dict, field, direction):
+        if col_name == 'stabilization':
+            rows = self.col_stabilization.find(query_dict).sort(field, direction)
             return rows

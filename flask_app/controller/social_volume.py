@@ -1,4 +1,4 @@
-from flask import Blueprint, Response, render_template, request, flash
+from flask import Blueprint, Response, render_template, request, flash, sessions
 from utils import get_cookie_check, SocialVolumeFetch, GetName
 import json
 
@@ -9,11 +9,7 @@ social_volume = Blueprint('social_volume', __name__, static_folder='static', tem
 
 @social_volume.route('/social_volume.html', methods=['GET'])
 def social_volume_page():
-    uid = get_cookie_check()
-    if isinstance(uid, int) is False:
-        flash('需要登入', 'danger')
-        return render_template('login.html')
-
+    token = request.cookies.get('token')
     # fetch social volume all
     social_volume_fetch = SocialVolumeFetch()
     stock_name_code, stock_count, article_count = social_volume_fetch.social_volume()
@@ -32,18 +28,13 @@ def social_volume_page():
         'source_name': 'PTT 論壇',
     }, indent=2, ensure_ascii=False)
 
-    print(social_volume_rank)
 
-    return render_template('social_volume.html', social_volume_rank=social_volume_rank)
+    return render_template('social_volume.html', social_volume_rank=social_volume_rank, token=token)
 
 
 @social_volume.route('/api/1.0/social_volume_rank', methods=['POST'])
 def social_volume_rank():
-    uid = get_cookie_check()
-    if isinstance(uid, int) is False:
-        flash('需要登入', 'danger')
-        return render_template('login.html')
-
+    token = request.cookies.get('token')
     # get form
     form = request.form.to_dict()
     if len(form) == 0:
@@ -78,7 +69,6 @@ def social_volume_rank():
         'source_name': source_name,
     }, indent=2, ensure_ascii=False)
 
-    print(social_volume_rank)
 
     if len(stock_name_code) == 0:
         flash('本日於該媒體還未有此類股相關提及', 'info')
@@ -89,4 +79,4 @@ def social_volume_rank():
                         mimetype="application/json")
         return resp
 
-    return render_template('social_volume.html', social_volume_rank=social_volume_rank)
+    return render_template('social_volume.html', social_volume_rank=social_volume_rank, token=token)

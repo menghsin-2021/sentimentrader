@@ -30,31 +30,23 @@ get_name = GetName()
 
 @strategy.route('/strategy.html', methods=['GET'])
 def strategy_page():
-    uid = get_cookie_check()
-    print(uid)
-    if isinstance(uid, int) is False:
-        flash('需要登入', 'danger')
-        return render_template('login.html')
+    token = request.cookies.get('token')
 
-    else:
-        sql_sample_strategy = model_mysql_query.sql_sample_strategy
-        db_mysql = model_mysql.DbWrapperMysqlDict()
-        sample_strategy_form = db_mysql.query_tb_all(sql_sample_strategy)
-        sample_strategy_form_length = int(len(sample_strategy_form))
-        get_name = GetName()
-
-        def add_key(sample_strategy):
-            sample_strategy['category_name'] = get_name.category(sample_strategy['category'])
-            sample_strategy['strategy_line_name'] = get_name.strategy_line(sample_strategy['strategy_line'])
-            sample_strategy['strategy_in_name'] = get_name.strategy_in(sample_strategy['strategy_in'])
-            sample_strategy['strategy_out_name'] = get_name.strategy_out(sample_strategy['strategy_out'])
-            sample_strategy['strategy_sentiment_name'] = get_name.strategy_sentiment(sample_strategy['strategy_sentiment'])
-            sample_strategy['source_name'] = get_name.source(sample_strategy['source'])
-            return sample_strategy
-
-        sample_strategy_form = [add_key(sample_strategy) for sample_strategy in sample_strategy_form]
-
-        return render_template('strategy.html', sample_strategy_form=sample_strategy_form, sample_strategy_form_length=sample_strategy_form_length)
+    sql_sample_strategy = model_mysql_query.sql_sample_strategy
+    db_mysql = model_mysql.DbWrapperMysqlDict()
+    sample_strategy_form = db_mysql.query_tb_all(sql_sample_strategy)
+    sample_strategy_form_length = int(len(sample_strategy_form))
+    get_name = GetName()
+    def add_key(sample_strategy):
+        sample_strategy['category_name'] = get_name.category(sample_strategy['category'])
+        sample_strategy['strategy_line_name'] = get_name.strategy_line(sample_strategy['strategy_line'])
+        sample_strategy['strategy_in_name'] = get_name.strategy_in(sample_strategy['strategy_in'])
+        sample_strategy['strategy_out_name'] = get_name.strategy_out(sample_strategy['strategy_out'])
+        sample_strategy['strategy_sentiment_name'] = get_name.strategy_sentiment(sample_strategy['strategy_sentiment'])
+        sample_strategy['source_name'] = get_name.source(sample_strategy['source'])
+        return sample_strategy
+    sample_strategy_form = [add_key(sample_strategy) for sample_strategy in sample_strategy_form]
+    return render_template('strategy.html', sample_strategy_form=sample_strategy_form, sample_strategy_form_length=sample_strategy_form_length, token=token)
 
 
 
@@ -62,7 +54,6 @@ def strategy_page():
 def send_strategy():
     uid = get_cookie_check()
     if isinstance(uid, int) is False:
-        flash('需要登入', 'danger')
         return render_template('login.html')
     else:
         try:
@@ -516,7 +507,7 @@ def send_strategy():
 
                 else:
                     file_path = draw_mpf.upload_figure_s3(filename, uid)
-
+                    flash("策略儲存成功，導至結果頁面", 'success')
                 # calculate buy times
                 buy1 = df.loc[df["buy"] == 1]
                 sell1 = df.loc[df["buy"] == -1]

@@ -2,7 +2,7 @@ import model_mongo
 import model_mysql
 from datetime import datetime, timedelta
 import requests
-from collections import defaultdict
+from pprint import pprint
 
 month_dict = {1: ["Jan", '01'], 2: ["Feb", '02'], 3: ["Mar", '03'], 4: ["Apr", '04'],
                   5: ["May", '05'], 6: ["Jun", '06'], 7: ["Jul", '07'], 8: ["Aug", '08'],
@@ -107,7 +107,7 @@ def fetch_stock_number(table, date, source=None, date_tomorrow=None):
     return stock_number
 
 
-def craw_stock_price_twse(year, month, day):
+def crawl_stock_price_twse(year, month, day):
     if month < 10:
         month = "0" + str(month)
 
@@ -174,8 +174,6 @@ def fetch_stock_price(date, date_tomorrow):
 
 if __name__ == '__main__':
     year, month, day = get_yesterday()
-    day = 13
-
     for i in range(year, year + 1):
         for j in range(month, month + 1):
             for k in range(day, day + 1):
@@ -191,19 +189,20 @@ if __name__ == '__main__':
                 count_dict["create_time"] = date
                 for SOURCE in SOURCES:
                     count_dict[SOURCE] = {}
+                    count_dict['stock_price'] = {}
                     # fetch crawled data
                     try:
                         rows = fetch_daily_data(year_fetch, month_fetch, day_fetch, SOURCE)
 
                     except:
                         print("no date")
-                        count_dict[SOURCE]['craw'] = 0
+                        count_dict[SOURCE]['crawl'] = 0
                         continue
                     else:
                         # aggregate text
-                        craw_numbers = len(rows)
-                        count_dict[SOURCE]['craw'] = craw_numbers
-                        print(SOURCE, ' article_today_numbers:', craw_numbers)
+                        crawl_numbers = len(rows)
+                        count_dict[SOURCE]['crawl'] = crawl_numbers
+                        print(SOURCE, ' article_today_numbers:', crawl_numbers)
 
                     # fetch cut data
                     try:
@@ -222,6 +221,10 @@ if __name__ == '__main__':
                             cut_numbers = len(rows)
                             count_dict[SOURCE]['cut'] = cut_numbers
                             print(SOURCE, ' article numbers after cut: ', len(rows))
+                            if count_dict[SOURCE]['crawl'] <= 0 and count_dict[SOURCE]['crawl'] != count_dict[SOURCE]['cut']:
+                                count_dict[SOURCE]['check'] = 'fail'
+                            else:
+                                count_dict[SOURCE]['check'] = 'pass'
 
                     # fetch stock number from social_volume and sentiment
                     try:
@@ -238,22 +241,22 @@ if __name__ == '__main__':
                         count_dict[SOURCE]['social_volume'] = stock_number_social_volume
                         count_dict[SOURCE]['sentiment'] = stock_number_sentiment
 
+                    if count_dict[SOURCE]['crawl'] != 480 and count_dict[SOURCE]['social_volume'] != count_dict[SOURCE]['sentiment']:
+                        count_dict[SOURCE]['check'] = 'fail'
+
                 # fetch stock number from stock_price
                 try:
                     stock_number_stock_price = fetch_stock_number('daily_stock_price', date, None, date_tomorrow)
-                    specific_stock_code_number = 6
-                    de_listed_number = 1
-                    stock_number_stock_price = stock_number_stock_price + specific_stock_code_number + de_listed_number
                 except:
                     count_dict['stock_price_number'] = 0
                     print("no date")
                 else:
                     print('stock numbers from daily_stock_price: ', stock_number_stock_price)
-                    count_dict['stock_price_number'] = stock_number_stock_price
+                    count_dict['stock_price']['crawl'] = stock_number_stock_price
 
                 # request stock price from twse
                 try:
-                    stock_price_twse = craw_stock_price_twse(year_fetch, month_fetch, day_fetch)
+                    stock_price_twse = crawl_stock_price_twse(year_fetch, month_fetch, day_fetch)
                     stock_price_yahoo = fetch_stock_price(date, date_tomorrow)
                 except:
                     print("no data")
@@ -261,6 +264,8 @@ if __name__ == '__main__':
                 else:
                     print(stock_price_twse)
                     print(stock_price_yahoo)
+                    count_dict['stock_price']['2330_twse'] = stock_price_twse
+                    count_dict['stock_price']['2330_yahoo'] = stock_price_yahoo
                     if stock_price_twse['open'] == stock_price_yahoo['open']:
                         print('stock_price_open: pass')
                         if stock_price_twse['high'] == stock_price_yahoo['high']:
@@ -269,18 +274,22 @@ if __name__ == '__main__':
                                 print('stock_price_low: pass')
                                 if stock_price_twse['close'] == stock_price_yahoo['close']:
                                     print('stock_price_close: pass')
-                                    count_dict['stock_price_check'] = 'pass'
+                                    count_dict['stock_price']['check'] = 'pass'
                                 else:
                                     print('stock_price_close: fail')
-                                    count_dict['stock_price_check'] = 'fail'
+                                    count_dict['stock_price']['check'] = 'fail'
                             else:
                                 print('stock_price_low: fail')
-                                count_dict['stock_price_check'] = 'fail'
+                                count_dict['stock_price']['check'] = 'fail'
                         else:
                             print('stock_price_high: fail')
-                            count_dict['stock_price_check'] = 'fail'
+                            count_dict['stock_price']['check'] = 'fail'
                     else:
                         print('stock_price_open: fail')
-                        count_dict['stock_price_check'] = 'fail'
+                        count_dict['stock_price']['check'] = 'fail'
 
-                print(count_dict)
+                pprint(count_dict)
+                db_mongo = model_mongo.DbWrapperMongo()
+                col_name = "stabilization"
+                # col_name = "test"
+                db_mongo.insert_one(col_name, count_dict)

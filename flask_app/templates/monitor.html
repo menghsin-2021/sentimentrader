@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <title>monitor</title>
+    <link rel="icon" type="image/png" href="/static/img/logo/s_word_logo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!-- form CSS -->
+    <link href="/static/css/dashboard.css" rel="stylesheet">
+    <link href="/static/css/strategy.css" rel="stylesheet">
+    <link href="/static/css/loader.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
+
+    <!-- jquery-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+    <!-- Sweet alert Js -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+
+    </head>
+<body>
+<nav class="navbar navbar-dark bg-primary flex-md-nowapr fixed-top p-0 shadow">
+    <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/home.html">Sentimentrader</a>
+    <ul class="navbar-nav px-3">
+        <li class="nav-item text-nowarp">
+            <a class="nav-link" href="/logout">Logout</a>
+        </li>
+    </ul>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <!--     siderbar -->
+        <div class="col-md-2 bg-active d-md-block sidebar">
+            <div class="left-sidebar">
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a href="/home.html" class="nav-link link-dark" aria-current="page">
+                            <svg class="bi me-2" width="16" height="16">
+                                <use xlink:href="#home"></use>
+                            </svg>
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/social_volume.html" class="nav-link link-dark">
+                            <svg class="bi me-2" width="16" height="16">
+                                <use xlink:href="#speedometer2"></use>
+                            </svg>
+                            Social volume
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/sentiment.html" class="nav-link link-dark">
+                            <svg class="bi me-2" width="16" height="16">
+                                <use xlink:href="#table"></use>
+                            </svg>
+                            Sentiment
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/strategy.html" class="nav-link link-dark">
+                            <svg class="bi me-2" width="16" height="16">
+                                <use xlink:href="#grid"></use>
+                            </svg>
+                            Strategy & Backtest
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/backtest.html" class="nav-link link-dark">
+                            <svg class="bi me-2" width="16" height="16">
+                                <use xlink:href="#people-circle"></use>
+                            </svg>
+                            Report
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/monitor.html" class="nav-link active">
+                            <svg class="bi me-2" width="16" height="16">
+                                <use xlink:href="#people-circle"></use>
+                            </svg>
+                            Monitor
+                        </a>
+                    </li>
+                </ul>
+
+            </div>
+            <!-- figure       -->
+        </div>
+        <!--Main element-->
+        <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4 bg-light">
+            <div class="content d-flex flex-column mr-2 col-12 " style="height: 1300px;">
+
+                <h2>Data Pipeline Monitor</h2>
+                <br>
+
+                <div class="content d-flex flex-row mr-2 shadow p-3 mb-5 rounded" style="background-color: white;">
+                        <div class="report_information d-flex flex-column">
+
+                            {% for row in rows %}
+                            <div class="d-flex flex-row justify-content-between">
+                            <table class="table table-hover">
+                                <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">datetime</th>
+                                    <th scope="col">source</th>
+                                    <th scope="col">crawled</th>
+                                    <th scope="col">cut</th>
+                                    <th scope="col">social_volume</th>
+                                    <th scope="col">sentiment</th>
+                                    <th scope="col">check</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <th scope="row">{{ row['create_time'].strftime('%Y-%m-%d') }}</th>
+                                    <td>ptt</td>
+                                    <td>{{ row['ptt']['crawl'] }}</td>
+                                    <td>{{ row['ptt']['cut'] }}</td>
+                                    <td>{{ row['ptt']['social_volume'] }}</td>
+                                    <td>{{ row['ptt']['sentiment'] }}</td>
+                                    <td class="table-info">{{ row['ptt']['check'] }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"></th>
+                                    <td>cnyes</td>
+                                    <td>{{ row['cnyes']['crawl'] }}</td>
+                                    <td>{{ row['cnyes']['cut'] }}</td>
+                                    <td>{{ row['cnyes']['social_volume'] }}</td>
+                                    <td>{{ row['cnyes']['sentiment'] }}</td>
+                                    <td class="table-info">{{ row['cnyes']['check'] }}</td>
+                                </tr>
+                                </tbody>
+                                </table>
+
+                                <table class="table table-hover">
+                                <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">crawled</th>
+                                    <th scope="col">source</th>
+                                    <th scope="col">open</th>
+                                    <th scope="col">high</th>
+                                    <th scope="col">low</th>
+                                    <th scope="col">close</th>
+                                    <th scope="col">check</th>
+                                </tr>
+                                </thead>
+
+                                <tbody>
+                                <tr>
+                                    <th scope="row">{{ row['stock_price']['crawl'] }}</th>
+                                    <td>yahoo</td>
+                                    <td>{{ row['stock_price']['2330_yahoo']['open'] }}</td>
+                                    <td>{{ row['stock_price']['2330_yahoo']['high'] }}</td>
+                                    <td>{{ row['stock_price']['2330_yahoo']['low'] }}</td>
+                                    <td>{{ row['stock_price']['2330_yahoo']['close'] }}</td>
+                                    <td class="table-info">{{ row['stock_price']['check'] }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"></th>
+                                    <td>twse</td>
+                                    <td>{{ row['stock_price']['2330_twse']['open'] }}</td>
+                                    <td>{{ row['stock_price']['2330_twse']['high'] }}</td>
+                                    <td>{{ row['stock_price']['2330_twse']['low'] }}</td>
+                                    <td>{{ row['stock_price']['2330_twse']['close'] }}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                                </div>
+                        {% endfor %}
+                        </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+</body>
+
+</html>

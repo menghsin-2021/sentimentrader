@@ -1,3 +1,5 @@
+import time
+
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 import json
 
@@ -27,10 +29,9 @@ def add_key(form):
 
 @backtest.route('/backtest.html', methods=['GET'])
 def backtest_page():
+    token = request.cookies.get('token')
     uid = get_cookie_check()
-    print(uid)
     if isinstance(uid, int) is False:
-        flash('需要登入', 'danger')
         return render_template('login.html')
 
     try:
@@ -38,7 +39,7 @@ def backtest_page():
         sql_backtest = model_mysql_query.sql_backtest
         strategy_backtest_dict_list = db_mysql.query_tb_all(sql_backtest, (uid,))
         strategy_backtest_dict_list_length = int(len(strategy_backtest_dict_list))
-        return render_template('backtest.html', strategy_backtest_dict_list=strategy_backtest_dict_list, strategy_backtest_dict_list_length=strategy_backtest_dict_list_length)
+        return render_template('backtest.html', strategy_backtest_dict_list=strategy_backtest_dict_list, strategy_backtest_dict_list_length=strategy_backtest_dict_list_length, token=token)
 
     except:
         flash('請先建立策略做回測', 'info')
@@ -47,9 +48,9 @@ def backtest_page():
 
 @backtest.route('/api/1.0/send_backtest', methods=['POST'])
 def send_backtest():
+    token = request.cookies.get('token')
     uid = get_cookie_check()
     if isinstance(uid, int) is False:
-        flash('需要登入', 'danger')
         return render_template('login.html')
     else:
         # send parameter
@@ -65,11 +66,12 @@ def send_backtest():
         sample_strategy_form_length = int(len(sample_strategy_form))
         sample_strategy_form = [add_key(sample_strategy) for sample_strategy in sample_strategy_form]
 
-        return render_template('strategy.html', send_backtest=send_backtest, sample_strategy_form=sample_strategy_form, sample_strategy_form_length=sample_strategy_form_length)
+        return render_template('strategy.html', send_backtest=send_backtest, sample_strategy_form=sample_strategy_form, sample_strategy_form_length=sample_strategy_form_length, token=token)
 
 
 @backtest.route('/api/1.0/remove_strategy', methods=['POST'])
 def remove_strategy():
+
     form = json.loads(list(request.form.keys())[0])
     strategy_id = form['strategy_id']
     file_path = form['file_path']
@@ -82,5 +84,6 @@ def remove_strategy():
 
     file_name = file_path.split("/")[-1]
     delete_file(BUCKET_NAME, OBJECT_PATH, user_id, file_name)
-
-    return redirect(url_for('backtest.backtest_page'))
+    resp = redirect(url_for('backtest.backtest_page'))
+    flash("已刪除策略", 'success')
+    return resp

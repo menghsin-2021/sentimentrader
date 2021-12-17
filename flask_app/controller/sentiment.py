@@ -14,12 +14,7 @@ sentiment = Blueprint('sentiment', __name__, static_folder='static', template_fo
 
 @sentiment.route('/sentiment.html')
 def sentiment_page():
-    # check token
-    uid = get_cookie_check()
-    if isinstance(uid, int) is False:
-        flash('需要登入', 'danger')
-        return render_template('login.html')
-
+    token = request.cookies.get('token')
     # create fetch instance
     stock_sentiment_fetch = StockSentimentFetch()
 
@@ -72,11 +67,12 @@ def sentiment_page():
             'source_name': '鉅亨網'
         }
 
-    return render_template('sentiment.html', daily_stock_price=daily_stock_price, daily_sentiment=daily_sentiment, form_info=form_info)
+    return render_template('sentiment.html', daily_stock_price=daily_stock_price, daily_sentiment=daily_sentiment, form_info=form_info, token=token)
 
 
 @sentiment.route('/api/1.0/single_stock_sentiment', methods=['POST'])
 def single_stock_sentiment():
+    token = request.cookies.get('token')
     form = request.form.to_dict()
     category = form['category']
 
@@ -139,7 +135,7 @@ def single_stock_sentiment():
     form_info['stock_name'] = daily_sentiment['chosen_stock_name']
 
 
-    return render_template('sentiment.html', daily_stock_price=daily_stock_price, daily_sentiment=daily_sentiment, form_info=form_info)
+    return render_template('sentiment.html', daily_stock_price=daily_stock_price, daily_sentiment=daily_sentiment, form_info=form_info, token=token)
 
 
 @sentiment.route('/api/1.0/set_sentiment_cache', methods=['POST'])

@@ -54,14 +54,14 @@ def craw_stock(stock_code, timestamp_start, timestamp_end):
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{stock_code}.TWO?period1={timestamp_start}&period2={timestamp_end}&interval=1d&events=history&=hP2rOschxO0"
 
     # on local
-    driver = webdriver.Chrome(CHROMEDRIVERPATH)
+    # driver = webdriver.Chrome(CHROMEDRIVERPATH)
 
     # on EC2
-    # driver = webdriver.Chrome('/usr/bin/chromedriver', options=options)
+    driver = webdriver.Chrome('/usr/bin/chromedriver', options=options)
 
     driver.get(url)
     # wait for loading
-    driver.implicitly_wait(15)  # seconds
+    driver.implicitly_wait(60)  # seconds
     html = driver.page_source
     soup = BeautifulSoup(html)
     data = json.loads(soup.text)
@@ -100,7 +100,7 @@ if __name__ == "__main__":
             try:
                 df = craw_stock(stock_code, timestamp_day_before, timestamp_today)
                 df_row_insert(df)
-                time.sleep(1)
+                time.sleep(2)
             except:
                 print(f"{stock_code} fail")
                 stock_fail_1st.append(stock_code)

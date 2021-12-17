@@ -1,4 +1,6 @@
-from flask import Flask, render_template, flash
+import time
+
+from flask import Flask, render_template, get_flashed_messages, session, request
 import config
 from utils import get_cookie_check
 
@@ -39,14 +41,11 @@ def page_not_found(e):
 app.register_error_handler(404, page_not_found)
 
 
+@app.route('/', methods=['GET'])
 @app.route('/home.html', methods=['GET'])
 def home():
-    uid = get_cookie_check()
-    print(uid)
-    if isinstance(uid, int) is False:
-        flash('需要登入', 'danger')
-        return render_template('login.html')
-    return render_template('home.html')
+    token = request.cookies.get('token')
+    return render_template('home.html', token=token)
 
 
 if __name__ == "__main__":

@@ -19,6 +19,10 @@
     <!--      plotly-->
     <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>
 
+     <!-- jquery-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
     <!-- Sweet alert Js -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
@@ -29,9 +33,15 @@
 <nav class="navbar navbar-dark bg-primary flex-md-nowapr fixed-top p-0 shadow">
     <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/home.html">Sentimentrader</a>
     <ul class="navbar-nav px-3">
+        {% if not token %}
+        <li class="nav-item text-nowarp">
+            <a class="nav-link" href="/login.html">Login</a>
+        </li>
+        {% else %}
         <li class="nav-item text-nowarp">
             <a class="nav-link" href="/logout">Logout</a>
         </li>
+        {% endif %}
     </ul>
 </nav>
 
@@ -58,7 +68,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/sentiment.html" class="nav-link link-dark">
+                        <a href="/sentiment.html" class="nav-link link-dark" onclick="$('.loader-wrapper').show().delay(500).fadeOut(2000);">
                             <svg class="bi me-2" width="16" height="16">
                                 <use xlink:href="#table"></use>
                             </svg>
@@ -91,9 +101,15 @@
         <!--Main element-->
         <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4 bg-light d-flex flex-row justify-content-center">
             <div class="content d-flex flex-column mr-2 col-12">
-
                 <div class="strategy_card form">
+
+                    {% if not token %}
+                  <h2>範例策略(使用回測功能請先登入)</h2>
+                {% else %}
                     <h2>範例策略</h2>
+                    {% endif %}
+
+
                     <br>
                     <div id="card-deck" class="d-flex flex-row flex-nowrap overflow-auto" style="height: 280px;">
                         {% for i in range(sample_strategy_form_length) %}
@@ -166,7 +182,6 @@
                                             <label for="strategy_in">自訂進場策略(股價)</label>
                                             <select class="form-control" id="strategy_in" name="strategy_in"
                                                     onchange="strategyStock('strategy_in', 'strategy_out')" required>
-                                                <option value="">--</option>
                                                 <option value="increase_in">股價連續上漲(3日)</option>
                                                 <option value="decrease_in">股價連續下跌(3日)</option>
                                             </select>
@@ -178,7 +193,7 @@
                                             </div>
                                             <input id="strategy_in_para" type="number" class="form-control"
                                                    name="strategy_in_para" aria-label="Amount (to the nearest dollar)"
-                                                   required min="0" max="10">
+                                                   value="1" required min="0" max="10">
                                             <div class="input-group-append">
                                                 <span class="input-group-text">％</span>
                                             </div>
@@ -187,7 +202,7 @@
                                         <div class="form-group">
                                             <label for="strategy_out">自訂出場策略(股價)</label>
                                             <select class="form-control" id="strategy_out" name="strategy_out">
-                                                <option value="none">--</option>
+                                                <option value="decrease_in">股價連續下跌(3日)</option>
                                             </select>
                                         </div>
 
@@ -197,7 +212,7 @@
                                             </div>
                                             <input id="strategy_out_para" type="number" class="form-control"
                                                    name="strategy_out_para" aria-label="Amount (to the nearest dollar)"
-                                                   required min="0" max="10">
+                                                   value="1" required min="0" max="10">
                                             <div class="input-group-append">
                                                 <span class="input-group-text">％</span>
                                             </div>
@@ -226,7 +241,7 @@
                                             <input id="sentiment_para_more" type="number" class="form-control"
                                                    name="sentiment_para_more"
                                                    aria-label="Amount (to the nearest dollar)" placeholder="多少以上不進場"
-                                                   required min="50" max="99">
+                                                   value="60" required min="50" max="99">
                                             <div class="input-group-append">
                                                 <span class="input-group-text">分</span>
                                             </div>
@@ -239,7 +254,7 @@
                                             <input id="sentiment_para_less" type="number" class="form-control"
                                                    name="sentiment_para_less"
                                                    aria-label="Amount (to the nearest dollar)" placeholder="多少以下不進場"
-                                                   required min="1" max="50">
+                                                   value="40" required min="1" max="50">
                                             <div class="input-group-append">
                                                 <span class="input-group-text">分</span>
                                             </div>
@@ -291,7 +306,7 @@
                         <div class="d-flex flex-row justify-content-end">
                             <div>
                                 <button type="submit" class="btn btn-primary mr-3" id="sent-backtest"
-                                        value="sent-backtest">送出回測
+                                        value="sent-backtest" onclick="$('.loader-wrapper').show().delay(500).fadeOut(2000);">送出回測
                                 </button>
                             </div>
                         </div>
@@ -311,6 +326,10 @@
         </main>
 
     </div>
+</div>
+
+<div class="loader-wrapper">
+    <span class="loader" style="top: -500px;"><span class="loader-inner"></span></span>
 </div>
 
 {% include "sweetalerts.html" %}

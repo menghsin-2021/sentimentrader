@@ -87,12 +87,12 @@ sql_insert_strategy_backtest = "INSERT INTO `strategy_backtest` (`user_id`, `sto
 
 # backtest
 sql_backtest = "SELECT * \
-                        FROM `strategy_backtest` \
-                        JOIN `stocks` \
-                        ON `strategy_backtest`.`stock_code` = `stocks`.`stock_code` \
-                        WHERE `user_id` = '%s' \
-                        ORDER BY `create_date` DESC, `id` DESC \
-                        limit 15;"
+                FROM `strategy_backtest` \
+                JOIN `stocks` \
+                ON `strategy_backtest`.`stock_code` = `stocks`.`stock_code` \
+                WHERE `user_id` = '%s' \
+                ORDER BY `create_date` DESC, `id` DESC \
+                limit 15;"
 
 sql_fetch_strategy_backtest = "SELECT * \
                                FROM `strategy_backtest` \

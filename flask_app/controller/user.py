@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, make_response, Response
+from flask import Blueprint, render_template, request, flash, redirect, url_for, make_response, Response, get_flashed_messages
 from datetime import datetime, timedelta
 
 from model import model_mysql
@@ -16,7 +16,7 @@ SECRET_KEY = config.SECRET_KEY
 
 check_jwt = Checkjwt()
 
-@user.route('/', methods=['GET'])
+
 @user.route('/login.html', methods=['GET'])
 def login():
     return render_template('login.html')
@@ -79,21 +79,17 @@ def signup():
                                                   'name': name,
                                                   'email': email,
                                               }}}
-
-            resp = make_response(redirect(url_for('home')))
-            resp.set_cookie(key='token', value=signup_user_info['data']['access_token'])
             flash('註冊成功', 'success')
+            resp = make_response(render_template('home.html'))
+            resp.set_cookie(key='token', value=signup_user_info['data']['access_token'])
             return resp
 
 
 @user.route('/api/1.0/signin', methods=['POST'])
 def signin():
     user_signin_request = request.form.to_dict()
-    print(user_signin_request)
-
     email = user_signin_request['email']
     pwd = user_signin_request['pwd']
-
     basic_auth = check_jwt.check_basic_auth_signin(email, pwd)
 
     if not basic_auth:
@@ -116,7 +112,8 @@ def signin():
             password_salt = db_password_salt
             password_hash = check_jwt.generate_hash(pwd, password_salt)
             if db_password != password_hash:
-                return Response('error: wrong password', status=403)
+                flash("密碼錯誤", 'danger')
+                return redirect(url_for('user.login'))
             else:
                 # set token
                 iss = 'stock-sentimentrader.com'
@@ -145,14 +142,14 @@ def signin():
 
 
                 # resp = make_response(redirect(url_for('home')))
-                resp = Response(render_template('home.html'))
+                flash("登入成功", 'success')
+                resp = make_response(render_template('home.html'))
                 resp.set_cookie(key='token', value=signin_user_info['data']['access_token'])
-
                 return resp
 
 
 @user.route('/logout', methods=['GET'])
 def logout():
-    resp = make_response(render_template('login.html'))
+    resp = make_response(render_template('home.html'))
     resp.delete_cookie('token')
     return resp
